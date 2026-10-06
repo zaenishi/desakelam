@@ -1,0 +1,10 @@
+/* ===== TOURNAMENT CLOCK ===== */
+let tournamentEnding=false,tournamentCountdown=null,tournamentLastSecond=null;
+function tournamentTimeEnabled(){return CONFIG.tournament.enabled&&CONFIG.tournament.endTime!==false&&CONFIG.tournament.endTime!=null}
+function tournamentDateMatches(){const d=CONFIG.tournament.date;if(!d||d===false)return true;const n=new Date();const y=n.getFullYear(),m=String(n.getMonth()+1).padStart(2,'0'),day=String(n.getDate()).padStart(2,'0');return `${y}-${m}-${day}`===d}
+function tournamentEndTimestamp(){if(!tournamentTimeEnabled()||!tournamentDateMatches())return Infinity;const [h,mi]=String(CONFIG.tournament.endTime).split(':').map(Number);if(!Number.isFinite(h)||!Number.isFinite(mi))return Infinity;const d=new Date();d.setHours(h,mi,0,0);return d.getTime()}
+function updateTournamentClock(){if(MODE!=='classic'||S!=='play'||tournamentEnding)return;if(!tournamentTimeEnabled()||!tournamentDateMatches())return;if(Date.now()>=tournamentEndTimestamp()){startTournamentCountdown()}}
+function startTournamentCountdown(){if(tournamentEnding)return;tournamentEnding=true;tournamentCountdown=Math.max(0,Number(CONFIG.tournament.countdownSeconds)||0);tournamentLastSecond=null;S='tournamentEnding';SFX.scare()}
+function updateTournamentCountdown(){if(!tournamentEnding)return;if(tournamentCountdown<=0){finishTournamentNow();return}const sec=Math.ceil(tournamentCountdown);if(sec!==tournamentLastSecond){tournamentLastSecond=sec;tone(220+sec*100,.18,'square',.18);tournamentCountdown-=1/60}}
+function finishTournamentNow(){if(S==='menu'||S==='rank')return;submit(score|0);tournamentEnding=false;S='menu';if(CONFIG.tournament.redirectToLeaderboard)openRanking();else show('menu',1);}
+function drawTournamentCountdown(){if(!tournamentEnding)return;X.save();X.fillStyle='rgba(0,0,0,.82)';X.fillRect(0,0,W,H);X.textAlign='center';X.textBaseline='middle';X.fillStyle='#ffd700';X.font='bold 110px Cinzel';const n=Math.max(1,Math.ceil(tournamentCountdown));X.fillText(n,W/2,H/2-20);X.font='bold 22px Cinzel';X.fillStyle='#fff';X.fillText('TURNAMEN SELESAI',W/2,H/2+75);X.restore()}

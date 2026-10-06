@@ -1,0 +1,3 @@
+/* ===== SARANG MONSTER ===== */
+function hitN(n,d){n.hp-=d;n.fl=.1;blood(n.x,n.y,5);SFX.hit();if(n.hp<=0&&!n.dead){n.dead=1;addScore(40*night);updatePlayerStat('nest',1);SFX.die();shake=Math.max(shake,6);say(`Sarang hancur! Tersisa ${NS.filter(q=>!q.dead).length}`,2)}}
+function drawNest(n){const p=1+Math.sin(t*3+n.t)*.08;X.save();X.translate(n.x,n.y);X.scale(p,p);X.fillStyle='#0008';X.beginPath();X.ellipse(0,14,22,8,0,0,7);X.fill();ci(0,0,18,n.fl>0?'#fff':'#2a0a18');ci(-6,-4,3,'#f22');ci(6,-4,3,'#f22');ci(0,5,5,'#400');X.restore();X.fillStyle='#000';X.fillRect(n.x-16,n.y-28,32,4);X.fillStyle='#b00';X.fillRect(n.x-16,n.y-28,32*Math.max(0,n.hp/40),4)}

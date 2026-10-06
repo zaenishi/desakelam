@@ -1,0 +1,2850 @@
+<<<<<<< HEAD
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0510">
+<title>Underground Legends v2.2</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+  
+  * { 
+    margin:0; padding:0; box-sizing:border-box; 
+    image-rendering: pixelated;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  
+  html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    position: fixed;
+    overscroll-behavior: none;
+    touch-action: none;
+  }
+  
+  body {
+    font-family: 'Press Start 2P', monospace;
+    background: #0a0510;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  #game {
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    position: relative;
+    background: #1a0a2e;
+    overflow: hidden;
+  }
+
+  /* ====== FULLSCREEN OVERLAY (Tap to Start) ====== */
+  .fs-overlay {
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse at center, #2a0a4a 0%, #0a0510 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    z-index: 10000;
+    cursor: pointer;
+    text-align: center;
+    padding: 20px;
+    animation: fadeIn 0.5s;
+    transition: opacity 0.4s;
+  }
+  .fs-overlay.hide { opacity: 0; pointer-events: none; }
+
+  .fs-overlay .logo {
+    font-size: clamp(20px, 6vw, 48px);
+    color: #ffcc00;
+    text-shadow: 4px 4px 0 #ff0066, 8px 8px 0 #000;
+    margin-bottom: 30px;
+    line-height: 1.3;
+    animation: bounce 1s infinite alternate;
+  }
+  @keyframes bounce { 0%{transform:translateY(0)} 100%{transform:translateY(-10px)} }
+
+  .fs-overlay .tap-icon {
+    font-size: clamp(40px, 12vw, 80px);
+    animation: tapPulse 1.2s infinite;
+    margin: 20px 0;
+  }
+  @keyframes tapPulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.15); opacity: 0.7; }
+  }
+
+  .fs-overlay .tap-text {
+    font-size: clamp(10px, 3vw, 16px);
+    color: #88ffff;
+    margin-top: 20px;
+    line-height: 1.8;
+    animation: blink 1.5s infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  .fs-overlay .sub-text {
+    font-size: clamp(7px, 2vw, 10px);
+    color: #aaa;
+    margin-top: 30px;
+    line-height: 1.8;
+    max-width: 400px;
+  }
+
+  .fs-overlay .features {
+    display: flex;
+    gap: clamp(10px, 3vw, 25px);
+    margin-top: 25px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .fs-overlay .feature {
+    background: rgba(74, 26, 92, 0.5);
+    border: 2px solid #4a1a5c;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: clamp(6px, 1.8vw, 9px);
+    color: #ffcc00;
+  }
+
+  /* ====== ROTATE OVERLAY ====== */
+  .rotate-overlay {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(135deg, #1a0a2e, #0a0510);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    z-index: 9999;
+    text-align: center;
+    padding: 30px;
+    transition: opacity 0.3s;
+  }
+  .rotate-overlay.show { display: flex; }
+  .rotate-overlay.hide { opacity: 0; pointer-events: none; }
+
+  .rotate-icon {
+    font-size: clamp(60px, 18vw, 100px);
+    margin-bottom: 25px;
+    animation: rotateAnim 2s infinite ease-in-out;
+  }
+  @keyframes rotateAnim {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-90deg); }
+    50% { transform: rotate(-90deg); }
+    75% { transform: rotate(0deg); }
+  }
+
+  .rotate-title {
+    font-size: clamp(12px, 4vw, 20px);
+    color: #ffcc00;
+    text-shadow: 2px 2px 0 #000;
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+
+  .rotate-text {
+    font-size: clamp(8px, 2.5vw, 11px);
+    color: #88ffff;
+    line-height: 1.8;
+    max-width: 400px;
+    margin-bottom: 20px;
+  }
+
+  .rotate-sub {
+    font-size: clamp(6px, 1.8vw, 9px);
+    color: #666;
+    margin-top: 20px;
+    line-height: 1.8;
+  }
+
+  .rotate-btn {
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(7px, 2vw, 9px);
+    padding: 10px 18px;
+    background: linear-gradient(180deg, #4a1a5c, #2a0a4a);
+    border: 2px solid #ffcc00;
+    color: #ffcc00;
+    cursor: pointer;
+    border-radius: 4px;
+    margin-top: 20px;
+    min-height: 40px;
+    touch-action: manipulation;
+  }
+  .rotate-btn:active { transform: scale(0.95); background: #ffcc00; color: #2a0a4a; }
+
+  /* ====== BACKGROUND ====== */
+  .bg-cave {
+    position: absolute; inset: 0;
+    background: 
+      radial-gradient(ellipse at 20% 30%, #4a1a5c 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 70%, #2a0a4a 0%, transparent 50%),
+      linear-gradient(180deg, #1a0a2e 0%, #0a0510 100%);
+  }
+  .bg-cave::before {
+    content:'';
+    position:absolute; inset:0;
+    background-image:
+      radial-gradient(2px 2px at 10% 20%, #ff88ff 50%, transparent),
+      radial-gradient(2px 2px at 30% 60%, #88ffff 50%, transparent),
+      radial-gradient(1px 1px at 60% 30%, #ffff88 50%, transparent),
+      radial-gradient(2px 2px at 80% 80%, #ff88ff 50%, transparent);
+    animation: sparkle 3s infinite alternate;
+  }
+  @keyframes sparkle { 0%{opacity:.3} 100%{opacity:1} }
+
+  /* ====== SCREEN SYSTEM ====== */
+  .screen {
+    position: absolute; inset: 0;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    padding: 15px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+  .screen.active { display: flex; }
+
+  /* ====== DEMO ====== */
+  #demoScreen { background: #000; z-index: 100; }
+  .demo-content { text-align: center; animation: fadeIn 1s; padding: 20px; }
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+  .demo-title {
+    font-size: clamp(18px, 5vw, 40px);
+    color: #ffcc00;
+    text-shadow: 3px 3px 0 #ff0066, 6px 6px 0 #000;
+    animation: bounce 1s infinite alternate;
+    margin-bottom: 20px;
+    line-height: 1.4;
+  }
+
+  .demo-sub {
+    font-size: clamp(8px, 2.2vw, 14px);
+    color: #88ffff;
+    margin: 20px 0;
+    line-height: 2;
+  }
+
+  .demo-hero {
+    width: clamp(60px, 15vw, 96px);
+    height: clamp(60px, 15vw, 96px);
+    margin: 20px auto;
+    animation: run 1s infinite;
+  }
+  @keyframes run { 0%{transform:translateY(0)} 50%{transform:translateY(-5px)} 100%{transform:translateY(0)} }
+
+  .demo-timer {
+    font-size: clamp(14px, 3.5vw, 20px);
+    color: #ff0066;
+    margin-top: 30px;
+  }
+
+  /* ====== MODAL ====== */
+  .modal {
+    background: linear-gradient(135deg, #2a0a4a, #4a1a5c);
+    border: 3px solid #ffcc00;
+    padding: clamp(20px, 4vw, 40px);
+    text-align: center;
+    box-shadow: 0 0 40px #ff0066;
+    animation: popIn 0.4s;
+    max-width: 500px;
+    width: 100%;
+  }
+  @keyframes popIn { from{transform:scale(0.5);opacity:0} to{transform:scale(1);opacity:1} }
+
+  .modal-title {
+    font-size: clamp(12px, 3vw, 20px);
+    color: #ffcc00;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 0 #000;
+  }
+
+  .input-field {
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(12px, 3vw, 16px);
+    padding: clamp(12px, 2.5vw, 15px);
+    background: #0a0510;
+    border: 3px solid #88ffff;
+    color: #88ffff;
+    text-align: center;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    width: 100%;
+    margin: 10px 0;
+    outline: none;
+    border-radius: 4px;
+  }
+  .input-field:focus { border-color: #ffcc00; box-shadow: 0 0 20px #ffcc00; }
+
+  .btn {
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(9px, 2.2vw, 13px);
+    padding: clamp(12px, 2.5vw, 15px) clamp(18px, 4vw, 30px);
+    background: linear-gradient(180deg, #ffcc00, #ff8800);
+    color: #2a0a4a;
+    border: 3px solid #fff;
+    cursor: pointer;
+    margin: 8px 4px;
+    text-transform: uppercase;
+    transition: all 0.15s;
+    box-shadow: 0 4px 0 #884400;
+    border-radius: 4px;
+    touch-action: manipulation;
+    min-height: 44px;
+  }
+  .btn:hover, .btn:active { transform: translateY(-2px); box-shadow: 0 6px 0 #884400, 0 0 20px #ffcc00; }
+  .btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #884400; }
+  .btn:disabled { background: #555; color: #999; cursor: not-allowed; box-shadow: 0 4px 0 #222; }
+
+  .btn-purple { background: linear-gradient(180deg, #cc66ff, #8800cc); color: #fff; box-shadow: 0 4px 0 #440066; }
+  .btn-red { background: linear-gradient(180deg, #ff4466, #cc0033); color: #fff; box-shadow: 0 4px 0 #660011; }
+  .btn-green { background: linear-gradient(180deg, #66ff88, #00aa44); color: #003300; box-shadow: 0 4px 0 #004400; }
+
+  .error-msg {
+    color: #ff4466;
+    font-size: clamp(8px, 2vw, 10px);
+    margin-top: 10px;
+    animation: shake 0.3s;
+  }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
+
+  .code-hint {
+    font-size: clamp(7px, 1.8vw, 9px);
+    color: #88ffff;
+    margin-top: 15px;
+    line-height: 1.8;
+  }
+
+  /* ====== REGISTER ====== */
+  #registerScreen { background: rgba(10,5,16,0.95); }
+
+  .register-container {
+    background: linear-gradient(135deg, #2a0a4a, #4a1a5c);
+    border: 3px solid #ffcc00;
+    padding: clamp(15px, 3vw, 30px);
+    max-width: 900px;
+    width: 100%;
+    max-height: 92vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    box-shadow: 0 0 40px #ff0066;
+    border-radius: 8px;
+  }
+
+  .step-title {
+    font-size: clamp(11px, 2.5vw, 16px);
+    color: #ffcc00;
+    margin-bottom: 20px;
+    text-align: center;
+    text-shadow: 2px 2px 0 #000;
+  }
+
+  .char-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 10px;
+    margin: 15px 0;
+  }
+
+  .char-card {
+    background: #0a0510;
+    border: 3px solid #4a1a5c;
+    padding: 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    border-radius: 6px;
+    touch-action: manipulation;
+  }
+  .char-card:active { border-color: #ffcc00; transform: scale(0.97); box-shadow: 0 0 20px #ffcc00; }
+  .char-card.selected { border-color: #00ff88; background: #0a2a1a; box-shadow: 0 0 30px #00ff88; }
+
+  .char-avatar {
+    width: clamp(48px, 12vw, 64px);
+    height: clamp(48px, 12vw, 64px);
+    margin: 0 auto 10px;
+    display: block;
+    animation: idle 2s infinite;
+  }
+  @keyframes idle { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-3px)} }
+
+  .char-name { font-size: clamp(9px, 2.2vw, 12px); color: #fff; margin-bottom: 8px; }
+  .char-role { font-size: clamp(7px, 1.8vw, 8px); color: #88ffff; margin-bottom: 8px; }
+  .char-desc { font-size: clamp(6px, 1.6vw, 7px); color: #aaa; line-height: 1.6; }
+  .char-skill { font-size: clamp(6px, 1.6vw, 7px); color: #ffcc00; margin-top: 8px; }
+
+  .progress-bar {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .progress-step {
+    width: 30px; height: 30px;
+    border: 2px solid #4a1a5c;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px;
+    color: #666;
+    border-radius: 50%;
+  }
+  .progress-step.active { border-color: #ffcc00; color: #ffcc00; background: #2a0a4a; }
+  .progress-step.done { border-color: #00ff88; color: #00ff88; background: #0a2a1a; }
+
+  /* ====== HOME ====== */
+  #homeScreen { background: rgba(10,5,16,0.98); padding: 0; }
+
+  .home-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: clamp(8px, 1.5vw, 20px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: clamp(8px, 1.5vw, 15px) clamp(10px, 2vw, 20px);
+    background: linear-gradient(90deg, #2a0a4a, transparent);
+    border: 3px solid #4a1a5c;
+    margin-bottom: 10px;
+    border-radius: 6px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .player-info { display: flex; align-items: center; gap: 10px; }
+  .player-avatar-small {
+    width: clamp(36px, 8vw, 48px);
+    height: clamp(36px, 8vw, 48px);
+    border: 2px solid #ffcc00;
+    background: #0a0510;
+    animation: idle 2s infinite;
+    border-radius: 4px;
+  }
+  .player-name { font-size: clamp(9px, 2.2vw, 12px); color: #ffcc00; }
+  .player-level { font-size: clamp(6px, 1.6vw, 8px); color: #88ffff; margin-top: 5px; }
+
+  .stats { display: flex; gap: clamp(10px, 2vw, 20px); }
+  .stat { text-align: center; }
+  .stat-label { font-size: clamp(6px, 1.6vw, 7px); color: #88ffff; }
+  .stat-value { font-size: clamp(9px, 2.2vw, 12px); color: #ffcc00; margin-top: 5px; }
+
+  .main-area {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    min-height: clamp(100px, 18vh, 200px);
+  }
+
+  .hero-display {
+    width: clamp(100px, 20vw, 200px);
+    height: clamp(100px, 20vw, 200px);
+    position: relative;
+    animation: heroFloat 3s infinite ease-in-out;
+  }
+  @keyframes heroFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-15px)} }
+
+  .hero-glow {
+    position: absolute; inset: -30px;
+    background: radial-gradient(circle, rgba(255,204,0,0.3) 0%, transparent 70%);
+    animation: glow 2s infinite alternate;
+  }
+  @keyframes glow { 0%{opacity:.5} 100%{opacity:1} }
+
+  .menu-panel {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    width: 100%;
+    max-width: 800px;
+    margin: 10px auto 0;
+    padding-bottom: 10px;
+  }
+
+  .menu-btn {
+    padding: clamp(10px, 2vw, 18px) clamp(6px, 1.5vw, 10px);
+    font-size: clamp(7px, 1.8vw, 10px);
+    background: linear-gradient(180deg, #4a1a5c, #2a0a4a);
+    border: 3px solid #ffcc00;
+    color: #ffcc00;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+    font-family: 'Press Start 2P', monospace;
+    border-radius: 6px;
+    min-height: 50px;
+    touch-action: manipulation;
+    line-height: 1.4;
+  }
+  .menu-btn:active { transform: scale(0.95); box-shadow: 0 0 20px #ffcc00; }
+  .menu-btn.primary { background: linear-gradient(180deg, #ffcc00, #ff8800); color: #2a0a4a; }
+
+  /* Landscape: menu 6 kolom */
+  @media (orientation: landscape) {
+    .menu-panel { grid-template-columns: repeat(6, 1fr); }
+    .main-area { min-height: clamp(80px, 15vh, 150px); }
+    .hero-display { width: clamp(80px, 15vw, 150px); height: clamp(80px, 15vw, 150px); }
+    .top-bar { padding: 8px 12px; }
+  }
+
+  @media (min-width: 900px) {
+    .menu-panel { grid-template-columns: repeat(6, 1fr); }
+  }
+
+  .welcome-popup {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.85);
+    display: flex; justify-content: center; align-items: center;
+    z-index: 200;
+    padding: 20px;
+    animation: fadeIn 0.5s;
+  }
+
+  .welcome-box {
+    background: linear-gradient(135deg, #2a0a4a, #4a1a5c);
+    border: 4px solid #ffcc00;
+    padding: clamp(20px, 4vw, 40px) clamp(20px, 5vw, 60px);
+    text-align: center;
+    box-shadow: 0 0 60px #ffcc00;
+    animation: welcomeIn 0.6s;
+    max-width: 500px;
+    width: 100%;
+  }
+  @keyframes welcomeIn {
+    0% { transform: scale(0) rotate(-180deg); }
+    70% { transform: scale(1.1) rotate(10deg); }
+    100% { transform: scale(1) rotate(0); }
+  }
+  .welcome-text {
+    font-size: clamp(16px, 4vw, 28px);
+    color: #ffcc00;
+    text-shadow: 3px 3px 0 #ff0066;
+    animation: pulse 1s infinite alternate;
+  }
+  @keyframes pulse { 0%{transform:scale(1)} 100%{transform:scale(1.05)} }
+
+  /* ====== GAME SCREEN ====== */
+  #gameScreen { background: #0a0510; padding: 0; overflow: hidden; }
+
+  .game-viewport {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    background: linear-gradient(180deg, #2a0a4a 0%, #1a0a2e 50%, #0a0510 100%);
+    touch-action: none;
+  }
+
+  .layer-far, .layer-mid, .layer-near {
+    position: absolute;
+    top: 0; left: 0;
+    width: 4000px;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  .layer-far {
+    background:
+      radial-gradient(ellipse 300px 100px at 200px 40%, #4a1a5c 0%, transparent 60%),
+      radial-gradient(ellipse 400px 150px at 800px 30%, #3a0a4a 0%, transparent 60%),
+      radial-gradient(ellipse 350px 120px at 1500px 45%, #4a1a5c 0%, transparent 60%),
+      radial-gradient(ellipse 500px 180px at 2300px 25%, #3a0a4a 0%, transparent 60%),
+      radial-gradient(ellipse 400px 140px at 3100px 40%, #4a1a5c 0%, transparent 60%);
+  }
+
+  .layer-mid {
+    background:
+      radial-gradient(ellipse 150px 80px at 400px 60%, #5a2a6c 0%, transparent 60%),
+      radial-gradient(ellipse 200px 100px at 1000px 55%, #5a2a6c 0%, transparent 60%),
+      radial-gradient(ellipse 180px 90px at 1700px 65%, #5a2a6c 0%, transparent 60%),
+      radial-gradient(ellipse 220px 110px at 2500px 50%, #5a2a6c 0%, transparent 60%),
+      radial-gradient(ellipse 200px 100px at 3300px 60%, #5a2a6c 0%, transparent 60%);
+  }
+
+  .layer-near {
+    background:
+      radial-gradient(circle 3px at 100px 30%, #ff88ff 50%, transparent),
+      radial-gradient(circle 2px at 250px 45%, #88ffff 50%, transparent),
+      radial-gradient(circle 3px at 500px 35%, #ffff88 50%, transparent),
+      radial-gradient(circle 2px at 750px 50%, #ff88ff 50%, transparent),
+      radial-gradient(circle 3px at 1100px 40%, #88ffff 50%, transparent),
+      radial-gradient(circle 2px at 1500px 55%, #ffff88 50%, transparent),
+      radial-gradient(circle 3px at 1900px 35%, #ff88ff 50%, transparent),
+      radial-gradient(circle 2px at 2300px 45%, #88ffff 50%, transparent),
+      radial-gradient(circle 3px at 2800px 40%, #ffff88 50%, transparent),
+      radial-gradient(circle 2px at 3200px 50%, #ff88ff 50%, transparent);
+    animation: twinkle 2s infinite alternate;
+  }
+  @keyframes twinkle { 0%{opacity:0.4} 100%{opacity:1} }
+
+  .ground {
+    position: absolute;
+    bottom: 0;
+    height: 80px;
+    background: linear-gradient(180deg, #3a1a4a 0%, #1a0a2e 100%);
+    border-top: 4px solid #6a3a7c;
+    width: 4000px;
+    left: 0;
+  }
+  .ground::before {
+    content:'';
+    position:absolute; inset:0;
+    background-image:
+      linear-gradient(90deg, #4a2a5c 2px, transparent 2px),
+      linear-gradient(0deg, #4a2a5c 2px, transparent 2px);
+    background-size: 40px 40px;
+    opacity: 0.3;
+  }
+
+  .platform {
+    position: absolute;
+    height: 30px;
+    background: linear-gradient(180deg, #6a3a7c 0%, #3a1a4a 100%);
+    border: 3px solid #8a5a9c;
+    border-radius: 4px;
+    box-shadow: 0 4px 0 #1a0a2e;
+  }
+
+  .building {
+    position: absolute;
+    bottom: 80px;
+    background: linear-gradient(180deg, #4a2a5c 0%, #2a0a3a 100%);
+    border: 4px solid #6a3a7c;
+    border-bottom: none;
+    box-shadow: inset 0 0 30px rgba(0,0,0,0.5);
+  }
+  .building .roof {
+    position: absolute;
+    top: -30px; left: -10px; right: -10px;
+    height: 30px;
+    background: linear-gradient(180deg, #8a5a9c, #4a2a5c);
+    clip-path: polygon(0% 100%, 50% 0%, 100% 100%);
+    border: 3px solid #aa7abc;
+    border-bottom: none;
+  }
+  .building .door {
+    position: absolute;
+    bottom: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 40px; height: 60px;
+    background: #1a0a2e;
+    border: 3px solid #8a5a9c;
+    border-bottom: none;
+    border-radius: 20px 20px 0 0;
+  }
+  .building .window {
+    position: absolute;
+    width: 25px; height: 25px;
+    background: #ffcc00;
+    border: 3px solid #4a2a5c;
+    box-shadow: 0 0 15px #ffcc00;
+    animation: windowFlicker 3s infinite alternate;
+  }
+  @keyframes windowFlicker { 0%{opacity:0.8} 100%{opacity:1} }
+
+  .lamp {
+    position: absolute;
+    bottom: 80px;
+    width: 4px;
+    height: 60px;
+    background: #3a1a4a;
+  }
+  .lamp::after {
+    content:'';
+    position: absolute;
+    top: -10px; left: -10px;
+    width: 24px; height: 24px;
+    background: radial-gradient(circle, #ffcc00 0%, transparent 70%);
+    border-radius: 50%;
+    animation: lampGlow 2s infinite alternate;
+  }
+  @keyframes lampGlow { 0%{opacity:0.6} 100%{opacity:1} }
+
+  .player-sprite {
+    position: absolute;
+    width: 48px;
+    height: 64px;
+    z-index: 10;
+    will-change: transform;
+  }
+  .player-sprite.flip { transform: scaleX(-1); }
+  .player-sprite.attack { animation: attackAnim 0.3s; }
+  @keyframes attackAnim {
+    0% { transform: translateY(0) rotate(0); }
+    50% { transform: translateY(-5px) rotate(-10deg); }
+    100% { transform: translateY(0) rotate(0); }
+  }
+  .player-sprite.hurt { animation: hurtAnim 0.4s; }
+  @keyframes hurtAnim {
+    0%,100% { filter: none; }
+    50% { filter: hue-rotate(90deg) brightness(2); }
+  }
+
+  .world-monster {
+    position: absolute;
+    width: 56px;
+    height: 56px;
+    z-index: 9;
+    animation: monsterIdle 2s infinite;
+    cursor: pointer;
+  }
+  @keyframes monsterIdle { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
+  .world-monster.hit { animation: hitFlash 0.3s; }
+  @keyframes hitFlash {
+    0%,100% { filter: none; }
+    50% { filter: brightness(3) hue-rotate(-30deg); }
+  }
+  .world-monster .hp-bar {
+    position: absolute;
+    top: -12px; left: 0; right: 0;
+    height: 6px;
+    background: #330011;
+    border: 2px solid #000;
+  }
+  .world-monster .hp-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ff0066, #ffcc00);
+    transition: width 0.3s;
+  }
+
+  .npc {
+    position: absolute;
+    width: 48px;
+    height: 64px;
+    z-index: 8;
+    animation: npcIdle 2s infinite;
+    cursor: pointer;
+  }
+  @keyframes npcIdle { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-3px)} }
+  .npc .quest-icon {
+    position: absolute;
+    top: -25px; left: 50%;
+    transform: translateX(-50%);
+    font-size: 20px;
+    animation: questBounce 1s infinite;
+  }
+  @keyframes questBounce { 0%,100%{transform:translateX(-50%) translateY(0)} 50%{transform:translateX(-50%) translateY(-8px)} }
+
+  .world-camera {
+    position: absolute;
+    inset: 0;
+    will-change: transform;
+  }
+
+  /* ====== HUD ====== */
+  .hud {
+    position: absolute; top: 0; left: 0; right: 0;
+    padding: clamp(6px, 1.5vw, 15px);
+    display: flex;
+    justify-content: space-between;
+    z-index: 50;
+    pointer-events: none;
+    background: linear-gradient(180deg, rgba(10,5,16,0.9), transparent);
+    padding-top: calc(clamp(6px, 1.5vw, 15px) + env(safe-area-inset-top));
+  }
+  .hud > * { pointer-events: auto; }
+
+  .hud-left { display: flex; flex-direction: column; gap: 6px; }
+  .hearts { display: flex; gap: 4px; font-size: clamp(14px, 3vw, 20px); }
+  .heart { color: #ff0066; text-shadow: 0 0 10px #ff0066; animation: beat 0.8s infinite; }
+  .heart.lost { color: #333; text-shadow: none; animation: none; }
+  @keyframes beat { 0%,100%{transform:scale(1)} 50%{transform:scale(1.2)} }
+
+  .hud-bar {
+    width: clamp(100px, 20vw, 180px);
+    height: 12px;
+    background: #0a0510;
+    border: 2px solid #4a1a5c;
+    position: relative;
+  }
+  .hud-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ff0066, #ffcc00);
+    transition: width 0.3s;
+  }
+  .hud-bar-label {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    font-size: clamp(5px, 1.2vw, 7px);
+    color: #fff;
+    text-shadow: 1px 1px 0 #000;
+  }
+
+  .hud-right { text-align: right; }
+  .score { font-size: clamp(10px, 2.5vw, 16px); color: #ffcc00; text-shadow: 2px 2px 0 #000; }
+  .level-text { font-size: clamp(6px, 1.5vw, 9px); color: #88ffff; margin-top: 6px; }
+
+  /* Quest Tracker */
+  .quest-tracker {
+    position: absolute;
+    top: calc(clamp(50px, 10vw, 100px));
+    right: clamp(6px, 1.5vw, 20px);
+    background: rgba(42, 10, 74, 0.9);
+    border: 2px solid #ffcc00;
+    padding: clamp(6px, 1.5vw, 12px);
+    min-width: clamp(120px, 25vw, 220px);
+    max-width: 35vw;
+    z-index: 40;
+    box-shadow: 0 0 20px rgba(255,204,0,0.5);
+    border-radius: 4px;
+  }
+  .quest-tracker-title {
+    font-size: clamp(6px, 1.5vw, 9px);
+    color: #ffcc00;
+    margin-bottom: 6px;
+    border-bottom: 1px solid #4a1a5c;
+    padding-bottom: 5px;
+  }
+  .quest-item {
+    font-size: clamp(5px, 1.2vw, 7px);
+    color: #fff;
+    line-height: 1.6;
+    margin-bottom: 6px;
+    padding-left: 10px;
+    position: relative;
+  }
+  .quest-item::before {
+    content:'▸';
+    position: absolute;
+    left: 0;
+    color: #ffcc00;
+  }
+
+  /* ====== MOBILE CONTROLS ====== */
+  .controls {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    padding: clamp(6px, 1.5vw, 15px);
+    padding-bottom: calc(clamp(6px, 1.5vw, 15px) + env(safe-area-inset-bottom));
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    z-index: 50;
+    pointer-events: none;
+  }
+  .controls > * { pointer-events: auto; }
+
+  .dpad {
+    display: grid;
+    grid-template-columns: repeat(3, clamp(44px, 9vw, 64px));
+    grid-template-rows: repeat(3, clamp(44px, 9vw, 64px));
+    gap: 3px;
+    position: relative;
+  }
+
+  .dpad-btn {
+    background: rgba(74, 26, 92, 0.75);
+    border: 2px solid #ffcc00;
+    color: #ffcc00;
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(14px, 3vw, 20px);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: all 0.05s;
+    border-radius: 8px;
+    backdrop-filter: blur(4px);
+    touch-action: none;
+  }
+  .dpad-btn.active, .dpad-btn:active {
+    background: #ffcc00;
+    color: #2a0a4a;
+    transform: scale(0.92);
+    box-shadow: 0 0 20px #ffcc00;
+  }
+
+  .dpad-up { grid-column: 2; grid-row: 1; }
+  .dpad-left { grid-column: 1; grid-row: 2; }
+  .dpad-center { grid-column: 2; grid-row: 2; opacity: 0.3; }
+  .dpad-right { grid-column: 3; grid-row: 2; }
+  .dpad-down { grid-column: 2; grid-row: 3; }
+
+  .action-buttons {
+    display: flex;
+    gap: clamp(6px, 1.5vw, 12px);
+    align-items: flex-end;
+  }
+
+  .action-btn {
+    width: clamp(55px, 11vw, 80px);
+    height: clamp(55px, 11vw, 80px);
+    border-radius: 50%;
+    background: rgba(255, 204, 0, 0.9);
+    border: 3px solid #fff;
+    color: #2a0a4a;
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(6px, 1.4vw, 9px);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: all 0.05s;
+    box-shadow: 0 4px 0 #884400;
+    touch-action: none;
+    position: relative;
+    backdrop-filter: blur(4px);
+    line-height: 1.3;
+  }
+  .action-btn.active, .action-btn:active {
+    transform: scale(0.9) translateY(2px);
+    box-shadow: 0 2px 0 #884400;
+  }
+  .action-btn.skill {
+    background: rgba(204, 102, 255, 0.9);
+    color: #fff;
+    box-shadow: 0 4px 0 #440066;
+  }
+  .action-btn.skill:disabled {
+    background: rgba(80, 80, 80, 0.7);
+    color: #666;
+    box-shadow: 0 4px 0 #222;
+  }
+  .action-btn .btn-icon {
+    font-size: clamp(16px, 3.5vw, 24px);
+  }
+  .action-btn .cd-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(14px, 3vw, 20px);
+    color: #ff0066;
+  }
+
+  /* Dialogue Box */
+  .dialogue-box {
+    position: absolute;
+    bottom: clamp(90px, 18vh, 140px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #2a0a4a, #4a1a5c);
+    border: 3px solid #ffcc00;
+    padding: clamp(12px, 2.5vw, 25px) clamp(15px, 3vw, 30px);
+    max-width: 700px;
+    width: calc(100% - 20px);
+    z-index: 100;
+    box-shadow: 0 0 40px #ff0066;
+    animation: popIn 0.3s;
+    border-radius: 8px;
+  }
+  .dialogue-name {
+    font-size: clamp(9px, 2.2vw, 12px);
+    color: #ffcc00;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 0 #000;
+  }
+  .dialogue-text {
+    font-size: clamp(7px, 1.8vw, 9px);
+    color: #fff;
+    line-height: 1.8;
+    margin-bottom: 12px;
+  }
+  .dialogue-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
+
+  /* Back & Fullscreen buttons */
+  .back-btn-game {
+    position: absolute;
+    top: calc(clamp(6px, 1.5vw, 15px) + env(safe-area-inset-top));
+    left: clamp(6px, 1.5vw, 15px);
+    z-index: 60;
+    padding: clamp(6px, 1.5vw, 10px) clamp(10px, 2vw, 15px);
+    font-size: clamp(7px, 1.8vw, 9px);
+    background: linear-gradient(180deg, #ff4466, #cc0033);
+    border: 2px solid #fff;
+    color: #fff;
+    cursor: pointer;
+    border-radius: 4px;
+    font-family: 'Press Start 2P', monospace;
+    box-shadow: 0 3px 0 #660011;
+    min-height: 36px;
+    touch-action: manipulation;
+  }
+  .back-btn-game:active { transform: translateY(2px); box-shadow: 0 1px 0 #660011; }
+
+  .fullscreen-btn {
+    position: absolute;
+    top: calc(clamp(6px, 1.5vw, 15px) + env(safe-area-inset-top));
+    right: clamp(6px, 1.5vw, 15px);
+    z-index: 60;
+    padding: clamp(6px, 1.5vw, 10px);
+    font-size: clamp(12px, 3vw, 16px);
+    background: rgba(74, 26, 92, 0.8);
+    border: 2px solid #ffcc00;
+    color: #ffcc00;
+    cursor: pointer;
+    border-radius: 4px;
+    min-width: 36px;
+    min-height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    touch-action: manipulation;
+  }
+  .fullscreen-btn:active { background: #ffcc00; color: #2a0a4a; }
+
+  .float-text {
+    position: fixed;
+    font-size: clamp(12px, 2.5vw, 16px);
+    font-weight: bold;
+    text-shadow: 2px 2px 0 #000;
+    animation: floatUp 1s forwards;
+    pointer-events: none;
+    z-index: 200;
+  }
+  @keyframes floatUp {
+    0% { transform: translateY(0); opacity: 1; }
+    100% { transform: translateY(-60px); opacity: 0; }
+  }
+
+  /* ====== OVERLAYS / PANELS ====== */
+  .overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.9);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 150;
+    animation: fadeIn 0.3s;
+    padding: 10px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .overlay.active { display: flex; }
+
+  .panel {
+    background: linear-gradient(135deg, #2a0a4a, #4a1a5c);
+    border: 3px solid #ffcc00;
+    padding: clamp(15px, 3vw, 30px);
+    max-width: 700px;
+    width: 100%;
+    max-height: 92vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    box-shadow: 0 0 40px #ff0066;
+    animation: popIn 0.3s;
+    border-radius: 8px;
+  }
+
+  .panel-title {
+    font-size: clamp(11px, 2.5vw, 16px);
+    color: #ffcc00;
+    margin-bottom: 15px;
+    text-align: center;
+    text-shadow: 2px 2px 0 #000;
+  }
+
+  .inventory-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    gap: 8px;
+    margin-bottom: 15px;
+  }
+
+  .item-slot {
+    aspect-ratio: 1;
+    background: #0a0510;
+    border: 2px solid #4a1a5c;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: clamp(6px, 1.5vw, 7px);
+    color: #88ffff;
+    padding: 5px;
+    text-align: center;
+    transition: all 0.15s;
+    border-radius: 6px;
+    touch-action: manipulation;
+  }
+  .item-slot:active { border-color: #ffcc00; transform: scale(0.95); }
+  .item-icon { font-size: clamp(18px, 4vw, 24px); margin-bottom: 4px; }
+  .item-slot.empty { opacity: 0.3; cursor: default; }
+
+  .profile-content { text-align: center; }
+  .profile-avatar {
+    width: clamp(80px, 18vw, 120px);
+    height: clamp(80px, 18vw, 120px);
+    margin: 0 auto 15px;
+    border: 3px solid #ffcc00;
+    background: #0a0510;
+    animation: idle 2s infinite;
+    border-radius: 8px;
+  }
+  .profile-stat {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #4a1a5c;
+    font-size: clamp(7px, 1.8vw, 10px);
+    gap: 10px;
+  }
+  .profile-stat span:last-child { color: #ffcc00; text-align: right; }
+
+  .mode-select { display: grid; gap: 10px; }
+  .mode-card {
+    background: #0a0510;
+    border: 2px solid #4a1a5c;
+    padding: clamp(12px, 2.5vw, 20px);
+    cursor: pointer;
+    transition: all 0.15s;
+    border-radius: 6px;
+    touch-action: manipulation;
+  }
+  .mode-card:active { border-color: #ffcc00; transform: scale(0.98); box-shadow: 0 0 20px #ffcc00; }
+  .mode-title { font-size: clamp(9px, 2.2vw, 12px); color: #ffcc00; margin-bottom: 6px; }
+  .mode-desc { font-size: clamp(6px, 1.6vw, 8px); color: #88ffff; line-height: 1.6; }
+
+  .levelup-notif {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    background: linear-gradient(135deg, #ffcc00, #ff8800);
+    border: 3px solid #fff;
+    padding: clamp(20px, 4vw, 30px) clamp(25px, 5vw, 50px);
+    text-align: center;
+    z-index: 300;
+    animation: levelupIn 0.5s;
+    box-shadow: 0 0 60px #ffcc00;
+    max-width: 90vw;
+    border-radius: 8px;
+  }
+  @keyframes levelupIn {
+    0% { transform: translate(-50%,-50%) scale(0) rotate(-180deg); }
+    100% { transform: translate(-50%,-50%) scale(1) rotate(0); }
+  }
+  .levelup-text {
+    font-size: clamp(14px, 3.5vw, 24px);
+    color: #2a0a4a;
+    text-shadow: 2px 2px 0 #fff;
+    line-height: 1.4;
+  }
+  .levelup-sub { font-size: clamp(8px, 2vw, 12px); color: #2a0a4a; margin-top: 12px; line-height: 1.5; }
+
+  .toast {
+    position: fixed;
+    bottom: calc(20px + env(safe-area-inset-bottom));
+    left: 50%;
+    transform: translateX(-50%);
+    background: #2a0a4a;
+    border: 3px solid #ffcc00;
+    padding: clamp(10px, 2vw, 15px) clamp(15px, 3vw, 25px);
+    font-size: clamp(7px, 1.8vw, 10px);
+    color: #ffcc00;
+    z-index: 400;
+    animation: toastIn 0.3s;
+    box-shadow: 0 0 20px #ffcc00;
+    max-width: 90vw;
+    text-align: center;
+    border-radius: 6px;
+    line-height: 1.5;
+  }
+  @keyframes toastIn {
+    from { transform: translateX(-50%) translateY(100px); opacity: 0; }
+    to { transform: translateX(-50%) translateY(0); opacity: 1; }
+  }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: #0a0510; }
+  ::-webkit-scrollbar-thumb { background: #4a1a5c; border: 1px solid #ffcc00; border-radius: 3px; }
+
+  /* Landscape-specific adjustments */
+  @media (orientation: landscape) and (max-height: 500px) {
+    .hud { padding: 4px 8px; padding-top: calc(4px + env(safe-area-inset-top)); }
+    .hearts { font-size: 14px; }
+    .hud-bar { width: 100px; height: 10px; }
+    .score { font-size: 10px; }
+    .dpad { grid-template-columns: repeat(3, 42px); grid-template-rows: repeat(3, 42px); }
+    .action-btn { width: 48px; height: 48px; font-size: 6px; }
+    .action-btn .btn-icon { font-size: 14px; }
+    .quest-tracker { top: 45px; padding: 5px 8px; min-width: 120px; }
+    .controls { padding: 4px 8px; padding-bottom: calc(4px + env(safe-area-inset-bottom)); }
+    .back-btn-game { padding: 5px 8px; font-size: 6px; min-height: 30px; }
+    .fullscreen-btn { padding: 5px; min-width: 30px; min-height: 30px; font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ====== FULLSCREEN + LANDSCAPE OVERLAY (WAJIB TAP) ====== -->
+<div class="fs-overlay" id="fsOverlay">
+  <div class="logo">UNDERGROUND<br>LEGENDS</div>
+  <div class="tap-icon">👆</div>
+  <div class="tap-text">TAP UNTUK MULAI</div>
+  <div class="sub-text">
+    Game akan masuk ke mode<br>
+    <b style="color:#ffcc00;">FULLSCREEN + LANDSCAPE</b><br>
+    untuk pengalaman terbaik
+  </div>
+  <div class="features">
+    <div class="feature">📱 Mobile Friendly</div>
+    <div class="feature">🎮 Touch Controls</div>
+    <div class="feature">🖥️ Fullscreen</div>
+  </div>
+</div>
+
+<!-- ====== ROTATE OVERLAY (jika tidak bisa lock) ====== -->
+<div class="rotate-overlay" id="rotateOverlay">
+  <div class="rotate-icon">📱</div>
+  <div class="rotate-title">PUTAR PERANGKAT</div>
+  <div class="rotate-text">
+    Untuk pengalaman terbaik,<br>
+    putar perangkat ke <b style="color:#ffcc00;">MODE LANDSCAPE</b>
+  </div>
+  <button class="rotate-btn" id="rotateBtn">SAYA SUDAH PUTAR ▶</button>
+  <div class="rotate-sub">Atau lanjutkan di mode portrait</div>
+</div>
+
+<div id="game">
+
+  <div class="bg-cave"></div>
+
+  <!-- ====== DEMO SCREEN ====== -->
+  <div class="screen active" id="demoScreen">
+    <div class="demo-content">
+      <div class="demo-hero">
+        <svg viewBox="0 0 16 16" width="100%" height="100%">
+          <rect x="6" y="2" width="4" height="3" fill="#ffcc00"/>
+          <rect x="5" y="5" width="6" height="4" fill="#ffcc00"/>
+          <rect x="6" y="6" width="1" height="1" fill="#000"/>
+          <rect x="9" y="6" width="1" height="1" fill="#000"/>
+          <rect x="5" y="9" width="6" height="4" fill="#88ffff"/>
+          <rect x="4" y="10" width="1" height="2" fill="#88ffff"/>
+          <rect x="11" y="10" width="1" height="2" fill="#88ffff"/>
+          <rect x="5" y="13" width="2" height="2" fill="#ff0066"/>
+          <rect x="9" y="13" width="2" height="2" fill="#ff0066"/>
+        </svg>
+      </div>
+      <div class="demo-title">UNDERGROUND LEGENDS</div>
+      <div class="demo-sub">
+        ⛏️ Dunia bawah tanah menantimu ⛏️<br>
+        Jelajahi kota, selesaikan quest,<br>
+        kalahkan monster, jadilah LEGENDA!
+      </div>
+      <div class="demo-timer">Demo: <span id="demoTimer">5</span>s</div>
+    </div>
+  </div>
+
+  <!-- ====== CODE SCREEN ====== -->
+  <div class="screen" id="codeScreen">
+    <div class="modal">
+      <div class="modal-title">🔐 MASUKKAN KODE</div>
+      <p style="font-size:clamp(7px,1.8vw,9px);color:#88ffff;line-height:1.8;margin-bottom:15px;">
+        Kode dari Lab Komputer
+      </p>
+      <input type="text" class="input-field" id="codeInput" placeholder="XXXXXX" maxlength="8" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false">
+      <div class="error-msg" id="codeError" style="display:none;"></div>
+      <div><button class="btn btn-purple" onclick="verifyCode()">VERIFIKASI</button></div>
+      <div class="code-hint">💡 Hint: <b style="color:#ffcc00">LAB2024</b></div>
+    </div>
+  </div>
+
+  <!-- ====== REGISTER SCREEN ====== -->
+  <div class="screen" id="registerScreen">
+    <div class="register-container">
+      <div class="progress-bar">
+        <div class="progress-step active" id="step1">1</div>
+        <div class="progress-step" id="step2">2</div>
+        <div class="progress-step" id="step3">3</div>
+      </div>
+      <div id="registerContent"></div>
+    </div>
+  </div>
+
+  <!-- ====== HOME SCREEN ====== -->
+  <div class="screen" id="homeScreen">
+    <div class="home-container">
+      <div class="top-bar">
+        <div class="player-info">
+          <div class="player-avatar-small" id="homeAvatar"></div>
+          <div>
+            <div class="player-name" id="homeName">PLAYER</div>
+            <div class="player-level" id="homeLevel">LV.1 | BRONZE</div>
+          </div>
+        </div>
+        <div class="stats">
+          <div class="stat"><div class="stat-label">POIN</div><div class="stat-value" id="homePoints">0</div></div>
+          <div class="stat"><div class="stat-label">MONEY</div><div class="stat-value" id="homeMoney">0</div></div>
+        </div>
+      </div>
+
+      <div class="main-area">
+        <div class="hero-display">
+          <div class="hero-glow"></div>
+          <div id="homeHero"></div>
+        </div>
+      </div>
+
+      <div class="menu-panel">
+        <button class="menu-btn primary" onclick="openModeSelect()">▶ START</button>
+        <button class="menu-btn" onclick="openPanel('inventoryPanel')">🎒 BAG</button>
+        <button class="menu-btn" onclick="openPanel('profilePanel')">👤 PROFIL</button>
+        <button class="menu-btn" onclick="openPanel('shopPanel')">🛒 SHOP</button>
+        <button class="menu-btn" onclick="openPanel('upgradePanel')">⚡ SKILL</button>
+        <button class="menu-btn" onclick="openPanel('rankPanel')">🏆 RANK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== GAME SCREEN ====== -->
+  <div class="screen" id="gameScreen">
+    <div class="game-viewport" id="gameViewport">
+      <div class="world-camera" id="worldCamera">
+        <div class="layer-far" id="layerFar"></div>
+        <div class="layer-mid" id="layerMid"></div>
+        <div class="layer-near" id="layerNear"></div>
+        <div class="ground" id="groundEl"></div>
+        <div id="platformsContainer"></div>
+        <div id="buildingsContainer"></div>
+        <div id="monstersContainer"></div>
+        <div id="npcsContainer"></div>
+        <div class="player-sprite" id="playerSprite"></div>
+      </div>
+    </div>
+
+    <button class="back-btn-game" onclick="exitGame()">◀ EXIT</button>
+    <button class="fullscreen-btn" id="fullscreenBtn" onclick="toggleFullscreen()">⛶</button>
+
+    <div class="hud">
+      <div class="hud-left">
+        <div class="hearts" id="hearts"></div>
+        <div class="hud-bar">
+          <div class="hud-bar-fill" id="expBar" style="width:0%"></div>
+          <div class="hud-bar-label" id="expLabel">EXP 0/10</div>
+        </div>
+      </div>
+      <div class="hud-right">
+        <div class="score">SCORE: <span id="gameScore">0</span></div>
+        <div class="level-text" id="gameLevel">LV.1</div>
+      </div>
+    </div>
+
+    <div class="quest-tracker" id="questTracker">
+      <div class="quest-tracker-title">📋 QUEST</div>
+      <div id="questList"></div>
+    </div>
+
+    <div class="controls">
+      <div class="dpad">
+        <button class="dpad-btn dpad-up" id="btnUp">▲</button>
+        <button class="dpad-btn dpad-left" id="btnLeft">◀</button>
+        <div class="dpad-btn dpad-center">●</div>
+        <button class="dpad-btn dpad-right" id="btnRight">▶</button>
+        <button class="dpad-btn dpad-down" id="btnDown">▼</button>
+      </div>
+      <div class="action-buttons">
+        <button class="action-btn skill" id="btnSkill">
+          <span class="btn-icon">⚡</span>
+          <span>SKILL</span>
+          <span class="cd-overlay" id="skillCdOverlay" style="display:none;"></span>
+        </button>
+        <button class="action-btn" id="btnAttack">
+          <span class="btn-icon">⚔</span>
+          <span>HIT</span>
+        </button>
+        <button class="action-btn" id="btnJump">
+          <span class="btn-icon">⬆</span>
+          <span>JUMP</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="dialogue-box" id="dialogueBox" style="display:none;"></div>
+  </div>
+
+  <!-- ====== PANELS ====== -->
+  <div class="overlay" id="inventoryPanel">
+    <div class="panel">
+      <div class="panel-title">🎒 INVENTORY</div>
+      <div class="inventory-grid" id="inventoryGrid"></div>
+      <div style="text-align:center;"><button class="btn btn-purple" onclick="closeAllPanels()">TUTUP</button></div>
+    </div>
+  </div>
+
+  <div class="overlay" id="profilePanel">
+    <div class="panel">
+      <div class="panel-title">👤 PROFILE</div>
+      <div class="profile-content">
+        <div class="profile-avatar" id="profileAvatar"></div>
+        <div class="profile-stat"><span>Nama</span><span id="profName">-</span></div>
+        <div class="profile-stat"><span>Karakter</span><span id="profChar">-</span></div>
+        <div class="profile-stat"><span>Level</span><span id="profLevel">-</span></div>
+        <div class="profile-stat"><span>Rank</span><span id="profRank">-</span></div>
+        <div class="profile-stat"><span>Total Poin</span><span id="profPoints">-</span></div>
+        <div class="profile-stat"><span>Money</span><span id="profMoney">-</span></div>
+        <div class="profile-stat"><span>Monster</span><span id="profKills">-</span></div>
+        <div class="profile-stat"><span>Quest</span><span id="profQuests">-</span></div>
+        <div class="profile-stat"><span>Skill Lv</span><span id="profSkill">-</span></div>
+      </div>
+      <div style="text-align:center;margin-top:15px;"><button class="btn btn-purple" onclick="closeAllPanels()">TUTUP</button></div>
+    </div>
+  </div>
+
+  <div class="overlay" id="shopPanel">
+    <div class="panel">
+      <div class="panel-title">🛒 SHOP</div>
+      <div style="text-align:center;font-size:clamp(8px,1.8vw,10px);color:#88ffff;margin-bottom:15px;">
+        Money: <span id="shopMoney" style="color:#ffcc00">0</span> 💰
+      </div>
+      <div id="shopItems" style="display:grid;gap:8px;"></div>
+      <div style="text-align:center;margin-top:15px;"><button class="btn btn-purple" onclick="closeAllPanels()">TUTUP</button></div>
+    </div>
+  </div>
+
+  <div class="overlay" id="upgradePanel">
+    <div class="panel">
+      <div class="panel-title">⚡ UPGRADE SKILL</div>
+      <div style="text-align:center;font-size:clamp(8px,1.8vw,10px);color:#88ffff;margin-bottom:15px;">
+        Poin: <span id="upgradePoints" style="color:#ffcc00">0</span> ⭐
+      </div>
+      <div id="upgradeItems" style="display:grid;gap:8px;"></div>
+      <div style="text-align:center;margin-top:15px;"><button class="btn btn-purple" onclick="closeAllPanels()">TUTUP</button></div>
+    </div>
+  </div>
+
+  <div class="overlay" id="rankPanel">
+    <div class="panel">
+      <div class="panel-title">🏆 LEADERBOARD</div>
+      <div id="rankList"></div>
+      <div style="text-align:center;margin-top:15px;"><button class="btn btn-purple" onclick="closeAllPanels()">TUTUP</button></div>
+    </div>
+  </div>
+
+  <div class="overlay" id="modePanel">
+    <div class="panel">
+      <div class="panel-title">🎮 PILIH MODE</div>
+      <div class="mode-select">
+        <div class="mode-card" onclick="startGame('training')">
+          <div class="mode-title">🌱 TRAINING</div>
+          <div class="mode-desc">Latihan santai. Monster lemah, EXP cepat.</div>
+        </div>
+        <div class="mode-card" onclick="startGame('classic')">
+          <div class="mode-title">⚔️ CLASSIC</div>
+          <div class="mode-desc">Mode normal. Monster seimbang, poin besar.</div>
+        </div>
+        <div class="mode-card" onclick="startGame('hardcore')">
+          <div class="mode-title">💀 HARDCORE</div>
+          <div class="mode-desc">Monster kuat, HP 3. Hanya untuk yang berani!</div>
+        </div>
+      </div>
+      <div style="text-align:center;margin-top:15px;"><button class="btn btn-purple" onclick="closeAllPanels()">KEMBALI</button></div>
+    </div>
+  </div>
+
+  <div class="welcome-popup" id="welcomePopup" style="display:none;">
+    <div class="welcome-box">
+      <div class="welcome-text">SELAMAT DATANG!</div>
+      <div style="font-size:clamp(10px,2.5vw,12px);color:#88ffff;margin-top:20px;" id="welcomeName">PLAYER</div>
+      <div style="font-size:clamp(7px,1.8vw,9px);color:#aaa;margin-top:15px;line-height:1.8;">
+        Jelajahi kota bawah tanah,<br>
+        selesaikan quest, kalahkan monster,<br>
+        dan raih peringkat LEGENDA!
+      </div>
+      <button class="btn btn-purple" style="margin-top:20px;" onclick="closeWelcome()">MULAI</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ============================================================
+   FULLSCREEN + LANDSCAPE MANAGER
+============================================================ */
+const fsOverlay = document.getElementById('fsOverlay');
+const rotateOverlay = document.getElementById('rotateOverlay');
+let fsInitialized = false;
+
+async function requestFullscreenLandscape() {
+  const el = document.documentElement;
+  
+  // 1. Coba fullscreen
+  try {
+    if (el.requestFullscreen) {
+      await el.requestFullscreen({ navigationUI: 'hide' });
+    } else if (el.webkitRequestFullscreen) {
+      await el.webkitRequestFullscreen();
+    } else if (el.mozRequestFullScreen) {
+      await el.mozRequestFullScreen();
+    } else if (el.msRequestFullscreen) {
+      await el.msRequestFullscreen();
+    }
+  } catch (err) {
+    console.log('Fullscreen error:', err);
+  }
+  
+  // 2. Coba lock orientation ke landscape
+  try {
+    if (screen.orientation && screen.orientation.lock) {
+      await screen.orientation.lock('landscape');
+    } else if (screen.lockOrientation) {
+      await screen.lockOrientation('landscape');
+    } else if (screen.mozLockOrientation) {
+      await screen.mozLockOrientation('landscape');
+    } else if (screen.msLockOrientation) {
+      await screen.msLockOrientation('landscape');
+    }
+  } catch (err) {
+    console.log('Orientation lock error:', err);
+    // Fallback: tampilkan overlay rotate
+    checkAndShowRotate();
+  }
+  
+  // 3. Cek apakah benar-benar landscape
+  setTimeout(() => {
+    checkAndShowRotate();
+  }, 500);
+}
+
+function checkAndShowRotate() {
+  const isPortrait = window.innerHeight > window.innerWidth;
+  const isSmallDevice = window.innerWidth < 900;
+  
+  if (isPortrait && isSmallDevice) {
+    rotateOverlay.classList.add('show');
+    rotateOverlay.classList.remove('hide');
+  } else {
+    rotateOverlay.classList.add('hide');
+    setTimeout(() => rotateOverlay.classList.remove('show'), 300);
+  }
+}
+
+// Tap overlay → fullscreen + landscape
+function initFullscreenLandscape() {
+  if (fsInitialized) return;
+  fsInitialized = true;
+  
+  fsOverlay.classList.add('hide');
+  setTimeout(() => fsOverlay.style.display = 'none', 400);
+  
+  requestFullscreenLandscape();
+  
+  // Start demo timer setelah overlay ditutup
+  startDemo();
+}
+
+fsOverlay.addEventListener('click', initFullscreenLandscape);
+fsOverlay.addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  initFullscreenLandscape();
+}, { passive: false });
+
+// Tombol "Saya sudah putar" di rotate overlay
+document.getElementById('rotateBtn').addEventListener('click', () => {
+  checkAndShowRotate();
+});
+document.getElementById('rotateBtn').addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  checkAndShowRotate();
+}, { passive: false });
+
+// Re-check saat orientasi berubah
+window.addEventListener('resize', checkAndShowRotate);
+window.addEventListener('orientationchange', () => {
+  setTimeout(() => {
+    checkAndShowRotate();
+    if (state.session.running) updateCamera();
+  }, 300);
+});
+
+// Toggle fullscreen button
+function toggleFullscreen() {
+  if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+    requestFullscreenLandscape();
+  } else {
+    if (document.exitFullscreen) document.exitFullscreen();
+    else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+  }
+}
+
+/* ============================================================
+   DATA
+============================================================ */
+const CHARACTERS = [
+  { id:'knight', name:'KNIGHT', role:'Tank', color:'#88ffff', accent:'#0066ff',
+    desc:'Ksatria baja dengan pertahanan tinggi.', skill:'Shield Bash',
+    skillDesc:'Damage 2x + invulnerable 2s', skillDamage:2.0, cooldown:6, bonusHP:1, emoji:'🛡️' },
+  { id:'mage', name:'MAGE', role:'Mage', color:'#cc66ff', accent:'#8800cc',
+    desc:'Penyihir elemen dengan damage sihir besar.', skill:'Arcane Blast',
+    skillDesc:'Damage 3x + efek ledakan', skillDamage:3.0, cooldown:8, bonusHP:0, emoji:'🔮' },
+  { id:'archer', name:'ARCHER', role:'Ranger', color:'#88ff88', accent:'#00aa00',
+    desc:'Penembak jitu dengan serangan cepat.', skill:'Multi Shot',
+    skillDesc:'Damage 2.5x + cooldown rendah', skillDamage:2.5, cooldown:4, bonusHP:0, emoji:'🏹' },
+  { id:'rogue', name:'ROGUE', role:'Assassin', color:'#ff8888', accent:'#cc0033',
+    desc:'Pembunuh bayangan dengan critical damage.', skill:'Shadow Strike',
+    skillDesc:'Damage 4x + critical', skillDamage:4.0, cooldown:7, bonusHP:0, emoji:'🗡️' },
+  { id:'priest', name:'PRIEST', role:'Support', color:'#ffff88', accent:'#ccaa00',
+    desc:'Pendeta suci dengan penyembuhan.', skill:'Holy Heal',
+    skillDesc:'Heal 1 HP + damage 1.5x', skillDamage:1.5, cooldown:10, bonusHP:1, emoji:'✨' },
+  { id:'berserker', name:'BERSERKER', role:'Bruiser', color:'#ffaa66', accent:'#cc4400',
+    desc:'Petarung gila dengan damage besar.', skill:'Rage Mode',
+    skillDesc:'Damage 3x + buff attack', skillDamage:3.0, cooldown:9, bonusHP:1, emoji:'⚔️' }
+];
+
+const MONSTERS = [
+  { name:'Slime', color:'#88ff88', emoji:'🟢', hp:3, damage:1, points:5, minLevel:1 },
+  { name:'Bat', color:'#cc88ff', emoji:'🦇', hp:4, damage:1, points:8, minLevel:1 },
+  { name:'Goblin', color:'#88ff88', emoji:'👺', hp:5, damage:1, points:12, minLevel:2 },
+  { name:'Skeleton', color:'#dddddd', emoji:'💀', hp:7, damage:2, points:18, minLevel:3 },
+  { name:'Orc', color:'#88cc44', emoji:'👹', hp:10, damage:2, points:25, minLevel:4 },
+  { name:'Wraith', color:'#8888ff', emoji:'👻', hp:13, damage:2, points:35, minLevel:5 },
+  { name:'Golem', color:'#aa8866', emoji:'🗿', hp:18, damage:3, points:50, minLevel:6 },
+  { name:'Dragon', color:'#ff4444', emoji:'🐉', hp:25, damage:3, points:80, minLevel:8 },
+  { name:'Demon Lord', color:'#ff0066', emoji:'😈', hp:35, damage:4, points:120, minLevel:10 }
+];
+
+const SHOP_ITEMS = [
+  { id:'medkit', name:'Medkit', emoji:'❤️', price:50, desc:'Pulihkan 1 HP' },
+  { id:'bigmedkit', name:'Big Medkit', emoji:'💖', price:120, desc:'Pulihkan 2 HP' },
+  { id:'shieldpotion', name:'Shield', emoji:'🛡️', price:80, desc:'Kebal 1x' },
+  { id:'energy', name:'Energy', emoji:'⚡', price:100, desc:'Reset cooldown' }
+];
+
+const QUESTS = [
+  { id:'q1', title:'Basmi Slime', desc:'Kalahkan 3 Slime', target:3, type:'kill', reward:{ points:30, money:20 } },
+  { id:'q2', title:'Bantu Pedagang', desc:'Kalahkan 5 monster', target:5, type:'killAny', reward:{ points:50, money:40 } },
+  { id:'q3', title:'Eksplorasi', desc:'Capai skor 200', target:200, type:'score', reward:{ points:80, money:60 } },
+  { id:'q4', title:'Bersihkan Kota', desc:'Kalahkan 10 monster', target:10, type:'killAny', reward:{ points:120, money:100 } },
+  { id:'q5', title:'Bunuh Bos', desc:'Kalahkan 1 Golem+', target:1, type:'boss', reward:{ points:200, money:200 } }
+];
+
+const WORLD = {
+  width: 4000, height: 600, groundY: 520,
+  platforms: [
+    { x: 300, y: 400, w: 120 }, { x: 550, y: 320, w: 100 },
+    { x: 800, y: 420, w: 150 }, { x: 1100, y: 350, w: 100 },
+    { x: 1350, y: 280, w: 140 }, { x: 1650, y: 400, w: 120 },
+    { x: 1900, y: 320, w: 100 }, { x: 2150, y: 420, w: 160 },
+    { x: 2450, y: 350, w: 120 }, { x: 2750, y: 280, w: 140 },
+    { x: 3050, y: 400, w: 120 }, { x: 3350, y: 320, w: 100 },
+    { x: 3600, y: 420, w: 150 }
+  ],
+  buildings: [
+    { x: 100, w: 150, h: 200 }, { x: 600, w: 180, h: 250 },
+    { x: 1200, w: 200, h: 220 }, { x: 1800, w: 160, h: 280 },
+    { x: 2400, w: 220, h: 240 }, { x: 3000, w: 180, h: 260 },
+    { x: 3500, w: 200, h: 220 }
+  ],
+  lamps: [250, 700, 1150, 1600, 2050, 2500, 2950, 3400, 3800]
+};
+
+const state = {
+  code: '',
+  player: { name:'', character:null, level:1, points:0, exp:0, expNeeded:10, money:0, kills:0, questsCompleted:0, skillLevel:1 },
+  inventory: [],
+  activeQuests: [],
+  completedQuests: [],
+  session: { mode:'classic', hearts:3, maxHearts:3, score:0, cooldowns:{ skill:0 }, invulnerable:false, running:false },
+  codeVerified: false, step: 1
+};
+
+const VALID_CODES = ['LAB2024', 'LAB2025', 'PIXEL001', 'RPG2024', 'LAB123', 'DEMO123'];
+
+/* ============================================================
+   AVATAR
+============================================================ */
+function charSVG(char, size = 64, flip = false) {
+  const c = char.color, a = char.accent;
+  const flipStyle = flip ? 'transform:scaleX(-1);transform-origin:center;' : '';
+  return `<svg viewBox="0 0 16 16" width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg" style="${flipStyle}">
+    <rect x="6" y="2" width="4" height="2" fill="${a}"/>
+    <rect x="5" y="4" width="6" height="4" fill="${c}"/>
+    <rect x="6" y="5" width="1" height="1" fill="#000"/>
+    <rect x="9" y="5" width="1" height="1" fill="#000"/>
+    <rect x="7" y="7" width="2" height="1" fill="#fff"/>
+    <rect x="5" y="8" width="6" height="4" fill="${a}"/>
+    <rect x="4" y="9" width="1" height="2" fill="${c}"/>
+    <rect x="11" y="9" width="1" height="2" fill="${c}"/>
+    <rect x="5" y="12" width="2" height="2" fill="#333"/>
+    <rect x="9" y="12" width="2" height="2" fill="#333"/>
+    <rect x="6" y="14" width="4" height="1" fill="${a}"/>
+  </svg>`;
+}
+function monsterSVG(monster, size = 56) {
+  return `<svg viewBox="0 0 16 16" width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="8" cy="8" r="6" fill="${monster.color}"/>
+    <rect x="5" y="6" width="2" height="2" fill="#000"/>
+    <rect x="9" y="6" width="2" height="2" fill="#000"/>
+    <rect x="6" y="10" width="4" height="1" fill="#000"/>
+    <rect x="4" y="3" width="1" height="3" fill="${monster.color}"/>
+    <rect x="11" y="3" width="1" height="3" fill="${monster.color}"/>
+    <text x="8" y="9" font-size="4" text-anchor="middle" fill="#fff">${monster.emoji}</text>
+  </svg>`;
+}
+function npcSVG(color = '#88ffff', emoji = '🧙') {
+  return `<svg viewBox="0 0 16 16" width="48" height="64" xmlns="http://www.w3.org/2000/svg">
+    <rect x="6" y="2" width="4" height="2" fill="#333"/>
+    <rect x="5" y="4" width="6" height="4" fill="${color}"/>
+    <rect x="6" y="5" width="1" height="1" fill="#000"/>
+    <rect x="9" y="5" width="1" height="1" fill="#000"/>
+    <rect x="5" y="8" width="6" height="4" fill="#664400"/>
+    <rect x="4" y="9" width="1" height="2" fill="${color}"/>
+    <rect x="11" y="9" width="1" height="2" fill="${color}"/>
+    <rect x="5" y="12" width="2" height="2" fill="#333"/>
+    <rect x="9" y="12" width="2" height="2" fill="#333"/>
+    <text x="8" y="7" font-size="3" text-anchor="middle" fill="#fff">${emoji}</text>
+  </svg>`;
+}
+
+/* ============================================================
+   SCREEN MANAGER
+============================================================ */
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+/* ============================================================
+   DEMO TIMER (dimulai setelah tap overlay)
+============================================================ */
+let demoTimer = 5;
+let demoInterval = null;
+
+function startDemo() {
+  const demoTimerEl = document.getElementById('demoTimer');
+  if (demoInterval) clearInterval(demoInterval);
+  demoInterval = setInterval(() => {
+    demoTimer--;
+    if (demoTimerEl) demoTimerEl.textContent = demoTimer;
+    if (demoTimer <= 0) {
+      clearInterval(demoInterval);
+      showScreen('codeScreen');
+    }
+  }, 1000);
+}
+
+/* ============================================================
+   CODE VERIFICATION
+============================================================ */
+function verifyCode() {
+  const input = document.getElementById('codeInput').value.trim().toUpperCase();
+  const errEl = document.getElementById('codeError');
+  if (VALID_CODES.includes(input)) {
+    state.code = input;
+    state.codeVerified = true;
+    errEl.style.display = 'none';
+    showToast('✅ Kode valid!');
+    setTimeout(() => { showScreen('registerScreen'); state.step = 1; renderRegister(); }, 600);
+  } else {
+    errEl.textContent = '❌ Kode salah! Cek Lab Komputer.';
+    errEl.style.display = 'block';
+    document.getElementById('codeInput').style.borderColor = '#ff4466';
+    setTimeout(() => { document.getElementById('codeInput').style.borderColor = '#88ffff'; }, 1000);
+  }
+}
+document.getElementById('codeInput').addEventListener('keypress', e => { if (e.key === 'Enter') verifyCode(); });
+
+/* ============================================================
+   REGISTER
+============================================================ */
+function renderRegister() {
+  const container = document.getElementById('registerContent');
+  ['step1','step2','step3'].forEach((s,i) => {
+    const el = document.getElementById(s);
+    el.classList.remove('active','done');
+    if (i + 1 < state.step) el.classList.add('done');
+    else if (i + 1 === state.step) el.classList.add('active');
+  });
+
+  if (state.step === 1) {
+    container.innerHTML = `
+      <div class="step-title">📝 MASUKKAN NAMA</div>
+      <div style="text-align:center;">
+        <input type="text" class="input-field" id="nameInput" placeholder="NAMA KAMU" maxlength="12" value="${state.player.name || ''}" autocomplete="off" autocorrect="off" spellcheck="false">
+        <p style="font-size:clamp(7px,1.6vw,8px);color:#88ffff;margin-top:10px;">Maks 12 karakter</p>
+        <button class="btn" onclick="submitName()" style="margin-top:15px;">LANJUT ▶</button>
+      </div>`;
+    setTimeout(() => document.getElementById('nameInput')?.focus(), 300);
+    document.getElementById('nameInput')?.addEventListener('keypress', e => { if (e.key === 'Enter') submitName(); });
+  } else if (state.step === 2) {
+    container.innerHTML = `
+      <div class="step-title">⚔️ PILIH KARAKTER</div>
+      <div class="char-grid">
+        ${CHARACTERS.map(c => `
+          <div class="char-card" data-id="${c.id}" onclick="selectChar('${c.id}')">
+            <div class="char-avatar">${charSVG(c, 64)}</div>
+            <div class="char-name">${c.emoji} ${c.name}</div>
+            <div class="char-role">${c.role}</div>
+            <div class="char-desc">${c.desc}</div>
+            <div class="char-skill">⚡ ${c.skill}<br><span style="color:#aaa">${c.skillDesc}</span></div>
+          </div>`).join('')}
+      </div>
+      <div style="text-align:center;"><button class="btn btn-purple" onclick="state.step=1;renderRegister()">◀ KEMBALI</button></div>`;
+  } else if (state.step === 3) {
+    const c = state.player.character;
+    container.innerHTML = `
+      <div class="step-title">✅ KONFIRMASI</div>
+      <div style="text-align:center;">
+        <div style="width:clamp(80px,15vw,100px);height:clamp(80px,15vw,100px);margin:0 auto 15px;">${charSVG(c, 100)}</div>
+        <div style="font-size:clamp(11px,2.5vw,14px);color:#ffcc00;margin-bottom:10px;">${state.player.name}</div>
+        <div style="font-size:clamp(8px,2vw,10px);color:#88ffff;margin-bottom:20px;">${c.emoji} ${c.name} - ${c.role}</div>
+        <div style="font-size:clamp(7px,1.8vw,9px);color:#aaa;line-height:2;text-align:left;max-width:400px;margin:0 auto;">
+          <div>⚡ Skill: <span style="color:#ffcc00">${c.skill}</span></div>
+          <div>📝 ${c.skillDesc}</div>
+          <div>❤️ Bonus HP: +${c.bonusHP}</div>
+          <div>⏱️ Cooldown: ${c.cooldown}s</div>
+        </div>
+        <button class="btn" onclick="finishRegister()" style="margin-top:20px;">MULAI ▶</button>
+        <button class="btn btn-purple" onclick="state.step=2;renderRegister()">◀ KEMBALI</button>
+      </div>`;
+  }
+}
+
+function submitName() {
+  const name = document.getElementById('nameInput').value.trim();
+  if (name.length < 2) { showToast('❌ Nama min 2 karakter!'); return; }
+  state.player.name = name.toUpperCase();
+  state.step = 2;
+  renderRegister();
+}
+function selectChar(id) {
+  const c = CHARACTERS.find(x => x.id === id);
+  state.player.character = c;
+  document.querySelectorAll('.char-card').forEach(el => el.classList.remove('selected'));
+  document.querySelector(`[data-id="${id}"]`).classList.add('selected');
+  setTimeout(() => { state.step = 3; renderRegister(); }, 400);
+}
+function finishRegister() {
+  state.inventory = [{ id:'medkit', name:'Medkit', emoji:'❤️', qty:2 }];
+  state.session.maxHearts = 3 + (state.player.character.bonusHP || 0);
+  state.session.hearts = state.session.maxHearts;
+  state.activeQuests = [QUESTS[0]];
+  showScreen('homeScreen');
+  renderHome();
+  document.getElementById('welcomePopup').style.display = 'flex';
+  document.getElementById('welcomeName').textContent = `Halo, ${state.player.name}!`;
+}
+function closeWelcome() {
+  document.getElementById('welcomePopup').style.display = 'none';
+  showToast('💡 Gunakan D-pad & tombol aksi!');
+}
+
+/* ============================================================
+   HOME
+============================================================ */
+function renderHome() {
+  const p = state.player, c = p.character;
+  document.getElementById('homeName').textContent = p.name;
+  document.getElementById('homeLevel').textContent = `LV.${p.level} | ${getRank(p.level)}`;
+  document.getElementById('homePoints').textContent = p.points;
+  document.getElementById('homeMoney').textContent = p.money;
+  document.getElementById('homeAvatar').innerHTML = charSVG(c, 48);
+  document.getElementById('homeHero').innerHTML = charSVG(c, 200);
+}
+function getRank(level) {
+  if (level >= 20) return 'LEGENDA';
+  if (level >= 15) return 'MASTER';
+  if (level >= 10) return 'DIAMOND';
+  if (level >= 7) return 'GOLD';
+  if (level >= 4) return 'SILVER';
+  return 'BRONZE';
+}
+function openModeSelect() {
+  closeAllPanels();
+  document.getElementById('modePanel').classList.add('active');
+}
+
+/* ============================================================
+   GAME ENGINE
+============================================================ */
+const player = {
+  x: 200, y: 400, vx: 0, vy: 0,
+  width: 48, height: 64,
+  onGround: false, facing: 1,
+  attacking: false, attackTimer: 0, hurtTimer: 0
+};
+
+const keys = { left:false, right:false, up:false, down:false };
+const GRAVITY = 0.8;
+const MOVE_SPEED = 4;
+const JUMP_FORCE = -14;
+let cameraX = 0;
+let worldMonsters = [];
+let worldNPCs = [];
+let dialogueOpen = false;
+
+function startGame(mode) {
+  closeAllPanels();
+  const s = state.session;
+  s.mode = mode;
+  s.maxHearts = 3 + (state.player.character.bonusHP || 0);
+  if (mode === 'hardcore') s.maxHearts = 3;
+  s.hearts = s.maxHearts;
+  s.score = 0;
+  s.cooldowns = { skill: 0 };
+  s.invulnerable = false;
+  s.running = true;
+
+  player.x = 200; player.y = 400;
+  player.vx = 0; player.vy = 0;
+  player.onGround = false; player.facing = 1;
+  player.attacking = false; player.attackTimer = 0; player.hurtTimer = 0;
+  cameraX = 0;
+
+  buildWorld();
+  document.getElementById('playerSprite').innerHTML = charSVG(state.player.character, 48);
+
+  showScreen('gameScreen');
+  renderHUD();
+  renderQuestTracker();
+  updateSkillButton();
+
+  if (window.gameLoopId) cancelAnimationFrame(window.gameLoopId);
+  lastTime = performance.now();
+  window.gameLoopId = requestAnimationFrame(gameLoop);
+
+  // Pastikan fullscreen + landscape
+  requestFullscreenLandscape();
+
+  showToast(`🎮 Mode: ${mode.toUpperCase()}`);
+}
+
+function exitGame() {
+  state.session.running = false;
+  if (window.gameLoopId) cancelAnimationFrame(window.gameLoopId);
+  worldMonsters = [];
+  worldNPCs = [];
+  dialogueOpen = false;
+  document.getElementById('dialogueBox').style.display = 'none';
+  showScreen('homeScreen');
+  renderHome();
+}
+
+function buildWorld() {
+  ['layerFar','layerMid','layerNear','groundEl'].forEach(id => {
+    document.getElementById(id).style.width = WORLD.width + 'px';
+  });
+
+  document.getElementById('platformsContainer').innerHTML = WORLD.platforms.map(p =>
+    `<div class="platform" style="left:${p.x}px;top:${p.y}px;width:${p.w}px;"></div>`
+  ).join('');
+
+  document.getElementById('buildingsContainer').innerHTML = WORLD.buildings.map(b => {
+    const windowsHTML = `
+      <div class="window" style="top:20px;left:15px;"></div>
+      <div class="window" style="top:20px;right:15px;"></div>
+      <div class="window" style="top:70px;left:15px;"></div>
+      <div class="window" style="top:70px;right:15px;"></div>`;
+    return `<div class="building" style="left:${b.x}px;width:${b.w}px;height:${b.h}px;">
+      <div class="roof"></div>${windowsHTML}<div class="door"></div>
+    </div>`;
+  }).join('') + WORLD.lamps.map(l => `<div class="lamp" style="left:${l}px;"></div>`).join('');
+
+  worldMonsters = [];
+  for (let i = 0; i < 8; i++) {
+    spawnWorldMonster(600 + i * 400 + Math.random() * 200);
+  }
+
+  worldNPCs = [
+    { id:'npc1', x: 180, y: 456, name:'Penjaga', color:'#88ffff', emoji:'💂', questId:'q1' },
+    { id:'npc2', x: 700, y: 456, name:'Pedagang', color:'#ffcc00', emoji:'🧑‍🌾', questId:'q2' },
+    { id:'npc3', x: 1500, y: 456, name:'Penjelajah', color:'#88ff88', emoji:'🧗', questId:'q3' },
+    { id:'npc4', x: 2500, y: 456, name:'Kapten', color:'#ff8888', emoji:'⚔️', questId:'q4' },
+    { id:'npc5', x: 3600, y: 456, name:'Raja', color:'#ffcc00', emoji:'👑', questId:'q5' }
+  ];
+
+  document.getElementById('npcsContainer').innerHTML = worldNPCs.map(n => `
+    <div class="npc" id="${n.id}" style="left:${n.x}px;bottom:${WORLD.height - n.y - 64}px;">
+      ${npcSVG(n.color, n.emoji)}
+      <div class="quest-icon">❓</div>
+    </div>
+  `).join('');
+
+  worldNPCs.forEach(n => {
+    const el = document.getElementById(n.id);
+    if (el) {
+      el.onclick = (e) => { e.stopPropagation(); openNPCQuest(n.id); };
+      el.ontouchstart = (e) => { e.preventDefault(); e.stopPropagation(); openNPCQuest(n.id); };
+    }
+  });
+}
+
+function spawnWorldMonster(x) {
+  const p = state.player;
+  const available = MONSTERS.filter(m => m.minLevel <= p.level + 1);
+  const monster = available[Math.floor(Math.random() * available.length)];
+  const hpMult = state.session.mode === 'training' ? 0.6 : state.session.mode === 'hardcore' ? 1.5 : 1;
+
+  const m = {
+    id: 'm_' + Math.random().toString(36).substr(2,9),
+    x, y: 456, monster,
+    hp: Math.ceil(monster.hp * hpMult),
+    maxHp: Math.ceil(monster.hp * hpMult),
+    damage: monster.damage, points: monster.points,
+    alive: true, hurtTimer: 0
+  };
+  worldMonsters.push(m);
+  renderMonster(m);
+}
+
+function renderMonster(m) {
+  const container = document.getElementById('monstersContainer');
+  let el = document.getElementById(m.id);
+  if (!el) {
+    el = document.createElement('div');
+    el.id = m.id;
+    el.className = 'world-monster';
+    container.appendChild(el);
+    el.onclick = (e) => { e.stopPropagation(); attackMonster(m); };
+    el.ontouchstart = (e) => { e.preventDefault(); e.stopPropagation(); attackMonster(m); };
+  }
+  el.style.left = m.x + 'px';
+  el.style.bottom = (WORLD.height - m.y - 56) + 'px';
+  el.innerHTML = `
+    <div class="hp-bar"><div class="hp-bar-fill" style="width:${(m.hp/m.maxHp)*100}%"></div></div>
+    ${monsterSVG(m.monster, 56)}
+  `;
+  el.style.display = m.alive ? 'block' : 'none';
+}
+
+/* ============================================================
+   LOOP
+============================================================ */
+let lastTime = 0;
+
+function gameLoop(now) {
+  if (!state.session.running) return;
+  const dt = Math.min(32, now - lastTime) / 16.67;
+  lastTime = now;
+
+  updatePlayer(dt);
+  updateMonsters(dt);
+  updateCamera();
+  updateCooldowns(dt);
+
+  window.gameLoopId = requestAnimationFrame(gameLoop);
+}
+
+function updatePlayer(dt) {
+  if (keys.left && !dialogueOpen) { player.vx = -MOVE_SPEED; player.facing = -1; }
+  else if (keys.right && !dialogueOpen) { player.vx = MOVE_SPEED; player.facing = 1; }
+  else { player.vx *= 0.7; if (Math.abs(player.vx) < 0.1) player.vx = 0; }
+
+  if (keys.up && player.onGround && !dialogueOpen) {
+    player.vy = JUMP_FORCE;
+    player.onGround = false;
+  }
+
+  player.vy += GRAVITY * dt;
+  if (player.vy > 20) player.vy = 20;
+
+  player.x += player.vx * dt;
+  player.y += player.vy * dt;
+
+  if (player.x < 20) player.x = 20;
+  if (player.x > WORLD.width - 60) player.x = WORLD.width - 60;
+
+  player.onGround = false;
+  const feetY = player.y + player.height;
+
+  if (feetY >= WORLD.groundY) {
+    player.y = WORLD.groundY - player.height;
+    player.vy = 0;
+    player.onGround = true;
+  }
+
+  WORLD.platforms.forEach(p => {
+    const pCenterX = player.x + player.width/2;
+    if (pCenterX > p.x && pCenterX < p.x + p.w) {
+      if (player.vy >= 0 && feetY >= p.y && feetY <= p.y + 20 && player.y + player.height - player.vy * dt <= p.y + 5) {
+        player.y = p.y - player.height;
+        player.vy = 0;
+        player.onGround = true;
+      }
+    }
+  });
+
+  const sprite = document.getElementById('playerSprite');
+  sprite.style.left = player.x + 'px';
+  sprite.style.bottom = (WORLD.height - player.y - player.height) + 'px';
+  sprite.classList.toggle('flip', player.facing === -1);
+  sprite.style.filter = state.session.invulnerable ? 'brightness(2) hue-rotate(180deg)' : '';
+
+  if (player.attackTimer > 0) player.attackTimer -= dt * 16.67;
+  if (player.hurtTimer > 0) {
+    player.hurtTimer -= dt * 16.67;
+    sprite.classList.add('hurt');
+  } else {
+    sprite.classList.remove('hurt');
+  }
+}
+
+function updateMonsters(dt) {
+  worldMonsters.forEach(m => {
+    if (!m.alive) return;
+    const dx = (player.x + player.width/2) - (m.x + 28);
+    const dist = Math.abs(dx);
+    if (dist < 300 && dist > 60) m.x += Math.sign(dx) * 1.2 * dt;
+    else if (dist <= 60) {
+      if (!m.attackCd || m.attackCd <= 0) {
+        m.attackCd = 60;
+        if (!state.session.invulnerable) damagePlayer(m.damage);
+      }
+    }
+    if (m.attackCd > 0) m.attackCd -= dt;
+    if (m.hurtTimer > 0) m.hurtTimer -= dt * 16.67;
+    renderMonster(m);
+  });
+}
+
+function updateCamera() {
+  const viewport = document.getElementById('gameViewport');
+  const vw = viewport.clientWidth;
+  const targetX = player.x - vw / 2 + player.width / 2;
+  cameraX += (targetX - cameraX) * 0.1;
+  cameraX = Math.max(0, Math.min(WORLD.width - vw, cameraX));
+
+  document.getElementById('worldCamera').style.transform = `translateX(${-cameraX}px)`;
+  document.getElementById('layerFar').style.transform = `translateX(${cameraX * 0.2}px)`;
+  document.getElementById('layerMid').style.transform = `translateX(${cameraX * 0.5}px)`;
+  document.getElementById('layerNear').style.transform = `translateX(${cameraX * 0.8}px)`;
+}
+
+function updateCooldowns(dt) {
+  const s = state.session;
+  if (s.cooldowns.skill > 0) {
+    s.cooldowns.skill -= dt * 16.67 / 1000;
+    if (s.cooldowns.skill < 0) s.cooldowns.skill = 0;
+    updateSkillButton();
+  }
+}
+
+function updateSkillButton() {
+  const btn = document.getElementById('btnSkill');
+  const overlay = document.getElementById('skillCdOverlay');
+  if (!btn) return;
+  if (state.session.cooldowns.skill > 0) {
+    btn.disabled = true;
+    overlay.style.display = 'flex';
+    overlay.textContent = Math.ceil(state.session.cooldowns.skill);
+  } else {
+    btn.disabled = false;
+    overlay.style.display = 'none';
+  }
+}
+
+/* ============================================================
+   ACTIONS
+============================================================ */
+function playerAttack() {
+  if (dialogueOpen) return;
+  if (player.attackTimer > 0) return;
+  player.attackTimer = 300;
+  const sprite = document.getElementById('playerSprite');
+  sprite.classList.add('attack');
+  setTimeout(() => sprite.classList.remove('attack'), 300);
+
+  const range = 80;
+  const px = player.x + player.width/2;
+  const py = player.y + player.height/2;
+
+  let hit = false;
+  worldMonsters.forEach(m => {
+    if (!m.alive) return;
+    const mx = m.x + 28, my = m.y + 28;
+    if (Math.hypot(px - mx, py - my) < range) { attackMonster(m); hit = true; }
+  });
+  if (!hit) spawnParticleAt(px + player.facing * 30, py);
+}
+
+function attackMonster(m) {
+  if (!m.alive || m.hurtTimer > 0) return;
+  const dmg = 1 + Math.floor(state.player.skillLevel / 2);
+  m.hp -= dmg;
+  m.hurtTimer = 300;
+  showDamage(dmg, m.x, m.y);
+  spawnParticleAt(m.x + 28, m.y + 28);
+  const el = document.getElementById(m.id);
+  if (el) {
+    el.classList.add('hit');
+    setTimeout(() => el.classList.remove('hit'), 300);
+  }
+  if (m.hp <= 0) killWorldMonster(m);
+  else renderMonster(m);
+}
+
+function killWorldMonster(m) {
+  m.alive = false;
+  const el = document.getElementById(m.id);
+  if (el) el.style.display = 'none';
+
+  const p = state.player, s = state.session;
+  let points = m.points;
+  if (s.mode === 'training') points = Math.floor(points * 0.7);
+  if (s.mode === 'hardcore') points = Math.floor(points * 1.5);
+
+  p.points += points; p.exp += points; p.kills++; s.score += points;
+  const moneyDrop = Math.floor(points * 0.5);
+  p.money += moneyDrop;
+
+  showToast(`💀 ${m.monster.name}! +${points}⭐ +${moneyDrop}💰`);
+  updateQuestProgress('kill', m.monster.name);
+  updateQuestProgress('killAny', null);
+  if (m.monster.minLevel >= 6) updateQuestProgress('boss', null);
+  updateQuestProgress('score', s.score);
+
+  if (p.exp >= p.expNeeded) levelUp();
+  renderHUD();
+
+  setTimeout(() => {
+    if (!s.running) return;
+    m.alive = true; m.hp = m.maxHp;
+    m.x = 600 + Math.random() * (WORLD.width - 800);
+    renderMonster(m);
+  }, 4000 + Math.random() * 3000);
+}
+
+function playerSkill() {
+  const s = state.session;
+  if (s.cooldowns.skill > 0) { showToast('⏳ Cooldown!'); return; }
+  if (dialogueOpen) return;
+
+  const c = state.player.character;
+  const dmgMult = c.skillDamage + (state.player.skillLevel - 1) * 0.1;
+  const baseDmg = 1 + Math.floor(state.player.skillLevel / 2);
+  const dmg = Math.ceil(baseDmg * dmgMult);
+
+  const range = 150;
+  const px = player.x + player.width/2;
+  const py = player.y + player.height/2;
+
+  let hits = 0;
+  worldMonsters.forEach(m => {
+    if (!m.alive) return;
+    const mx = m.x + 28, my = m.y + 28;
+    if (Math.hypot(px - mx, py - my) < range) {
+      m.hp -= dmg; m.hurtTimer = 300;
+      showDamage(dmg, m.x, m.y);
+      spawnParticleAt(mx, my);
+      hits++;
+      if (m.hp <= 0) killWorldMonster(m);
+      else renderMonster(m);
+    }
+  });
+
+  if (c.id === 'priest' && s.hearts < s.maxHearts) {
+    s.hearts++;
+    showToast('✨ +1 HP');
+  }
+  if (c.id === 'knight') {
+    s.invulnerable = true;
+    showToast('🛡️ Shield aktif!');
+    setTimeout(() => s.invulnerable = false, 2000);
+  }
+
+  if (hits === 0) showToast(`⚡ ${c.skill}`);
+  else showToast(`⚡ ${c.skill}! -${dmg} × ${hits}`);
+
+  spawnSkillEffect(px, py);
+  s.cooldowns.skill = c.cooldown;
+  updateSkillButton();
+  renderHUD();
+}
+
+function damagePlayer(dmg) {
+  const s = state.session;
+  if (!s.running || s.invulnerable) return;
+  s.hearts -= dmg;
+  player.hurtTimer = 400;
+  const vp = document.getElementById('gameViewport');
+  vp.style.animation = 'shake 0.3s';
+  setTimeout(() => vp.style.animation = '', 300);
+  renderHUD();
+  if (s.hearts <= 0) gameOver();
+}
+
+function gameOver() {
+  const s = state.session;
+  s.running = false;
+  if (window.gameLoopId) cancelAnimationFrame(window.gameLoopId);
+
+  const notif = document.createElement('div');
+  notif.className = 'levelup-notif';
+  notif.style.background = 'linear-gradient(135deg, #ff0066, #660033)';
+  notif.innerHTML = `
+    <div class="levelup-text" style="color:#fff;">💀 GAME OVER 💀</div>
+    <div class="levelup-sub" style="color:#fff;">Skor: ${s.score}</div>
+    <div class="levelup-sub" style="color:#fff;">LV.${state.player.level} | ${state.player.points}⭐</div>
+    <button class="btn btn-purple" style="margin-top:15px;" onclick="this.parentElement.remove();exitGame()">HOME</button>
+  `;
+  document.body.appendChild(notif);
+}
+
+/* ============================================================
+   EFFECTS
+============================================================ */
+function showDamage(dmg, worldX, worldY) {
+  const el = document.createElement('div');
+  el.className = 'float-text';
+  el.textContent = '-' + dmg;
+  el.style.color = '#ffcc00';
+  el.style.left = (worldX - cameraX + 20) + 'px';
+  el.style.top = (WORLD.height - worldY - 40) + 'px';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1000);
+}
+
+function spawnParticleAt(worldX, worldY) {
+  const screenX = worldX - cameraX;
+  const screenY = WORLD.height - worldY;
+  for (let i = 0; i < 6; i++) {
+    const p = document.createElement('div');
+    p.style.position = 'fixed';
+    p.style.left = screenX + 'px';
+    p.style.top = screenY + 'px';
+    p.style.width = '6px'; p.style.height = '6px';
+    p.style.background = '#ffcc00';
+    p.style.borderRadius = '50%';
+    p.style.zIndex = '299';
+    p.style.pointerEvents = 'none';
+    const angle = (Math.PI * 2 * i) / 6;
+    const dist = 30 + Math.random() * 40;
+    p.style.transition = 'all 0.6s ease-out';
+    document.body.appendChild(p);
+    requestAnimationFrame(() => {
+      p.style.transform = `translate(${Math.cos(angle)*dist}px, ${Math.sin(angle)*dist}px)`;
+      p.style.opacity = '0';
+    });
+    setTimeout(() => p.remove(), 700);
+  }
+}
+
+function spawnSkillEffect(x, y) {
+  const screenX = x - cameraX;
+  const screenY = WORLD.height - y;
+  for (let i = 0; i < 16; i++) {
+    const p = document.createElement('div');
+    p.style.position = 'fixed';
+    p.style.left = screenX + 'px';
+    p.style.top = screenY + 'px';
+    p.style.width = '8px'; p.style.height = '8px';
+    p.style.background = '#cc66ff';
+    p.style.borderRadius = '50%';
+    p.style.zIndex = '299';
+    p.style.pointerEvents = 'none';
+    p.style.boxShadow = '0 0 10px #cc66ff';
+    const angle = (Math.PI * 2 * i) / 16;
+    const dist = 80 + Math.random() * 60;
+    p.style.transition = 'all 0.7s ease-out';
+    document.body.appendChild(p);
+    requestAnimationFrame(() => {
+      p.style.transform = `translate(${Math.cos(angle)*dist}px, ${Math.sin(angle)*dist}px)`;
+      p.style.opacity = '0';
+    });
+    setTimeout(() => p.remove(), 800);
+  }
+}
+
+/* ============================================================
+   QUEST
+============================================================ */
+function openNPCQuest(npcId) {
+  const npc = worldNPCs.find(n => n.id === npcId);
+  if (!npc) return;
+  const quest = QUESTS.find(q => q.id === npc.questId);
+  if (!quest) return;
+
+  const isActive = state.activeQuests.find(q => q.id === quest.id);
+  const isDone = state.completedQuests.includes(quest.id);
+
+  dialogueOpen = true;
+  const box = document.getElementById('dialogueBox');
+
+  if (isDone) {
+    box.innerHTML = `
+      <div class="dialogue-name">${npc.emoji} ${npc.name}</div>
+      <div class="dialogue-text">Terima kasih sudah menyelesaikan "${quest.title}"!</div>
+      <div class="dialogue-actions"><button class="btn btn-purple" onclick="closeDialogue()">TUTUP</button></div>`;
+  } else if (isActive) {
+    box.innerHTML = `
+      <div class="dialogue-name">${npc.emoji} ${npc.name}</div>
+      <div class="dialogue-text">Quest "${quest.title}" berjalan.<br>Progress: ${getQuestProgress(quest)}<br><span style="color:#ffcc00;">${quest.desc}</span></div>
+      <div class="dialogue-actions"><button class="btn btn-purple" onclick="closeDialogue()">TUTUP</button></div>`;
+  } else {
+    box.innerHTML = `
+      <div class="dialogue-name">${npc.emoji} ${npc.name}</div>
+      <div class="dialogue-text">
+        Halo petualang!<br><br>
+        <span style="color:#ffcc00;">📋 ${quest.title}</span><br>
+        ${quest.desc}<br><br>
+        Hadiah: <span style="color:#ffcc00;">+${quest.reward.points}⭐ +${quest.reward.money}💰</span>
+      </div>
+      <div class="dialogue-actions">
+        <button class="btn btn-purple" onclick="closeDialogue()">NANTI</button>
+        <button class="btn btn-green" onclick="acceptQuest('${quest.id}')">TERIMA</button>
+      </div>`;
+  }
+  box.style.display = 'block';
+}
+
+function closeDialogue() {
+  dialogueOpen = false;
+  document.getElementById('dialogueBox').style.display = 'none';
+}
+
+function acceptQuest(questId) {
+  const quest = QUESTS.find(q => q.id === questId);
+  if (!quest) return;
+  if (state.activeQuests.find(q => q.id === questId)) return;
+  if (state.completedQuests.includes(questId)) return;
+  state.activeQuests.push(quest);
+  closeDialogue();
+  showToast(`📋 ${quest.title}`);
+  renderQuestTracker();
+  const npc = worldNPCs.find(n => n.questId === questId);
+  if (npc) {
+    const el = document.getElementById(npc.id);
+    if (el) {
+      const icon = el.querySelector('.quest-icon');
+      if (icon) icon.textContent = '❗';
+    }
+  }
+}
+
+function getQuestProgress(quest) {
+  if (quest.type === 'kill' || quest.type === 'killAny' || quest.type === 'boss')
+    return `${Math.min(state.player.kills, quest.target)}/${quest.target}`;
+  if (quest.type === 'score')
+    return `${Math.min(state.session.score, quest.target)}/${quest.target}`;
+  return `0/${quest.target}`;
+}
+
+function updateQuestProgress(type, value) {
+  state.activeQuests.forEach(quest => {
+    if (quest.type !== type) return;
+    let progress = 0;
+    if (type === 'killAny' || type === 'kill' || type === 'boss') progress = state.player.kills;
+    else if (type === 'score') progress = state.session.score;
+    if (progress >= quest.target && !state.completedQuests.includes(quest.id)) completeQuest(quest);
+  });
+  renderQuestTracker();
+}
+
+function completeQuest(quest) {
+  state.completedQuests.push(quest.id);
+  state.activeQuests = state.activeQuests.filter(q => q.id !== quest.id);
+  state.player.questsCompleted++;
+  state.player.points += quest.reward.points;
+  state.player.money += quest.reward.money;
+  showToast(`✅ ${quest.title}! +${quest.reward.points}⭐`);
+
+  const notif = document.createElement('div');
+  notif.className = 'levelup-notif';
+  notif.innerHTML = `
+    <div class="levelup-text">✅ QUEST!</div>
+    <div class="levelup-sub">${quest.title}</div>
+    <div class="levelup-sub">+${quest.reward.points}⭐ +${quest.reward.money}💰</div>`;
+  document.body.appendChild(notif);
+  setTimeout(() => notif.remove(), 2500);
+
+  renderQuestTracker();
+  renderHome();
+}
+
+function renderQuestTracker() {
+  const list = document.getElementById('questList');
+  if (!list) return;
+  if (state.activeQuests.length === 0) {
+    list.innerHTML = '<div style="font-size:7px;color:#888;">Tidak ada quest</div>';
+    return;
+  }
+  list.innerHTML = state.activeQuests.map(q =>
+    `<div class="quest-item">${q.title}<br><span style="color:#88ffff;">${getQuestProgress(q)}</span></div>`
+  ).join('');
+}
+
+/* ============================================================
+   HUD
+============================================================ */
+function renderHUD() {
+  const s = state.session, p = state.player;
+  const heartsEl = document.getElementById('hearts');
+  let h = '';
+  for (let i = 0; i < s.maxHearts; i++) {
+    h += `<span class="heart ${i >= s.hearts ? 'lost' : ''}">❤</span>`;
+  }
+  heartsEl.innerHTML = h;
+
+  const expPct = Math.min(100, (p.exp / p.expNeeded) * 100);
+  document.getElementById('expBar').style.width = expPct + '%';
+  document.getElementById('expLabel').textContent = `EXP ${p.exp}/${p.expNeeded}`;
+  document.getElementById('gameScore').textContent = s.score;
+  document.getElementById('gameLevel').textContent = `LV.${p.level} | ${getRank(p.level)}`;
+}
+
+function levelUp() {
+  const p = state.player;
+  p.exp -= p.expNeeded;
+  p.level++;
+  p.expNeeded = Math.floor(p.expNeeded * 1.5);
+  p.skillLevel++;
+
+  const notif = document.createElement('div');
+  notif.className = 'levelup-notif';
+  notif.innerHTML = `
+    <div class="levelup-text">⭐ LEVEL UP! ⭐</div>
+    <div class="levelup-sub">Level ${p.level} | ${getRank(p.level)}</div>
+    <div class="levelup-sub">+1 Damage Skill!</div>`;
+  document.body.appendChild(notif);
+  setTimeout(() => notif.remove(), 2500);
+  renderHome();
+}
+
+/* ============================================================
+   CONTROLS
+============================================================ */
+function bindHold(btnId, key) {
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
+  const start = (e) => {
+    e.preventDefault(); e.stopPropagation();
+    keys[key] = true;
+    btn.classList.add('active');
+  };
+  const end = (e) => {
+    e.preventDefault(); e.stopPropagation();
+    keys[key] = false;
+    btn.classList.remove('active');
+  };
+  btn.addEventListener('touchstart', start, { passive: false });
+  btn.addEventListener('touchend', end, { passive: false });
+  btn.addEventListener('touchcancel', end, { passive: false });
+  btn.addEventListener('mousedown', start);
+  btn.addEventListener('mouseup', end);
+  btn.addEventListener('mouseleave', end);
+}
+
+bindHold('btnLeft', 'left');
+bindHold('btnRight', 'right');
+bindHold('btnUp', 'up');
+bindHold('btnDown', 'down');
+
+const attackBtn = document.getElementById('btnAttack');
+attackBtn.addEventListener('touchstart', (e) => {
+  e.preventDefault(); e.stopPropagation();
+  attackBtn.classList.add('active');
+  playerAttack();
+}, { passive: false });
+attackBtn.addEventListener('touchend', (e) => {
+  e.preventDefault(); e.stopPropagation();
+  attackBtn.classList.remove('active');
+}, { passive: false });
+attackBtn.addEventListener('click', (e) => { e.preventDefault(); playerAttack(); });
+
+const jumpBtn = document.getElementById('btnJump');
+jumpBtn.addEventListener('touchstart', (e) => {
+  e.preventDefault(); e.stopPropagation();
+  jumpBtn.classList.add('active');
+  keys.up = true;
+  setTimeout(() => { keys.up = false; jumpBtn.classList.remove('active'); }, 120);
+}, { passive: false });
+jumpBtn.addEventListener('touchend', (e) => {
+  e.preventDefault(); e.stopPropagation();
+  keys.up = false;
+  jumpBtn.classList.remove('active');
+}, { passive: false });
+jumpBtn.addEventListener('click', (e) => { e.preventDefault(); keys.up = true; setTimeout(() => keys.up = false, 120); });
+
+const skillBtn = document.getElementById('btnSkill');
+skillBtn.addEventListener('touchstart', (e) => {
+  e.preventDefault(); e.stopPropagation();
+  if (skillBtn.disabled) return;
+  skillBtn.classList.add('active');
+  playerSkill();
+  setTimeout(() => skillBtn.classList.remove('active'), 150);
+}, { passive: false });
+skillBtn.addEventListener('touchend', (e) => {
+  e.preventDefault(); e.stopPropagation();
+  skillBtn.classList.remove('active');
+}, { passive: false });
+skillBtn.addEventListener('click', (e) => { e.preventDefault(); playerSkill(); });
+
+document.addEventListener('contextmenu', e => e.preventDefault());
+
+let lastTouchEnd = 0;
+document.addEventListener('touchend', (e) => {
+  const now = Date.now();
+  if (now - lastTouchEnd <= 300) e.preventDefault();
+  lastTouchEnd = now;
+}, { passive: false });
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'a' || e.key === 'A' || e.key === 'ArrowLeft') keys.left = true;
+  if (e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') keys.right = true;
+  if (e.key === 'w' || e.key === 'W' || e.key === 'ArrowUp') keys.up = true;
+  if (e.key === 's' || e.key === 'S' || e.key === 'ArrowDown') keys.down = true;
+  if (e.key === ' ' || e.key === 'j' || e.key === 'J') { e.preventDefault(); playerAttack(); }
+  if (e.key === 'k' || e.key === 'K' || e.key === 'q' || e.key === 'Q') playerSkill();
+  if (e.key === 'Escape') { closeAllPanels(); closeDialogue(); }
+});
+document.addEventListener('keyup', e => {
+  if (e.key === 'a' || e.key === 'A' || e.key === 'ArrowLeft') keys.left = false;
+  if (e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') keys.right = false;
+  if (e.key === 'w' || e.key === 'W' || e.key === 'ArrowUp') keys.up = false;
+  if (e.key === 's' || e.key === 'S' || e.key === 'ArrowDown') keys.down = false;
+});
+
+/* ============================================================
+   PANELS
+============================================================ */
+function closeAllPanels() {
+  document.querySelectorAll('.overlay').forEach(p => p.classList.remove('active'));
+}
+
+function openPanel(id) {
+  closeAllPanels();
+  document.getElementById(id).classList.add('active');
+  if (id === 'inventoryPanel') renderInventory();
+  if (id === 'profilePanel') renderProfile();
+  if (id === 'shopPanel') renderShop();
+  if (id === 'upgradePanel') renderUpgrade();
+  if (id === 'rankPanel') renderRank();
+}
+
+function renderInventory() {
+  const grid = document.getElementById('inventoryGrid');
+  const slots = [...state.inventory];
+  while (slots.length < 12) slots.push(null);
+  grid.innerHTML = slots.map(item => {
+    if (!item) return `<div class="item-slot empty"><div class="item-icon">·</div>KOSONG</div>`;
+    return `<div class="item-slot" onclick="useOrSellItem('${item.id}')">
+      <div class="item-icon">${item.emoji}</div><div>${item.name}</div>
+      <div style="color:#ffcc00;">x${item.qty}</div></div>`;
+  }).join('');
+}
+
+function useOrSellItem(id) {
+  const item = state.inventory.find(i => i.id === id);
+  if (!item) return;
+  const choice = confirm(`Gunakan ${item.name}? (OK=Pakai, Cancel=Jual)`);
+  if (choice) {
+    if (item.id === 'medkit' || item.id === 'bigmedkit') {
+      if (state.session.hearts < state.session.maxHearts) {
+        const heal = item.id === 'bigmedkit' ? 2 : 1;
+        state.session.hearts = Math.min(state.session.maxHearts, state.session.hearts + heal);
+        item.qty--;
+        showToast(`❤️ +${heal} HP`);
+      } else { showToast('❤️ HP penuh!'); return; }
+    } else {
+      showToast(`✨ ${item.name}`);
+      item.qty--;
+    }
+    if (item.qty <= 0) state.inventory = state.inventory.filter(i => i.id !== id);
+  } else {
+    const price = Math.floor((SHOP_ITEMS.find(s => s.id === id)?.price || 30) * 0.5);
+    state.player.money += price;
+    item.qty--;
+    if (item.qty <= 0) state.inventory = state.inventory.filter(i => i.id !== id);
+    showToast(`💰 +${price}`);
+  }
+  renderInventory();
+  renderHome();
+}
+
+function renderProfile() {
+  const p = state.player, c = p.character;
+  document.getElementById('profileAvatar').innerHTML = charSVG(c, 120);
+  document.getElementById('profName').textContent = p.name;
+  document.getElementById('profChar').textContent = `${c.emoji} ${c.name}`;
+  document.getElementById('profLevel').textContent = 'LV.' + p.level;
+  document.getElementById('profRank').textContent = getRank(p.level);
+  document.getElementById('profPoints').textContent = p.points;
+  document.getElementById('profMoney').textContent = p.money + '💰';
+  document.getElementById('profKills').textContent = p.kills;
+  document.getElementById('profQuests').textContent = p.questsCompleted;
+  document.getElementById('profSkill').textContent = 'Lv.' + p.skillLevel;
+}
+
+function renderShop() {
+  document.getElementById('shopMoney').textContent = state.player.money;
+  const container = document.getElementById('shopItems');
+  container.innerHTML = SHOP_ITEMS.map(item => `
+    <div style="display:flex;justify-content:space-between;align-items:center;background:#0a0510;border:2px solid #4a1a5c;padding:10px;border-radius:6px;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="font-size:20px;">${item.emoji}</div>
+        <div>
+          <div style="font-size:clamp(8px,2vw,10px);color:#ffcc00;">${item.name}</div>
+          <div style="font-size:clamp(6px,1.5vw,7px);color:#88ffff;margin-top:4px;">${item.desc}</div>
+        </div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:clamp(7px,1.8vw,9px);color:#ffcc00;margin-bottom:6px;">${item.price}💰</div>
+        <button class="btn btn-purple" style="padding:6px 10px;font-size:clamp(7px,1.8vw,8px);min-height:32px;" onclick="buyItem('${item.id}')">BELI</button>
+      </div>
+    </div>`).join('');
+}
+
+function buyItem(id) {
+  const item = SHOP_ITEMS.find(i => i.id === id);
+  if (state.player.money < item.price) { showToast('❌ Money kurang!'); return; }
+  state.player.money -= item.price;
+  const existing = state.inventory.find(i => i.id === id);
+  if (existing) existing.qty++;
+  else state.inventory.push({ id: item.id, name: item.name, emoji: item.emoji, qty: 1 });
+  showToast(`✅ ${item.name}!`);
+  renderShop();
+  renderHome();
+}
+
+function renderUpgrade() {
+  const p = state.player, c = p.character;
+  document.getElementById('upgradePoints').textContent = p.points;
+  const cost = p.skillLevel * 20;
+  document.getElementById('upgradeItems').innerHTML = `
+    <div style="background:#0a0510;border:2px solid #4a1a5c;padding:12px;border-radius:6px;">
+      <div style="font-size:clamp(9px,2.2vw,11px);color:#ffcc00;margin-bottom:8px;">⚡ ${c.skill}</div>
+      <div style="font-size:clamp(6px,1.6vw,8px);color:#88ffff;margin-bottom:8px;">Lv.${p.skillLevel} | Damage: ${(c.skillDamage + (p.skillLevel-1)*0.1).toFixed(1)}x</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+        <div style="font-size:clamp(7px,1.8vw,9px);color:#ffcc00;">Biaya: ${cost}⭐</div>
+        <button class="btn" style="padding:8px 12px;font-size:clamp(7px,1.8vw,8px);min-height:36px;" onclick="upgradeSkill(${cost})" ${p.points < cost ? 'disabled' : ''}>UPGRADE</button>
+      </div>
+    </div>`;
+}
+
+function upgradeSkill(cost) {
+  if (state.player.points < cost) return;
+  state.player.points -= cost;
+  state.player.skillLevel++;
+  showToast(`⚡ Skill Lv.${state.player.skillLevel}!`);
+  renderUpgrade();
+  renderHome();
+}
+
+function renderRank() {
+  const bots = [
+    { name:'ShadowX', level:15, points:2500 },
+    { name:'DragonSlayer', level:12, points:1800 },
+    { name:'NightBlade', level:10, points:1200 },
+    { name:'MysticMage', level:8, points:900 },
+    { name:'IronKnight', level:6, points:600 }
+  ];
+  const all = [...bots, { name: state.player.name + ' (YOU)', level: state.player.level, points: state.player.points, isPlayer: true }];
+  all.sort((a,b) => b.points - a.points);
+  document.getElementById('rankList').innerHTML = all.map((p, i) => {
+    const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}.`;
+    return `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:${p.isPlayer ? '#0a2a1a' : '#0a0510'};border:2px solid ${p.isPlayer ? '#00ff88' : '#4a1a5c'};margin-bottom:6px;border-radius:6px;gap:8px;">
+        <div style="display:flex;align-items:center;gap:8px;min-width:0;">
+          <div style="font-size:clamp(12px,2.5vw,16px);min-width:24px;">${medal}</div>
+          <div style="min-width:0;">
+            <div style="font-size:clamp(7px,1.8vw,10px);color:${p.isPlayer ? '#00ff88' : '#ffcc00'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.name}</div>
+            <div style="font-size:clamp(5px,1.3vw,7px);color:#88ffff;margin-top:3px;">LV.${p.level} | ${getRank(p.level)}</div>
+          </div>
+        </div>
+        <div style="font-size:clamp(8px,2vw,11px);color:#ffcc00;white-space:nowrap;">${p.points}⭐</div>
+      </div>`;
+  }).join('');
+}
+
+/* ============================================================
+   TOAST
+============================================================ */
+function showToast(msg) {
+  const existing = document.querySelector('.toast');
+  if (existing) existing.remove();
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2500);
+}
+
+/* ============================================================
+   AUTO FULLSCREEN ON FIRST INTERACTION (fallback)
+============================================================ */
+document.addEventListener('click', function once() {
+  if (!document.fullscreenElement && !fsInitialized) {
+    requestFullscreenLandscape();
+  }
+  document.removeEventListener('click', once);
+}, { once: true });
+
+/* ============================================================
+   INIT
+============================================================ */
+console.log('%c🎮 UNDERGROUND LEGENDS v2.2', 'color:#ffcc00;font-size:18px;font-weight:bold;');
+console.log('%cFullscreen + Landscape Default | Kode: LAB2024', 'color:#88ffff;');
+console.log('%cTap overlay untuk memulai!', 'color:#ff0066;');
+</script>
+</body>
+</html>
+=======
+<!DOCTYPE html><html lang="id"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>Malam Kelam di Desa Terkutuk</title><meta name="theme-color" content="#0a0a0a">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Creepster&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/main.css"></head><body>
+<canvas id="c" width="960" height="540"></canvas>
+<div id="tc"><div id="jz"></div><div id="jb"></div><div id="jk"></div>
+<button class="tb" id="bH">HIT</button><button class="tb" id="bD">DODGE</button><button class="tb" id="bE">MED</button><button class="tb" id="bS">SKILL</button><button class="tb" id="bI">MASUK</button></div>
+<button id="pb">II</button><button id="sk">lewati</button>
+<div class="ov hide" id="menu"><h1>MALAM KELAM<br>DI DESA TERKUTUK</h1><div id="mi"></div>
+<button class="b" data-a="classic">TURNAMEN</button><button class="b" data-a="train">TRAINING</button>
+<div class="row"><button class="b s" data-a="rank">RANKING</button><button class="b s" data-a="prof">PROFIL</button></div><div id="lb"></div></div>
+<div class="ov hide" id="gate"><h1>KODE AKSES</h1><p style="max-width:80vw">Masukkan kode akses turnamen dari panitia.</p><input class="in" id="code" maxlength="16" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="KODE"><div class="er" id="ge"></div><button class="b" data-a="gate">MASUK</button></div>
+<div class="ov hide" id="reg"><h1 style="font-size:6vh">NAMA &amp; KARAKTER</h1><input class="in" id="nm" maxlength="12" autocomplete="off" placeholder="NAMA"><div class="chg" id="chg"></div><div class="er" id="re"></div><button class="b" data-a="reg">MULAI</button></div>
+<div class="ov hide" id="rank"><h1 style="font-size:6vh">RANKING</h1><div id="rs" style="color:#a99;font-size:clamp(10px,2.2vh,14px)"></div><div class="tbl" id="rl"></div><button class="b" data-a="close">TUTUP</button></div>
+<div class="ov hide" id="prof"><h1 style="font-size:5vh" id="pn"></h1><div id="pd" style="line-height:1.7"></div><div class="tbl" id="pa" style="max-height:30vh"></div><div class="row"><button class="b s" data-a="edit">UBAH PROFIL</button><button class="b s" data-a="close">TUTUP</button></div></div>
+<div class="ov hide" id="load"><h1 style="font-size:5vh">Memuat…</h1><div id="bar"><i></i></div><p id="tip"></p></div>
+<div class="ov hide" id="pause"><h1>JEDA</h1><button class="b" data-a="resume">LANJUT</button><button class="b" data-a="home">MENU</button></div>
+<div class="ov hide" id="end"><h1 id="et"></h1><p id="es" style="font-size:clamp(12px,2.8vh,20px);line-height:1.6"></p><button class="b" data-a="again">ULANGI</button><button class="b" data-a="home">MENU</button></div>
+<div id="rot"><b>📱</b>Putar perangkat ke mode landscape untuk bermain</div>
+<script src="js/config.js"></script>
+<script src="js/database.js"></script>
+<script src="js/core.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/data.js"></script>
+<script src="js/entities.js"></script>
+<script src="js/input.js"></script>
+<script src="js/fullscreen.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/combat.js"></script>
+<script src="js/monsters.js"></script>
+<script src="js/update.js"></script>
+<script src="js/end.js"></script>
+<script src="js/render.js"></script>
+<script src="js/menu.js"></script>
+<script src="js/account.js"></script>
+<script src="js/skills.js"></script>
+<script src="js/nests.js"></script>
+<script src="js/night.js"></script>
+<script src="js/interiors.js"></script>
+<script src="js/music.js"></script>
+<script src="js/main.js"></script></body></html>
+>>>>>>> cfbaf71 (Update game dan tambah assets)
