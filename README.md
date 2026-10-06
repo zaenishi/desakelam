@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-# Manuk_Piit
-=======
 # Malam Kelam di Desa Terkutuk — Struktur Pengembangan
 
 Versi ini mempertahankan gameplay utama, tetapi struktur kode dibuat supaya lebih mudah dirawat dan dikembangkan.
@@ -114,5 +111,3 @@ Sistem melakukan normalisasi dari nama field lama ke nama field baru ketika data
 ## 6. Urutan script
 
 `config.js` harus dimuat sebelum `database.js` dan file game lain karena menjadi sumber konfigurasi global.
->>>>>>> cfbaf71 (Update game dan tambah assets)
-# desakelam
