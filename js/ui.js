@@ -134,6 +134,11 @@ function begin(mode) {
     show('load', 0);
     $('#pb').style.display = 'block';
     $('#tc').style.display = touch ? 'block' : '';
+
+    /* ★ KUNCI: arm turnamen HANYA saat pemain benar-benar mulai main */
+    if (typeof Tournament !== 'undefined') Tournament.armIfPlaying();
+
     last = performance.now();
   }, 1700);
+}
 }

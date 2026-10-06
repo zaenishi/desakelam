@@ -65,7 +65,8 @@ function init() {
   S = 'intro';
   P.x = 300; P.y = 430;
 
-  /* Mulai pemeriksa turnamen */
+  /* Timer turnamen jalan dari awal, tapi tidak akan efek apapun
+     sampai Tournament.armIfPlaying() dipanggil dari begin() */
   if (typeof Tournament !== 'undefined') Tournament.start();
 
   requestAnimationFrame(n => { last = n; frame(n); });
