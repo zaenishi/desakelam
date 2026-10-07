@@ -1,7 +1,7 @@
 /* ===== ENTITAS ===== */
 const mk=(k,x,y,s=1)=>{const d=T[k];return{k,t:d,x,y,r:d.r,hp:d.hp*s,mh:d.hp*s,st:'idle',stt:0,cd:1,fl:0,face:0,kx:0,ky:0,dash:0,da:0,sc:s,pa:0,spd:1,boss:0,bossName:'',bossPhase:0,lightScared:0,rushT:0,rushSpeed:0}};
-function reset(m){MODE=m;M=[];IT=[];PR=[];FX=[];TX=[];P={sk:0,skT:0,scd:0,rage:0,x:300,y:430,r:13,hp:100*getCurrentCharacterClass().hpMultiplier,mh:100*getCurrentCharacterClass().hpMultiplier,st:100,sn:100,face:0,at:0,cd:0,cmb:0,cmT:0,inv:0,dd:0,dcd:0,lives:3,mv:0,noise:0,meds:1,art:0,kills:0,rs:0,nt:0,walked:0,swings:0,dodges:0,used:0,hf:0,sp:0,dx:1,dy:0,sc20:0};
- gt=0;wave=0;night=1;INR=0;WW=2400;WH=1600;NS=[];wT=20;tr=0;score=0;weather='clear';wTm=30;boss=0;sc=null;msg=null;
+function reset(m){MODE=m;M=[];IT=[];PR=[];FX=[];TX=[];skillPress[1]=skillPress[2]=skillPress[3]=0;ab=db=eb=sb=fb=0;jx=jy=0;jid=null;Object.keys(K).forEach(k=>delete K[k]);cam.x=cam.y=0;shake=hitstop=flash=0;slow=1;I={};OUT=null;ROOM=null;P={sk:0,skT:0,scd:0,rage:0,x:300,y:430,r:13,hp:100*getCurrentCharacterClass().hpMultiplier,mh:100*getCurrentCharacterClass().hpMultiplier,st:100,sn:100,face:0,at:0,cd:0,cmb:0,cmT:0,inv:0,dd:0,dcd:0,lives:3,mv:0,noise:0,meds:1,art:0,kills:0,rs:0,nt:0,walked:0,swings:0,dodges:0,used:0,hf:0,sp:0,dx:1,dy:0,sc20:0,tutDone:false};
+ gt=0;wave=0;night=1;INR=0;WW=2400;WH=1600;NS=[];wT=20;tr=0;score=0;weather='clear';wTm=30;boss=0;sc=null;msg=null;P.tutDone=false;
  if(m=='classic')popC();
  else say('Selamat datang di Training. Ikuti instruksi di atas.',6)}
 function popC(){M=[];IT=[];NS=[];PR=[];[0,1,2,3,4,5].sort(()=>R()-.5).slice(0,5).forEach(z=>{const p=fp(z,350),g=mk(['bo','gh','sp'][z%3],p.x,p.y,1.6*getNightDifficultyMultiplier());g.guard=1;M.push(g)});

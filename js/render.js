@@ -28,7 +28,7 @@ function dP(){const b=Math.sin(t*(P.mv?16:2))*(P.mv?2.5:1.2),fx=Math.cos(P.face)
  const ph=((t*(P.mv?12:3)|0)%8)/8*PI*2,lg=P.mv?Math.sin(ph)*4:0;X.fillStyle='#2b2b2b';X.fillRect(-8,4+lg,6,9);X.fillRect(2,4-lg,6,9);X.fillStyle='#d8b99a';X.fillRect(-14,-6+b-lg*.6,4,9);if(P.at<=0)X.fillRect(10,-6+b+lg*.6,4,9);if(P.hf>.3)X.rotate(.18);
  const sq=P.dd>0?.7:1;X.scale(1/sq,sq);ci(0,-4+b,12,playerProfile.skinUnlocked?'#8a6a20':getCurrentCharacterClass().color);ci(0,-18+b,8,'#d8b99a');
  if(fy>-.5){ci(fx*4-2.5,-18+b+fy*3,1.6,'#000');ci(fx*4+2.5,-18+b+fy*3,1.6,'#000')}else ci(0,-19+b,7,'#2a1a10');
- const sw=P.at>0?(1-P.at/.22)*2.2-1.1:.5;X.strokeStyle='#ccd';X.lineWidth=4;X.beginPath();X.moveTo(fx*10,-4+fy*8);X.lineTo(fx*10+Math.cos(P.face+sw)*30,-4+fy*8+Math.sin(P.face+sw)*30);X.stroke();X.restore()}
+ const sword=getCurrentSword();const sw=P.at>0?(1-P.at/.22)*2.2-1.1:.5;X.strokeStyle=sword.color;X.lineWidth=sword.id==='void'?5:sword.id==='blood'?4:3;X.beginPath();X.moveTo(fx*10,-4+fy*8);X.lineTo(fx*10+Math.cos(P.face+sw)*34,-4+fy*8+Math.sin(P.face+sw)*34);X.stroke();if(P.at>0&&sword.id!=='rust'){X.globalAlpha=.45;X.strokeStyle=sword.color;X.lineWidth=2;X.beginPath();X.arc(fx*10,fy*8,32,P.face+sw-0.5,P.face+sw+0.5);X.stroke();X.globalAlpha=1}X.restore()}
 function dM(m){const T_=m.t,fx=Math.cos(m.face),fy=Math.sin(m.face),b=Math.sin(t*6+m.x)*2,r=m.r;X.save();X.translate(m.x,m.y);
  if(m.st=='death'){X.globalAlpha=1-m.stt/.7;X.rotate(m.stt*3);X.scale(1-m.stt*.4,1-m.stt*.4)}
  X.fillStyle='#0007';X.beginPath();X.ellipse(0,r*.7,r,r*.4,0,0,7);X.fill();
@@ -57,7 +57,7 @@ function post(){const hr=((18*60+gt)/60)%24,ds=S=='intro'?.5:weather=='eclipse'?
  X.fillStyle='#fff1';for(let i=0;i<50;i++)X.fillRect(R()*W,R()*H,2,2)}
 function hud(){const bar=(y,v,c,l)=>{X.fillStyle='#000a';X.fillRect(12,y,170,14);X.fillStyle=c;X.fillRect(13,y+1,168*cl(v,0,1),12);X.strokeStyle='#8b0000';X.lineWidth=2;X.strokeRect(12,y,170,14);X.fillStyle='#fff';X.font='10px Cinzel';X.textAlign='left';X.fillText(l,190,y+11)};
  bar(12,P.hp/P.mh,`hsl(0,80%,${30+Math.sin(t*8)*(P.hp<30?8:0)}%)`,'♥ HP');bar(32,P.st/100,'#c9a227','⚡ STAMINA');bar(52,P.sn/100,'#3a5a9a','👁 SANITY');
- X.fillStyle='#ffd700';X.font='13px Cinzel';X.textAlign='left';X.fillText(`Medkit ${P.meds}   Nyawa ${'♥'.repeat(Math.max(0,P.lives))}`,12,84);hud2();
+ X.fillStyle='#ffd700';X.font='13px Cinzel';X.textAlign='left';X.fillText(`Medkit ${P.meds}   Nyawa ${'♥'.repeat(Math.max(0,P.lives))}   ·   POINT ${playerProfile.points||0}`,12,84);hud2();
  X.textAlign='center';X.font='16px Cinzel';
  if(MODE=='classic'){const hr=((18*60+gt)/60)%24,hh=hr|0,mm=(hr%1*60)|0;X.fillText(`${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')} → 06:00   ·   Malam ${night}   ·   Artefak ${P.art}/5   ·   Gelombang ${wave}`,W/2,22);
   X.font='12px Cinzel';X.fillStyle='#caa';X.fillText(`${ZN[zoneAt(P.x,P.y)][0]}  ·  ${{clear:'Cerah',rain:'Hujan',fog:'Kabut',storm:'Badai',eclipse:'Gerhana'}[weather]}  ·  Penyintas ${P.rs}/3  ·  Catatan ${P.nt}/10`,W/2,40)}
