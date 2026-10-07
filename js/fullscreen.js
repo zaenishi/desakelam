@@ -16,7 +16,13 @@ function updateImmersiveButton(){
   const button = immersiveButton();
   if(!button) return;
   immersiveActive = isFullscreen();
-  button.classList.toggle('hide', immersiveActive);
+  const portrait = isPortraitGameplay();
+  // Jangan sembunyikan tombol ketika fullscreen sudah aktif tetapi orientation
+  // lock gagal. Dalam kondisi itu tombol tetap diperlukan sebagai fallback.
+  button.classList.toggle('hide', !portrait && immersiveActive);
+  button.textContent = portrait ? '↻' : '⛶';
+  button.setAttribute('aria-label', portrait ? 'Coba aktifkan landscape' : 'Aktifkan layar penuh dan landscape');
+  button.title = portrait ? 'Coba aktifkan landscape' : 'Layar penuh + landscape';
 }
 
 async function requestLandscape(){
@@ -66,6 +72,14 @@ async function exitImmersiveMode(){
 }
 
 async function toggleImmersiveMode(){
+  // Jika sudah fullscreen tetapi masih portrait, jangan keluar fullscreen.
+  // Coba orientation lock lagi dari user gesture.
+  if(isFullscreen() && isPortraitGameplay()){
+    const ok=await requestLandscape();
+    if(ok) syncOrientationGate();
+    else syncOrientationGate();
+    return ok;
+  }
   if(isFullscreen()) return exitImmersiveMode();
   return requestGameFullscreen();
 }
@@ -103,7 +117,8 @@ setTimeout(()=>{ if(GAME_CONFIG.ui.autoFullscreen || GAME_CONFIG.ui.autoLandscap
 
 
 function isPortraitGameplay(){
-  return !!(touch && innerHeight > innerWidth && (S === 'play' || S === 'intro'));
+  const mobileLike = touch || matchMedia('(max-width: 800px)').matches;
+  return !!(mobileLike && innerHeight > innerWidth && (S === 'play' || S === 'intro'));
 }
 function syncOrientationGate(){
   const rot=document.getElementById('rot');
@@ -111,5 +126,10 @@ function syncOrientationGate(){
   const blocked=isPortraitGameplay();
   rot.classList.toggle('active',blocked);
   rot.setAttribute('aria-hidden',String(!blocked));
+  const button=immersiveButton();
+  if(button){
+    button.classList.toggle('hide', !blocked && isFullscreen());
+    if(blocked){ button.textContent='↻'; button.setAttribute('aria-label','Coba aktifkan landscape'); button.title='Coba aktifkan landscape'; }
+  }
   if(typeof setOrientationGameplayPause==='function') setOrientationGameplayPause(blocked);
 }
