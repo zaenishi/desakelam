@@ -22,4 +22,33 @@ function skill(slot=skillSlot){if(!P)return;if(!hasSkill(slot)){say(`Skill ${slo
  else {P.inv=1.15;P.rage=5;aoe(210,62*getCurrentSword().damage);for(let i=0;i<10;i++)FX.push({k:'p',x:P.x,y:P.y,vx:R()*280-140,vy:R()*280-140,t:.7,c:getCurrentSword().color,s:4});ring(getCurrentSword().color,210)}
 }
 function openArsenal(){show('menu',0);renderArsenal();show('arsenal',1)}
-function renderArsenal(){const p=$('#arsenalPoints');if(p)p.textContent=`POINT ${playerProfile.points}`;const ss=$('#skillShop');if(ss)ss.innerHTML=SKILL_SHOP.map(x=>`<button class="shop-item ${hasSkill(x.slot)?'owned':''}" data-shop-skill="${x.slot}"><b>${x.name}</b><small>${x.cost?x.cost+' POINT':'TERBUKA'}</small><span>${x.desc}</span></button>`).join('');const sw=$('#swordShop');if(sw)sw.innerHTML=SWORDS.map((x,i)=>`<button class="shop-item ${hasSword(i)?'owned':''} ${playerProfile.swordIndex===i?'equipped':''}" data-shop-sword="${i}"><i style="--blade:${x.color}">⚔</i><b>${x.name}</b><small>${hasSword(i)?(playerProfile.swordIndex===i?'DIPAKAI':'MILIK'):x.cost+' POINT'}</small><span>${x.desc}</span></button>`).join('')}
+function renderArsenal(){
+  const p=$('#arsenalPoints');
+  if(p)p.textContent=`POINT ${playerProfile.points||0}`;
+
+  const ss=$('#skillShop');
+  if(ss)ss.innerHTML=SKILL_SHOP.map(x=>{
+    const owned=hasSkill(x.slot);
+    const active=skillSlot===x.slot;
+    const action=owned?'PILIH':'BELI';
+    const cost=owned?'MILIK':`${x.cost} POINT`;
+    return `<article class="shop-card ${owned?'owned':''} ${active?'equipped':''}">
+      <div class="shop-icon skill-icon">${active?'✦':'✧'}</div>
+      <div class="shop-copy"><b>${x.name}</b><small>${cost}</small><span>${x.desc}</span></div>
+      <button class="shop-buy" type="button" data-shop-action="skill" data-index="${x.slot}">${action}</button>
+    </article>`;
+  }).join('');
+
+  const sw=$('#swordShop');
+  if(sw)sw.innerHTML=SWORDS.map((x,i)=>{
+    const owned=hasSword(i);
+    const active=playerProfile.swordIndex===i;
+    const action=owned?(active?'DIPAKAI':'PAKAI'):'BELI';
+    const cost=owned?'MILIK':`${x.cost} POINT`;
+    return `<article class="shop-card ${owned?'owned':''} ${active?'equipped':''}">
+      <div class="shop-icon sword-icon" style="--blade:${x.color}">⚔</div>
+      <div class="shop-copy"><b>${x.name}</b><small>${cost}</small><span>${x.desc}</span></div>
+      <button class="shop-buy" type="button" data-shop-action="sword" data-index="${i}">${action}</button>
+    </article>`;
+  }).join('');
+}

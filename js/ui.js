@@ -19,19 +19,31 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape' && !$('#credits').cl
 
 /* ===== V6 INTERACTION / TUTORIAL ===== */
 function updateSkillButtons(){
-  for(let i=1;i<=3;i++){
-    const b=$(`#bS${i}`); if(!b) continue;
-    const open=hasSkill(i); b.classList.toggle('locked',!open); b.classList.toggle('ready',open && (!P || P.scd<=0));
-    b.textContent=open?`S${i}`:`🔒 ${i}`;
-    b.title=open?`Skill ${i}`:`Buka Skill ${i} di Arsenal`;
-  }
+  const b=$('#bS');
+  if(!b)return;
+  const open=hasSkill(skillSlot);
+  b.classList.toggle('locked',!open);
+  b.classList.toggle('ready',open && (!P || P.scd<=0));
+  const label=b.querySelector('.skill-main');
+  if(label)label.textContent=open?`S${skillSlot}`:`🔒 ${skillSlot}`;
+  const item=SKILL_SHOP.find(x=>x.slot===skillSlot);
+  b.title=open?`${item?.name||'Skill'} · tap untuk ganti skill`:`Skill ${skillSlot} terkunci`;
+}
+function cycleSkill(){
+  const owned=(playerProfile.unlockedSkills||[]).slice().sort((a,b)=>a-b);
+  if(!owned.length)return;
+  const idx=owned.indexOf(skillSlot);
+  skillSlot=owned[(idx+1)%owned.length];
+  updateSkillButtons();
+  SFX.click();
+  say(`Skill aktif: ${skillSlot}`,1.2);
 }
 function startGameplayTutorial(){
   if(playerProfile.tutorialSeen||tutorialActive||S!='play')return;
   tutorialActive=true;tutorialStep=0;tutorial={mode:touch?'mobile':'desktop',steps:touch?[
     ['🕹','GERAK','Gerakkan analog ke arah mana saja.'],['⚔','SERANG','Tekan HIT untuk menyerang monster.'],['✦','SKILL','Pakai salah satu Skill yang sudah terbuka.'],['↯','MENGHINDAR','Tekan DODGE untuk menghindari serangan.']
   ]:[
-    ['W','GERAK','Tekan W / A / S / D atau Arrow untuk bergerak.'],['SPACE','SERANG','Tekan SPACE atau J untuk menyerang.'],['1 2 3','SKILL','Gunakan 1 / 2 / 3 untuk skill yang sudah terbuka.'],['SHIFT','MENGHINDAR','Tekan SHIFT untuk menghindar.']
+    ['W','GERAK','Tekan W / A / S / D atau Arrow untuk bergerak.'],['SPACE','SERANG','Tekan SPACE atau J untuk menyerang.'],['1 / 2 / 3','SKILL','Tekan angka untuk memilih skill. Di HP, tekan tombol skill untuk memakai atau menggantinya.'],['SHIFT','MENGHINDAR','Tekan SHIFT untuk menghindar.']
   ]};renderTutorial();show('tutorial',1);
 }
 function renderTutorial(){if(!tutorial)return;const s=tutorial.steps[tutorialStep];$('#tutorialIcon').textContent=s[0];$('#tutorialTitle').textContent=s[1];$('#tutorialText').textContent=s[2];$('#tutorialNext').textContent=tutorialStep>=tutorial.steps.length-1?'SELESAI':'LANJUT';}
@@ -43,15 +55,26 @@ function tutorialHandleInput(type){
 function finishTutorial(){tutorialActive=false;tutorial=null;playerProfile.tutorialSeen=true;savePlayerProfile();show('tutorial',0)}
 const tutorialNext=$('#tutorialNext');if(tutorialNext)tutorialNext.addEventListener('click',()=>{if(tutorialStep>=tutorial.steps.length-1)finishTutorial();else{tutorialStep++;renderTutorial()}});
 
-const _oldBegin=begin;
+const _originalBegin=begin;
 begin=function(m){
-  _oldBegin(m);
-  setTimeout(()=>{if(S==='play'){updateSkillButtons();startGameplayTutorial()}},1750);
+  _originalBegin(m);
+  window.setTimeout(()=>{
+    if(S==='play'){
+      updateSkillButtons();
+      startGameplayTutorial();
+    }
+  },1750);
 };
 
 document.addEventListener('click',e=>{
-  const skillCard=e.target.closest('[data-shop-skill]');
-  if(skillCard){buySkill(Number(skillCard.dataset.shopSkill));renderArsenal();return}
-  const swordCard=e.target.closest('[data-shop-sword]');
-  if(swordCard){buySword(Number(swordCard.dataset.shopSword));renderArsenal();return}
+  const action=e.target.closest('[data-shop-action]');
+  if(action){
+    const kind=action.dataset.shopAction;
+    const index=Number(action.dataset.index);
+    if(kind==='skill')buySkill(index);
+    if(kind==='sword')buySword(index);
+    renderArsenal();
+    updateSkillButtons();
+    return;
+  }
 });

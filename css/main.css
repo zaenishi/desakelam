@@ -89,3 +89,50 @@ input{user-select:text;-webkit-user-select:text;touch-action:auto}
 @media(max-width:700px){.shop-grid{grid-template-columns:1fr 1fr}.arsenal{padding:2vh 3vw}.desktop-help{display:none!important}.char-preview{height:145px}.chg{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:430px){.shop-grid{grid-template-columns:1fr}.skill-btn{font-size:9px!important}.char-preview{width:90vw}}
 #bS{position:static!important}
+
+
+/* ===== V7 PROFESSIONAL UX / STABILITY OVERRIDES ===== */
+.state-play #rot,
+.gameplay #rot{display:none!important;pointer-events:none!important}
+#rot{pointer-events:none!important}
+.state-intro #rot{display:none!important}
+#tc{display:none!important}
+.gameplay #tc{display:block!important}
+.gameplay #tc .tb,
+.gameplay #tc #jz{pointer-events:auto!important}
+
+/* One compact skill control. Tap to cycle owned skills; keyboard 1/2/3 still selects. */
+#skillCluster{position:fixed;right:calc(3vw + env(safe-area-inset-right));bottom:calc(5vh + env(safe-area-inset-bottom) + clamp(80px,29vh,135px));width:76px;height:76px;display:none;z-index:7;pointer-events:auto}
+.gameplay #skillCluster{display:block}
+#bS.skill-btn{position:relative!important;inset:auto!important;width:76px!important;height:76px!important;min-width:76px!important;min-height:76px!important;border-radius:22px!important;background:radial-gradient(circle at 35% 28%,#8b0000,#190000 70%);border:2px solid #ffd700!important;box-shadow:0 0 22px #8b000055, inset 0 0 16px #000;display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:18px!important}
+#bS .skill-main{font:700 20px Cinzel;color:#ffd700}
+#bS .skill-cycle{font:7px Cinzel;color:#c7a9a9;letter-spacing:.08em}
+#bS.ready{box-shadow:0 0 26px #ffd70055,inset 0 0 16px #000}
+#bS.locked{filter:grayscale(1);opacity:.7}
+
+/* Touch controls are strictly gameplay-only. */
+.not-gameplay #tc,.not-gameplay #pb{display:none!important}
+
+/* Shop: scrollable modal, explicit purchase/equip actions, clear instruction. */
+#arsenal{touch-action:pan-y!important;overflow-y:auto!important;overscroll-behavior:contain;padding:3vh 4vw 7vh}
+#arsenal *{touch-action:auto}
+.arsenal-head{flex:0 0 auto}
+.arsenal-help{color:#8f7f7f;font:9px Cinzel;line-height:1.5;margin-top:4px;max-width:560px}
+.shop-title{margin-top:18px;display:flex;align-items:center;gap:8px}
+.shop-title small{font:8px Cinzel;color:#6f6060;letter-spacing:.05em}
+.shop-grid{grid-template-columns:repeat(2,minmax(0,1fr));padding-bottom:4px}
+.shop-card{min-height:112px;display:grid;grid-template-columns:54px 1fr;grid-template-rows:1fr auto;gap:8px;padding:12px;border:1px solid #351010;border-radius:14px;background:linear-gradient(145deg,#190707ee,#050505ee);box-shadow:0 8px 22px #0008;transition:transform .2s,border-color .2s,box-shadow .2s}
+.shop-card:hover{transform:translateY(-3px);border-color:#8b0000}
+.shop-card.owned{border-color:#31502b}
+.shop-card.equipped{border-color:#ffd700;box-shadow:0 0 24px #ffd70020}
+.shop-icon{grid-row:1/3;width:54px;height:54px;border-radius:15px;display:grid;place-items:center;background:#0b0000;border:1px solid #4a1717;color:#ffd700;font-size:26px}
+.sword-icon{color:var(--blade);text-shadow:0 0 14px var(--blade)}
+.shop-copy{min-width:0;display:flex;flex-direction:column;gap:3px}
+.shop-copy b{font:700 12px Cinzel;color:#ffd700}
+.shop-copy small{font:8px Cinzel;color:#8c7c7c}
+.shop-copy span{font:9px Cinzel;line-height:1.45;color:#aaa}
+.shop-buy{grid-column:2;justify-self:end;min-width:82px;border:1px solid #8b0000;border-radius:9px;background:#260606;color:#ffd700;padding:7px 10px;font:700 9px Cinzel;cursor:pointer;touch-action:auto}
+.shop-buy:hover{background:#4a0000;border-color:#ffd700}
+.shop-card.equipped .shop-buy{border-color:#ffd700;color:#fff}
+.arsenal-footer{position:sticky;bottom:0;padding-top:14px;background:linear-gradient(#0000,#000 40%);width:min(1000px,94vw);display:flex;justify-content:center;z-index:2}
+@media(max-width:700px){.shop-grid{grid-template-columns:1fr}.shop-card{min-height:104px}.arsenal{padding:2vh 3vw 7vh}.arsenal-head{align-items:flex-start}.arsenal-head>b{font-size:11px}}

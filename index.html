@@ -5,8 +5,8 @@
 <link rel="stylesheet" href="css/main.css"></head><body>
 <canvas id="c" width="960" height="540"></canvas>
 <div id="tc"><div id="jz"></div><div id="jb"></div><div id="jk"></div>
-<button class="tb" id="bH">HIT</button><button class="tb" id="bD">DODGE</button><button class="tb" id="bE">MED</button><div id="skillCluster"><button class="tb skill-btn" id="bS1">S1</button><button class="tb skill-btn" id="bS2">S2</button><button class="tb skill-btn" id="bS3">S3</button></div><button class="tb" id="bI">MASUK</button></div>
-<button id="pb">II</button><button id="sk">LEWATI</button><button id="immersiveToggle" class="immersive-toggle" type="button" aria-label="Aktifkan layar penuh dan landscape" title="Layar penuh + landscape">⛶</button>
+<button class="tb" id="bH">HIT</button><button class="tb" id="bD">DODGE</button><button class="tb" id="bE">MED</button><div id="skillCluster"><button class="tb skill-btn" id="bS" type="button"><span class="skill-main">S1</span><small class="skill-cycle">TAP GANTI</small></button></div><button class="tb" id="bI">MASUK</button></div>
+<button id="pb">II</button><button id="sk">LEWATI DEMO</button><button id="immersiveToggle" class="immersive-toggle" type="button" aria-label="Aktifkan layar penuh dan landscape" title="Layar penuh + landscape">⛶</button>
 <div class="ov hide" id="menu">
   <div class="menu-topbar">
     <button class="profile-chip" data-a="prof" type="button"><span id="menuAvatar">☠</span><span><b id="menuName">PEMAIN</b><small id="menuUid">BELUM MASUK</small></span></button>
@@ -23,7 +23,7 @@
 <div class="ov hide" id="rank"><h1 style="font-size:6vh">RANKING</h1><div id="rs" style="color:#a99;font-size:clamp(10px,2.2vh,14px)"></div><div class="tbl" id="rl"></div><button class="b" data-a="close">TUTUP</button></div>
 <div class="ov hide" id="credits"><h1 style="font-size:6vh">CREDITS</h1><div id="creditsNames" class="creditsNames"></div><p>Terima kasih untuk semua yang membantu pengembangan dan pengujian.</p><button class="b" data-a="close">KEMBALI</button></div>
 <div class="ov hide" id="prof"><h1 style="font-size:5vh" id="pn"></h1><div id="pd" style="line-height:1.7"></div><div class="tbl" id="pa" style="max-height:30vh"></div><div class="row"><button class="b s" data-a="edit">UBAH PROFIL</button><button class="b s" data-a="close">TUTUP</button></div></div>
-<div class="ov hide arsenal" id="arsenal"><div class="arsenal-head"><h1>ARSENAL</h1><b id="arsenalPoints">POINT 0</b></div><div class="shop-title">SKILL</div><div class="shop-grid" id="skillShop"></div><div class="shop-title">PEDANG</div><div class="shop-grid" id="swordShop"></div><button class="b" data-a="closeArsenal">KEMBALI</button></div>
+<div class="ov hide arsenal" id="arsenal"><div class="arsenal-head"><div><h1>ARSENAL</h1><p class="arsenal-help">Beli dengan POINT. Item milikmu bisa dipakai kembali tanpa bayar.</p></div><b id="arsenalPoints">POINT 0</b></div><div class="shop-title">SKILL <small>• pilih untuk membeli / memakai</small></div><div class="shop-grid" id="skillShop"></div><div class="shop-title">PEDANG <small>• setiap pedang punya efek berbeda</small></div><div class="shop-grid" id="swordShop"></div><div class="arsenal-footer"><button class="b s" data-a="closeArsenal">← KEMBALI</button></div></div>
 <div class="ov hide" id="tutorial"><div class="tutorial-icon" id="tutorialIcon">⌨</div><h1 id="tutorialTitle">CARA BERMAIN</h1><p id="tutorialText"></p><button class="b" id="tutorialNext">LANJUT</button></div>
 <div class="ov hide" id="load"><h1 style="font-size:5vh">Memuat…</h1><div id="bar"><i></i></div><p id="tip"></p></div>
 <div class="ov hide" id="pause"><h1>JEDA</h1><button class="b" data-a="resume">LANJUT</button><button class="b" data-a="home">MENU</button></div>

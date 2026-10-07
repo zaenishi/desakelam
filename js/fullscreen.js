@@ -78,7 +78,10 @@ async function enableImmersiveMode(){
   await requestGameFullscreen();
 }
 
-const immersiveTapHandler=(event)=>{ if(event.target && event.target.closest && event.target.closest('#immersiveToggle')) return; void enableImmersiveMode(); };
+const immersiveTapHandler=(event)=>{
+  if(event.target && event.target.closest && event.target.closest('#immersiveToggle')) return;
+  if(typeof S==='string' && S==='play' && !isFullscreen()) void enableImmersiveMode();
+};
 addEventListener('pointerdown', immersiveTapHandler, {capture:true, once:false});
 
 document.addEventListener('fullscreenchange',()=>{updateImmersiveButton();fit()});
