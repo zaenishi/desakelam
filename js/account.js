@@ -13,12 +13,7 @@ const DEFAULT_PLAYER_PROFILE = {
   stats: {},
   achievements: [],
   accessCode: '',
-  skinUnlocked: 0,
-  points: 0,
-  unlockedSkills: [1],
-  unlockedSwords: [0],
-  swordIndex: 0,
-  tutorialSeen: false
+  skinUnlocked: 0
 };
 
 function normalizePlayerProfile(savedProfile = {}) {
@@ -33,19 +28,13 @@ function normalizePlayerProfile(savedProfile = {}) {
       ? savedProfile.achievements
       : (Array.isArray(savedProfile.ach) ? savedProfile.ach : []),
     accessCode: savedProfile.accessCode || savedProfile.code || '',
-    skinUnlocked: Number(savedProfile.skinUnlocked ?? savedProfile.skin ?? 0),
-    points: Number(savedProfile.points ?? savedProfile.pt ?? 0),
-    unlockedSkills: Array.from(new Set((Array.isArray(savedProfile.unlockedSkills) ? savedProfile.unlockedSkills.map(Number) : [1]).filter(n=>n>=1&&n<=3))).sort((a,b)=>a-b).concat([]).filter((n,i,a)=>a.indexOf(n)===i).length ? Array.from(new Set((Array.isArray(savedProfile.unlockedSkills) ? savedProfile.unlockedSkills.map(Number) : [1]).filter(n=>n>=1&&n<=3))).sort((a,b)=>a-b) : [1],
-    unlockedSwords: Array.from(new Set((Array.isArray(savedProfile.unlockedSwords) ? savedProfile.unlockedSwords.map(Number) : [0]).filter(n=>n>=0))).sort((a,b)=>a-b).length ? Array.from(new Set((Array.isArray(savedProfile.unlockedSwords) ? savedProfile.unlockedSwords.map(Number) : [0]).filter(n=>n>=0))).sort((a,b)=>a-b) : [0],
-    swordIndex: Number(savedProfile.swordIndex ?? 0),
-    tutorialSeen: Boolean(savedProfile.tutorialSeen ?? false)
+    skinUnlocked: Number(savedProfile.skinUnlocked ?? savedProfile.skin ?? 0)
   });
 }
 
 let playerProfile = normalizePlayerProfile(MLDatabase.getCachedUser() || {});
 
 let selectedCharacterIndex = playerProfile.characterIndex || 0;
-if(typeof skillSlot==='number' && !playerProfile.unlockedSkills.includes(skillSlot)) skillSlot=playerProfile.unlockedSkills[0]||1;
 let leaderboardCache = MLDatabase.getCachedLeaderboard();
 
 let interiorIndex = 0;
@@ -54,21 +43,6 @@ let currentRoom = null;
 let monsterNests = [];
 let night = 1;
 let foundDocuments = 0;
-
-function addPoints(amount, reason='') {
-  const gain = Math.max(0, Math.round(amount));
-  if (!gain) return 0;
-  playerProfile.points = Math.max(0, Number(playerProfile.points || 0) + gain);
-  if (reason) say(`+${gain} POINT · ${reason}`, 1.8);
-  return gain;
-}
-
-function spendPoints(amount) {
-  amount = Math.max(0, Number(amount || 0));
-  if (playerProfile.points < amount) return false;
-  playerProfile.points -= amount;
-  return true;
-}
 
 function getCurrentCharacterClass() {
   return CHARACTER_CLASSES[playerProfile.characterIndex] || CHARACTER_CLASSES[0];
@@ -240,29 +214,28 @@ function submitAccessCode() {
 
 function showRegistration() {
   ['menu', 'gate', 'prof'].forEach(id => show(id, 0));
+
   $('#nm').value = playerProfile.name || '';
   $('#chg').innerHTML = CHARACTER_CLASSES.map((character, index) => `
-    <button class="chc" data-i="${index}" type="button">
-      <b>${character.emoji}</b><span>${character.name}</span>
+    <button class="chc" data-i="${index}">
+      <b>${character.emoji}</b>${character.name}
     </button>
   `).join('');
+
   selectCharacter(playerProfile.characterIndex || 0);
   show('reg', 1);
 }
 
 function selectCharacter(characterIndex) {
-  selectedCharacterIndex = cl(Number(characterIndex) || 0, 0, CHARACTER_CLASSES.length - 1);
+  selectedCharacterIndex = characterIndex;
+
   document.querySelectorAll('.chc').forEach(button => {
-    button.classList.toggle('on', Number(button.dataset.i) === selectedCharacterIndex);
+    button.classList.toggle('on', Number(button.dataset.i) === characterIndex);
   });
-  const character = CHARACTER_CLASSES[selectedCharacterIndex] || CHARACTER_CLASSES[0];
-  const preview = $('#charPreview');
-  if (preview) {
-    preview.style.setProperty('--skin', character.color);
-    preview.innerHTML = `<div class="skin-shadow"></div><div class="skin-body"><span class="skin-emoji">${character.emoji}</span></div><b>${escapeHtml(character.name)}</b><small>${escapeHtml(character.skillName)}</small>`;
-  }
+
+  const character = CHARACTER_CLASSES[characterIndex] || CHARACTER_CLASSES[0];
   $('#re').style.color = '#caa';
-  $('#re').textContent = `${character.description} · HP x${character.hpMultiplier} · Speed x${character.speedMultiplier}`;
+  $('#re').textContent = `${character.skillName}: ${character.description} · HP x${character.hpMultiplier} · Speed x${character.speedMultiplier}`;
 }
 
 function submitRegistration() {
@@ -326,10 +299,9 @@ function openProfile() {
   const stats = playerProfile.stats;
 
   $('#pn').textContent = `${playerProfile.name} - ${playerProfile.uid} [${character.name}]`;
-  $('#pd').innerHTML = `${character.emoji} ${escapeHtml(character.name)} · Skill dasar: ${escapeHtml(character.skillName)}<br>
-    <b style="color:#ffd700">POINT ${playerProfile.points}</b> · Skor terbaik ${playerProfile.bestScore} · Rank #${getPlayerRank(playerProfile.bestScore)}<br>
+  $('#pd').innerHTML = `${character.emoji} Skill: ${character.skillName}<br>
+    Skor terbaik ${playerProfile.bestScore} · Rank #${getPlayerRank(playerProfile.bestScore)}<br>
     Monster ${stats.kills || 0} · Artefak ${stats.art || 0} · Malam ${stats.night || 0} · Main ${playerProfile.gamesPlayed}<br>
-    Skill terbuka ${playerProfile.unlockedSkills.length}/3 · Pedang ${playerProfile.unlockedSwords.length}/${SWORDS.length}<br>
     Achievement ${playerProfile.achievements.length}/${ACHIEVEMENTS.length}`;
 
   $('#pa').innerHTML = ACHIEVEMENTS.map(achievement => `
