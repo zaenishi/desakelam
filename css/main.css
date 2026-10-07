@@ -136,3 +136,34 @@ input{user-select:text;-webkit-user-select:text;touch-action:auto}
 .shop-card.equipped .shop-buy{border-color:#ffd700;color:#fff}
 .arsenal-footer{position:sticky;bottom:0;padding-top:14px;background:linear-gradient(#0000,#000 40%);width:min(1000px,94vw);display:flex;justify-content:center;z-index:2}
 @media(max-width:700px){.shop-grid{grid-template-columns:1fr}.shop-card{min-height:104px}.arsenal{padding:2vh 3vw 7vh}.arsenal-head{align-items:flex-start}.arsenal-head>b{font-size:11px}}
+
+/* ===== V8 INTERACTION / CONTROL DECK / SHOP FEEDBACK ===== */
+#tc{position:fixed;inset:auto 0 0 0;height:auto;display:none!important;z-index:20;pointer-events:none}
+.gameplay #tc{display:block!important}
+#jz{position:fixed;left:0;bottom:0;width:46vw;height:78vh;z-index:4;pointer-events:auto}
+#jb,#jk{z-index:6}
+#actionDeck{position:fixed;right:calc(2.5vw + env(safe-area-inset-right));bottom:calc(3vh + env(safe-area-inset-bottom));display:flex;align-items:flex-end;justify-content:flex-end;gap:8px;z-index:8;pointer-events:auto;padding:8px;border:1px solid #5a1818;border-radius:24px;background:linear-gradient(145deg,#090000d9,#020202d9);box-shadow:0 12px 35px #000b,0 0 24px #8b000018;backdrop-filter:blur(7px)}
+#actionDeck .tb{position:relative!important;inset:auto!important;transform:none!important;flex:0 0 auto;width:clamp(54px,9.2vh,76px)!important;height:clamp(54px,9.2vh,76px)!important;min-width:54px!important;min-height:54px!important;border-radius:18px!important;font-size:clamp(9px,1.8vh,13px)!important;box-shadow:inset 0 0 14px #000,0 0 12px #3008;}
+#actionDeck #bH{width:clamp(66px,11vh,88px)!important;height:clamp(66px,11vh,88px)!important;border-color:#ffd700;background:radial-gradient(circle,#7b0000,#180000 72%)}
+#actionDeck #bS{display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:radial-gradient(circle at 35% 28%,#540000,#130000 72%);border-color:#9d6b00}
+#bS .skill-main{font:700 clamp(15px,2.6vh,21px) Cinzel;color:#ffd700}
+#bS .skill-cycle{font:7px Cinzel;color:#bda6a6;letter-spacing:.05em}
+#bS.ready{box-shadow:0 0 20px #ffd70044,inset 0 0 14px #000}
+#bS.locked{filter:grayscale(1);opacity:.65}
+#skillCluster{display:none!important}
+#uiToast{position:fixed;left:50%;top:calc(10px + env(safe-area-inset-top));transform:translate(-50%,-18px) scale(.96);z-index:180;max-width:min(88vw,520px);padding:10px 16px;border:1px solid #8b0000;border-radius:999px;background:linear-gradient(135deg,#180000f2,#050505f2);color:#ffd700;font:700 11px Cinzel;letter-spacing:.04em;text-align:center;box-shadow:0 10px 30px #000b,0 0 18px #8b000033;opacity:0;pointer-events:none;transition:opacity .18s,transform .18s}
+#uiToast.show{opacity:1;transform:translate(-50%,0) scale(1)}
+#uiToast[data-kind="error"]{border-color:#d22;color:#ff7777;animation:toastShake .28s ease}
+#uiToast[data-kind="success"]{border-color:#c5a400;color:#ffe66b}
+@keyframes toastShake{0%,100%{margin-left:0}25%{margin-left:-7px}75%{margin-left:7px}}
+.shop-banner{position:sticky;top:0;z-index:5;width:min(1000px,94vw);display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid #6d1b1b;border-radius:16px;background:linear-gradient(120deg,#250707f5,#070707f5);box-shadow:0 10px 30px #0009;backdrop-filter:blur(8px)}
+.shop-mark{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:#120000;border:1px solid #a00000;color:#ffd700;font-size:23px;box-shadow:0 0 18px #8b000033}
+.shop-banner strong{display:block;color:#ffd700;font:700 16px Cinzel;letter-spacing:.1em}.shop-banner small{display:block;color:#8e7777;font:9px Cinzel;margin-top:2px}.shop-banner>b{margin-left:auto;color:#ffd700;font:700 12px Cinzel;padding:8px 11px;border:1px solid #735800;border-radius:999px;background:#120d00}
+.arsenal{scrollbar-width:thin;scrollbar-color:#8b0000 #080808}
+.arsenal::after{content:'SCROLL UNTUK MELIHAT SEMUA ITEM';position:sticky;bottom:0;align-self:center;color:#675454;font:8px Cinzel;letter-spacing:.12em;padding:10px;pointer-events:none;background:linear-gradient(transparent,#000 55%);width:100%;text-align:center}
+.shop-buy:disabled{opacity:.45;cursor:not-allowed;filter:grayscale(.8)}
+@media(max-width:700px){#actionDeck{right:2vw;bottom:calc(2vh + env(safe-area-inset-bottom));gap:5px;padding:6px;border-radius:20px}#actionDeck .tb{width:clamp(48px,10.5vw,64px)!important;height:clamp(48px,10.5vw,64px)!important;min-width:48px!important;min-height:48px!important;border-radius:15px!important}#actionDeck #bH{width:clamp(58px,13vw,76px)!important;height:clamp(58px,13vw,76px)!important}.shop-banner{width:94vw}.shop-banner strong{font-size:13px}}
+@media(max-width:430px){#actionDeck{right:1vw;gap:3px;padding:5px}#actionDeck .tb{width:46px!important;height:46px!important;min-width:46px!important;min-height:46px!important}#actionDeck #bH{width:58px!important;height:58px!important}.shop-banner{gap:8px}.shop-mark{width:36px;height:36px;font-size:19px}}
+@media(min-width:701px){#actionDeck{display:none!important}.gameplay #actionDeck{display:none!important}}
+.shop-card.shop-error{animation:shopError .45s ease;border-color:#e22!important;box-shadow:0 0 22px #e221!important}
+@keyframes shopError{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}

@@ -7,4 +7,4 @@ function reset(m){MODE=m;M=[];IT=[];PR=[];FX=[];TX=[];skillPress[1]=skillPress[2
 function popC(){M=[];IT=[];NS=[];PR=[];[0,1,2,3,4,5].sort(()=>R()-.5).slice(0,5).forEach(z=>{const p=fp(z,350),g=mk(['bo','gh','sp'][z%3],p.x,p.y,1.6*getNightDifficultyMultiplier());g.guard=1;M.push(g)});
   for(let z=0;z<7;z++)for(let i=0;i<2;i++){const p=fp(z,350);M.push(mk(ZM[z][i],p.x,p.y,getNightDifficultyMultiplier()))}
   for(let i=0;i<8;i++){const p=fp(i%7);IT.push({k:'med',x:p.x,y:p.y})}for(let i=0;i<10;i++){const p=fp(i%6);IT.push({k:'note',x:p.x,y:p.y,i})}for(let i=0;i<3;i++){const p=fp([1,4,5][i]);IT.push({k:'npc',x:p.x,y:p.y})};for(let i=0;i<20;i++){const p=fp(i%7,300);NS.push({x:p.x,y:p.y,hp:40,t:R()*9,cd:R()*8,fl:0})}}
-function say(s,d=4){msg={s,t:d}}
+function say(s,d=4){msg={s,t:d};if(typeof showToast==='function' && (S!=='play' || !document.body.classList.contains('gameplay')))showToast(s,'info');}

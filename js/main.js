@@ -10,8 +10,9 @@ function frame(now){requestAnimationFrame(frame);syncStateClass();let rd=Math.mi
  slow+=(1-slow)*Math.min(1,rd*2.5);if(hitstop>0){hitstop-=rd;rd=0}const dt=rd*slow;shake*=.9;if(shake<.3)shake=0;flash=Math.max(0,flash-rd*2.5);
  if(S=='menu'||S=='load'){setGameplayUI(false);if(R()<.002)weather=['clear','rain','fog'][R()*3|0];if(AC&&(I.pn=(I.pn||0)-rd)<=0){I.pn=1.6;tone([261,311,392,349,233][R()*5|0],1.4,'triangle',.06)}menuScene();return}
  if(S=='intro'){
-  setGameplayUI(false);
+  setGameplayUI(true);
   it+=rd;
+  upPlayer(rd,true);
   // Demo is a deterministic cinematic; it must never depend on gameplay input/state.
   if(it>6&&!I.sp){
     I.sp=1;
@@ -21,8 +22,9 @@ function frame(now){requestAnimationFrame(frame);syncStateClass();let rd=Math.mi
       go(m,'chase');M.push(m);
     }
   }
+  if(M.length){for(const m of M)upM(m,rd);M=M.filter(m=>!m.dead);}
   if(it>11&&!I.sc){I.sc=1;slow=.25;scare()}
-  if(it>=14)endIntro();
+  if(it>=12)endIntro();
  }
  else if(S=='play'){setGameplayUI(true);upGame(dt)}
  if(S=='pause'||S=='end'){setGameplayUI(true)}
