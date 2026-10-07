@@ -19,7 +19,8 @@ const DEFAULT_PLAYER_PROFILE = {
   equippedWeapon: 'rustblade',
   ownedSkills: ['class'],
   equippedSkill: 'class',
-  tutorialCompleted: false
+  tutorialCompleted: false,
+  characterLocked: false
 };
 
 function normalizePlayerProfile(savedProfile = {}) {
@@ -40,7 +41,8 @@ function normalizePlayerProfile(savedProfile = {}) {
     equippedWeapon: savedProfile.equippedWeapon || 'rustblade',
     ownedSkills: Array.isArray(savedProfile.ownedSkills) ? [...new Set(savedProfile.ownedSkills.map(String))] : ['class'],
     equippedSkill: savedProfile.equippedSkill || 'class',
-    tutorialCompleted: Boolean(savedProfile.tutorialCompleted)
+    tutorialCompleted: Boolean(savedProfile.tutorialCompleted),
+    characterLocked: Boolean(savedProfile.characterLocked ?? (savedProfile.name && savedProfile.uid))
   });
 }
 
@@ -237,11 +239,20 @@ function showRegistration() {
   `).join('');
 
   selectCharacter(playerProfile.characterIndex || 0);
+  const existing = Boolean(playerProfile.characterLocked || playerProfile.name);
+  document.querySelectorAll('.chc').forEach(button => { button.disabled = existing; });
+  $('#nm').disabled = false;
+  $('#re').textContent = existing ? 'Karakter akun ini sudah terkunci dan tidak dapat diganti.' : $('#re').textContent;
   show('reg', 1);
 }
 
 function selectCharacter(characterIndex) {
-  selectedCharacterIndex = characterIndex;
+  if (playerProfile.characterLocked) {
+    selectedCharacterIndex = playerProfile.characterIndex;
+    characterIndex = playerProfile.characterIndex;
+  } else {
+    selectedCharacterIndex = characterIndex;
+  }
 
   document.querySelectorAll('.chc').forEach(button => {
     button.classList.toggle('on', Number(button.dataset.i) === characterIndex);
@@ -265,7 +276,8 @@ function submitRegistration() {
   }
 
   playerProfile.name = GAME_CONFIG.registration.uppercaseName === false ? playerName : playerName.toUpperCase();
-  playerProfile.characterIndex = selectedCharacterIndex;
+  if (!playerProfile.characterLocked) playerProfile.characterIndex = selectedCharacterIndex;
+  playerProfile.characterLocked = true;
   playerProfile.tutorialCompleted = Boolean(playerProfile.tutorialCompleted);
 
   if (!playerProfile.uid) {

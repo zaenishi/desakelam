@@ -10,7 +10,7 @@
 <div class="ov hide" id="menu"><h1>MALAM KELAM<br>DI DESA TERKUTUK</h1><div id="mi"></div>
 <button class="b" data-a="classic" id="tournamentBtn">TURNAMEN</button><button class="b" data-a="train">TRAINING</button><div id="tournamentStatus"></div>
 <div class="menu-nav menu-nav-primary">
-<button class="b s" data-a="shop">SHOP</button><button class="b s" data-a="character">CHARACTER</button><button class="b s" data-a="skills">SKILLS</button><button class="b s" data-a="weapons">WEAPONS</button>
+<button class="b s" data-a="shop">SHOP</button><button class="b s" data-a="character">CHARACTER</button>
 </div>
 <div class="menu-nav"><button class="b s" data-a="rank">RANKING</button><button class="b s" data-a="prof">PROFIL</button><button class="b s" data-a="credits">CREDITS</button></div><div id="lb"></div></div>
 <div class="ov hide" id="gate"><h1>KODE AKSES</h1><p style="max-width:80vw">Masukkan kode akses turnamen dari panitia.</p><input class="in" id="code" maxlength="16" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="KODE"><div class="er" id="ge"></div><button class="b" data-a="gate">MASUK</button></div>
@@ -22,12 +22,10 @@
 <div class="ov hide" id="pause"><h1>JEDA</h1><button class="b" data-a="resume">LANJUT</button><button class="b" data-a="home">MENU</button></div>
 <div class="ov hide" id="end"><h1 id="et"></h1><p id="es" style="font-size:clamp(12px,2.8vh,20px);line-height:1.6"></p><button class="b" data-a="again">ULANGI</button><button class="b" data-a="home">MENU</button></div>
 
-<div class="ov hide game-panel" id="shop"><h1>SHOP</h1><div id="shopPoints" class="panel-points"></div><div id="shopList" class="item-grid"></div><button class="b" data-a="close">KEMBALI</button></div>
-<div class="ov hide game-panel" id="character"><h1>CHARACTER</h1><div id="characterList" class="item-grid"></div><button class="b" data-a="close">KEMBALI</button></div>
-<div class="ov hide game-panel" id="skills"><h1>SKILLS</h1><div id="skillList" class="item-grid"></div><button class="b" data-a="close">KEMBALI</button></div>
-<div class="ov hide game-panel" id="weapons"><h1>WEAPONS</h1><div id="weaponList" class="item-grid"></div><button class="b" data-a="close">KEMBALI</button></div>
+<div class="ov hide game-panel" id="shop"><div class="panel-shell"><div class="panel-head"><div><span class="panel-kicker">ARSENAL</span><h1>SHOP</h1></div><div id="shopPoints" class="panel-points"></div></div><div class="shop-content"><section class="shop-section"><div class="section-head"><span>⚔</span><div><b>PEDANG</b><small>Senjata yang memengaruhi damage dan kecepatan serangan.</small></div></div><div id="shopList" class="item-grid"></div></section><section class="shop-section"><div class="section-head"><span>✦</span><div><b>SKILL</b><small>Beli lalu pilih satu skill aktif untuk gameplay.</small></div></div><div id="skillList" class="item-grid"></div></section></div><button class="b panel-close" data-a="close">KEMBALI</button></div></div>
+<div class="ov hide game-panel" id="character"><div class="panel-shell"><div class="panel-head"><div><span class="panel-kicker">IDENTITAS</span><h1>CHARACTER</h1></div><span class="locked-label">TERKUNCI</span></div><p class="panel-note">Karakter dipilih sekali saat registrasi dan tidak dapat diganti setelah akun dibuat.</p><div id="characterList" class="item-grid character-grid"></div><button class="b panel-close" data-a="close">KEMBALI</button></div></div>
 <div id="tournamentWarning"></div><div class="ov hide" id="tournamentEnd"><div id="tCountdownWrap"><div id="tCountdownTitle"></div><div id="tCountdown"></div></div><div id="tWinner"></div></div>
-<div id="rot"><b>📱</b>Putar perangkat ke mode landscape untuk bermain</div>
+<div id="rot" aria-live="assertive"><div class="rot-card"><b>📱</b><strong>PUTAR PERANGKAT</strong><span>Game membutuhkan orientasi landscape.</span><small>Setelah landscape aktif, layar ini akan hilang otomatis.</small></div></div>
 <script src="js/config.js"></script>
 <script src="js/database.js"></script>
 <script src="js/core.js"></script>

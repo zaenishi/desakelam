@@ -5,6 +5,7 @@
  */
 let immersiveActive = false;
 let immersiveAttempted = false;
+let fsDone = false;
 const immersiveButton = () => document.getElementById('immersiveToggle');
 
 function isFullscreen(){
@@ -82,8 +83,8 @@ async function enableImmersiveMode(){
 const immersiveTapHandler=(event)=>{ if(event.target && event.target.closest && event.target.closest('#immersiveToggle')) return; fsDone=true; void enableImmersiveMode(); };
 addEventListener('pointerdown', immersiveTapHandler, {capture:true, once:false});
 
-document.addEventListener('fullscreenchange',()=>{updateImmersiveButton();fit()});
-document.addEventListener('webkitfullscreenchange',()=>{updateImmersiveButton();fit()});
+document.addEventListener('fullscreenchange',()=>{updateImmersiveButton();fit();syncOrientationGate()});
+document.addEventListener('webkitfullscreenchange',()=>{updateImmersiveButton();fit();syncOrientationGate()});
 
 const button=immersiveButton();
 if(button) button.addEventListener('click', e=>{e.stopPropagation();void toggleImmersiveMode()});
@@ -94,6 +95,21 @@ function fit(){
   C.style.transform=`translate(${(innerWidth-W*s)/2}px,${(innerHeight-H*s)/2}px) scale(${s})`;
 }
 addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(fit,80)});
-addEventListener('orientationchange',()=>setTimeout(fit,200));
+addEventListener('orientationchange',()=>setTimeout(()=>{fit();syncOrientationGate()},100));
+addEventListener('resize',()=>setTimeout(syncOrientationGate,40));
 fit();
+syncOrientationGate();
 setTimeout(()=>{ if(GAME_CONFIG.ui.autoFullscreen || GAME_CONFIG.ui.autoLandscape) void enableImmersiveMode(); },250);
+
+
+function isPortraitGameplay(){
+  return !!(touch && innerHeight > innerWidth && (S === 'play' || S === 'intro'));
+}
+function syncOrientationGate(){
+  const rot=document.getElementById('rot');
+  if(!rot)return;
+  const blocked=isPortraitGameplay();
+  rot.classList.toggle('active',blocked);
+  rot.setAttribute('aria-hidden',String(!blocked));
+  if(typeof setOrientationGameplayPause==='function') setOrientationGameplayPause(blocked);
+}
