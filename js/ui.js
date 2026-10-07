@@ -1,6 +1,6 @@
 /* ===== UI ===== */
 document.addEventListener('click',e=>{const cc=e.target.closest('.chc');if(cc){SFX.click();selectCharacter(+cc.dataset.i);return}const b=e.target.closest('.b');if(!b)return;SFX.click();const r=document.createElement('i'),q=b.getBoundingClientRect();r.className='rp';r.style.left=e.clientX-q.left-5+'px';r.style.top=e.clientY-q.top-5+'px';b.appendChild(r);setTimeout(()=>r.remove(),600);
- const a=b.dataset.a;if(a=='train'||a=='classic')begin(a);if(a=='again')begin(MODE);if(a=='home')toMenu();if(a=='resume')pauseT();if(a=='rank')openRanking();if(a=='prof')openProfile();if(a=='close')toMenu();if(a=='credits')openCredits();if(a=='fullscreen')requestGameFullscreen();if(a=='landscape')requestLandscape();if(a=='gate')submitAccessCode();if(a=='reg')submitRegistration();if(a=='edit')showRegistration()});
+ const a=b.dataset.a;if(a=='train'||a=='classic')begin(a);if(a=='again')begin(MODE);if(a=='home')toMenu();if(a=='resume')pauseT();if(a=='rank')openRanking();if(a=='prof')openProfile();if(a=='close')toMenu();if(a=='credits')openCredits();if(a=='gate')submitAccessCode();if(a=='reg')submitRegistration();if(a=='edit')showRegistration()});
 document.addEventListener('pointerover',e=>{if(e.target.closest&&e.target.closest('.b'))SFX.hover()});
 const show=(id,v)=>$('#'+id).classList.toggle('hide',!v);
 function pauseT(){if(S=='play'){S='pause';show('pause',1);SFX.back()}else if(S=='pause'){S='play';show('pause',0)}}
@@ -12,4 +12,7 @@ function begin(m){S='load';show('menu',0);show('end',0);show('load',1);$('#tip')
  setTimeout(()=>{reset(m);if(m=='classic'){playerProfile.gamesPlayed++;savePlayerProfile()}S='play';show('load',0);$('#pb').style.display='block';$('#tc').style.display=touch?'block':'';last=performance.now()},1700)}
 
 function openCredits(){show('menu',0);$('#creditsNames').innerHTML=(GAME_CONFIG.ui.credits||[]).map(escapeHtml).map(n=>`<div>${n}</div>`).join('');show('credits',1)}
-function closeCredits(){show('credits',0);toMenu()}
+function closeCredits(){show('credits',0);show('menu',1);S='menu';renderLB()}
+const creditsCloseButton=document.querySelector('#credits [data-a="close"]');
+if(creditsCloseButton) creditsCloseButton.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();closeCredits()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape' && !$('#credits').classList.contains('hide')) closeCredits()});

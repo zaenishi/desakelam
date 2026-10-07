@@ -7,6 +7,9 @@ function frame(now){requestAnimationFrame(frame);let rd=Math.min(.05,(now-last)/
  else if(S=='play'){upGame(dt)}
  if(S=='pause'||S=='end'||S=='play'||S=='intro'){const tx=P.x-W/2,ty=P.y-H/2;cam.x+=(cl(tx,0,WW-W)-cam.x)*Math.min(1,rd*8);cam.y+=(cl(ty,0,WH-H)-cam.y)*Math.min(1,rd*8);
   drawWorld();post();if(S=='intro')introScene();else hud();if(sc&&(S=='play'||I.sc))face();if(FD>0){X.fillStyle=`rgba(0,0,0,${FD})`;X.fillRect(0,0,W,H);FD=Math.max(0,FD-rd*1.2)}}}
-function init(){genWorld();for(let i=0;i<40;i++)fireflies.push({x:R()*W,y:200+R()*300,p:R()*9});reset('classic');S='intro';P.x=300;P.y=430;requestAnimationFrame(n=>{last=n;frame(n)})}
+function init(){genWorld();for(let i=0;i<40;i++)fireflies.push({x:R()*W,y:200+R()*300,p:R()*9});reset('classic');P.x=300;P.y=430;
+  if(typeof isLoggedIn==='function' && isLoggedIn()){ S='menu'; $('#sk').style.display='none'; toMenu(); }
+  else { S='intro'; $('#sk').style.display='block'; }
+  requestAnimationFrame(n=>{last=n;frame(n)})}
 async function boot(){await initDatabase();if(typeof Tournament!=='undefined')Tournament.start();addEventListener('pagehide',()=>{if(S=='play'&&MODE=='classic')submitScore(score|0)});document.addEventListener('visibilitychange',()=>{if(document.hidden&&GAME_CONFIG.gameplay.pauseWhenHidden&&S=='play')pauseT()});init()}
 boot();

@@ -23,7 +23,7 @@ const Tournament = (()=>{
   function winners(i){const list=(MLDatabase.getLeaderboardSync?MLDatabase.getLeaderboardSync():[]).slice().sort((a,b)=>(b.score||0)-(a.score||0)).slice(0,+cfg().topWinners||3);if(i>=list.length){setTimeout(finish,1000);return}const e=list[i],el=$('#tWinner');if(el){el.innerHTML=`<div class="t-rank">PEMENANG NO ${i+1}</div><div class="t-name">${escapeHtml(e.name||'?')}</div><div class="t-score">${e.score||0} POIN</div>`;el.classList.remove('show');void el.offsetWidth;el.classList.add('show')}setTimeout(()=>winners(i+1),+cfg().revealDelayMs||2200)}
   function finish(){ending=false;armed=false;warningShown=false;show('tournamentEnd',0);show('tournamentWarning',0);if(cfg().redirectToLeaderboard)openRanking();else toMenu()}
   function label(){return !configured()||past()?'START':'TURNAMEN'}
-  function status(){if(!configured())return 'Hari ini bukan hari turnamen.';if(past())return 'Turnamen hari ini telah selesai.';if(Date.now()<startTs())return `Mulai ${cfg().startTime}`;return `Aktif · sisa ${Math.max(0,Math.ceil((endTs()-Date.now())/1000))} detik`}
+  function status(){if(!configured()||past())return '';if(Date.now()<startTs())return `Mulai ${cfg().startTime}`;return `Aktif · sisa ${Math.max(0,Math.ceil((endTs()-Date.now())/1000))} detik`}
   function escapeHtml(v){return String(v).replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\\':'&#92;'}[c]||c))}
   return Object.freeze({start,stop,tick,armIfPlaying:arm,disarm,isWithinWindow:active,isPastEnd:past,getMenuLabel:label,getStatusText:status});
 })();
