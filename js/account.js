@@ -9,26 +9,38 @@ const DEFAULT_PLAYER_PROFILE = {
   uid: '',
   characterIndex: 0,
   bestScore: 0,
+  points: 0,
   gamesPlayed: 0,
   stats: {},
   achievements: [],
   accessCode: '',
-  skinUnlocked: 0
+  skinUnlocked: 0,
+  ownedWeapons: ['rustblade'],
+  equippedWeapon: 'rustblade',
+  ownedSkills: ['class'],
+  equippedSkill: 'class',
+  tutorialCompleted: false
 };
 
 function normalizePlayerProfile(savedProfile = {}) {
   return Object.assign({}, DEFAULT_PLAYER_PROFILE, {
     name: savedProfile.name || '',
     uid: savedProfile.uid || '',
-    characterIndex: Number(savedProfile.characterIndex ?? savedProfile.ch ?? 0),
+    characterIndex: Math.max(0, Math.min(CHARACTER_CLASSES.length - 1, Number(savedProfile.characterIndex ?? savedProfile.ch ?? 0) || 0)),
     bestScore: Number(savedProfile.bestScore ?? savedProfile.best ?? 0),
+    points: Number(savedProfile.points ?? savedProfile.pts ?? 0),
     gamesPlayed: Number(savedProfile.gamesPlayed ?? savedProfile.games ?? 0),
     stats: savedProfile.stats || savedProfile.st || {},
     achievements: Array.isArray(savedProfile.achievements)
       ? savedProfile.achievements
       : (Array.isArray(savedProfile.ach) ? savedProfile.ach : []),
     accessCode: savedProfile.accessCode || savedProfile.code || '',
-    skinUnlocked: Number(savedProfile.skinUnlocked ?? savedProfile.skin ?? 0)
+    skinUnlocked: Number(savedProfile.skinUnlocked ?? savedProfile.skin ?? 0),
+    ownedWeapons: Array.isArray(savedProfile.ownedWeapons) ? [...new Set(savedProfile.ownedWeapons.map(String))] : ['rustblade'],
+    equippedWeapon: savedProfile.equippedWeapon || 'rustblade',
+    ownedSkills: Array.isArray(savedProfile.ownedSkills) ? [...new Set(savedProfile.ownedSkills.map(String))] : ['class'],
+    equippedSkill: savedProfile.equippedSkill || 'class',
+    tutorialCompleted: Boolean(savedProfile.tutorialCompleted)
   });
 }
 
@@ -78,10 +90,12 @@ function updatePlayerStat(statKey, amount, setMaximum = false) {
 }
 
 function addScore(amount) {
-  score += Math.round(
-    amount * (1 + Math.min(4, P.sk / 3 | 0)) *
-    (weather === 'eclipse' ? 2 : 1)
-  );
+  const base = Math.max(0, Number(amount) || 0);
+  const multiplier = (1 + Math.min(4, (P?.sk || 0) / 3 | 0)) * (weather === 'eclipse' ? 2 : 1);
+  const gainedScore = Math.max(0, Math.round(base * multiplier));
+  const gainedPoints = Math.max(0, Math.round(base));
+  score += gainedScore;
+  playerProfile.points = Math.max(0, Number(playerProfile.points || 0) + gainedPoints);
 }
 
 function checkAchievements() {
@@ -252,6 +266,7 @@ function submitRegistration() {
 
   playerProfile.name = GAME_CONFIG.registration.uppercaseName === false ? playerName : playerName.toUpperCase();
   playerProfile.characterIndex = selectedCharacterIndex;
+  playerProfile.tutorialCompleted = Boolean(playerProfile.tutorialCompleted);
 
   if (!playerProfile.uid) {
     playerProfile.uid = createPlayerId(

@@ -42,7 +42,7 @@ async function requestGameFullscreen(){
     }
   }catch(e){}
 
-  if(fullscreenOk) await requestLandscape();
+  if(fullscreenOk){fsDone=true;await requestLandscape();}
   fit();
   updateImmersiveButton();
   immersiveAttempted=true;
@@ -59,6 +59,7 @@ async function exitImmersiveMode(){
       if(fn) await fn.call(document);
     }
   }catch(e){}
+  fsDone=false;
   fit();
   updateImmersiveButton();
 }
@@ -78,7 +79,7 @@ async function enableImmersiveMode(){
   await requestGameFullscreen();
 }
 
-const immersiveTapHandler=(event)=>{ if(event.target && event.target.closest && event.target.closest('#immersiveToggle')) return; void enableImmersiveMode(); };
+const immersiveTapHandler=(event)=>{ if(event.target && event.target.closest && event.target.closest('#immersiveToggle')) return; fsDone=true; void enableImmersiveMode(); };
 addEventListener('pointerdown', immersiveTapHandler, {capture:true, once:false});
 
 document.addEventListener('fullscreenchange',()=>{updateImmersiveButton();fit()});

@@ -11,5 +11,7 @@ function init(){genWorld();for(let i=0;i<40;i++)fireflies.push({x:R()*W,y:200+R(
   if(typeof isLoggedIn==='function' && isLoggedIn()){ S='menu'; $('#sk').style.display='none'; toMenu(); }
   else { S='intro'; $('#sk').style.display='block'; }
   requestAnimationFrame(n=>{last=n;frame(n)})}
+window.addEventListener('error',event=>{console.error('[GAME ERROR]',event.error||event.message)});
+window.addEventListener('unhandledrejection',event=>{console.error('[GAME PROMISE ERROR]',event.reason)});
 async function boot(){await initDatabase();if(typeof Tournament!=='undefined')Tournament.start();addEventListener('pagehide',()=>{if(S=='play'&&MODE=='classic')submitScore(score|0)});document.addEventListener('visibilitychange',()=>{if(document.hidden&&GAME_CONFIG.gameplay.pauseWhenHidden&&S=='play')pauseT()});init()}
 boot();

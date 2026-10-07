@@ -13,4 +13,4 @@ function drawRoom(){const c=['#2a1a12','#3a2f12','#25222d'][ROOM.z==0?0:ROOM.z==
 function hud2(){const mu=(1+Math.min(4,P.sk/3|0))*(weather=='eclipse'?2:1);X.textAlign='left';
  if(MODE=='classic'){X.fillStyle='#fff';X.font='bold 15px Cinzel';X.fillText('SKOR '+(score|0),12,104);X.font='12px Cinzel';X.fillStyle=mu>1?'#ff6':'#caa';X.fillText(`x${mu}  streak ${P.sk}  ·  Rank #${getMyRank()}  ·  Sarang ${NS.length}`,12,121)}
  X.fillStyle=P.scd>0?'#777':'#8f8';X.font='12px Cinzel';X.fillText(P.scd>0?`${getCurrentCharacterClass().skillName} ${Math.ceil(P.scd)}s`:`${getCurrentCharacterClass().skillName} SIAP (K)`,12,138);
- const dn=doorNear();if(dn){X.textAlign='center';X.fillStyle='#ffd700';X.font='14px Cinzel';X.fillText(dn==='exit'?'[F] Keluar':'[F] Masuk bangunan',W/2,H-90)}if(touch)$('#bI').style.display=dn?'block':'none'}
+ const dn=doorNear();if(dn){X.textAlign='center';X.fillStyle='#ffd700';X.font='14px Cinzel';X.fillText(dn==='exit'?'[F] Keluar':'[F] Masuk bangunan',W/2,H-90)}if(touch){const button=$('#bI');if(button)button.style.display=dn?'block':'none'}}

@@ -60,7 +60,7 @@ function hud(){const bar=(y,v,c,l)=>{X.fillStyle='#000a';X.fillRect(12,y,170,14)
  X.textAlign='center';X.font='16px Cinzel';
  if(MODE=='classic'){const hr=((18*60+gt)/60)%24,hh=hr|0,mm=(hr%1*60)|0;X.fillText(`${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')} → 06:00   ·   Malam ${night}   ·   Artefak ${P.art}/5   ·   Gelombang ${wave}`,W/2,22);
   X.font='12px Cinzel';X.fillStyle='#caa';X.fillText(`${ZN[zoneAt(P.x,P.y)][0]}  ·  ${{clear:'Cerah',rain:'Hujan',fog:'Kabut',storm:'Badai',eclipse:'Gerhana'}[weather]}  ·  Penyintas ${P.rs}/3  ·  Catatan ${P.nt}/10`,W/2,40)}
- else{X.fillText(`Langkah ${Math.min(tr+1,6)}/6`,W/2,22);X.font='14px Cinzel';X.fillStyle='#fff';X.fillText(TS[Math.min(tr,5)],W/2,44)}
+ else{const desktop=!touch;const steps=desktop?TS:TS.map(v=>v.replace('joystick / WASD','joystick').replace('SPACE / J','HIT').replace('SHIFT','DODGE').replace('MED / E','MED'));X.fillText(`Langkah ${Math.min(tr+1,6)}/6`,W/2,22);X.font='14px Cinzel';X.fillStyle='#fff';X.fillText(steps[Math.min(tr,5)],W/2,44)}
  /* minimap perkamen */
  const mx=W-136,my=56,sx=124/WW,sy=84/WH;X.fillStyle='#d8c39acc';X.fillRect(mx-4,my-4,132,92);X.strokeStyle='#5a3a1a';X.strokeRect(mx-4,my-4,132,92);X.fillStyle='#5a3a1a55';ZN.forEach(z=>X.strokeRect(mx+z[1]*sx,my+z[2]*sy,z[3]*sx,z[4]*sy));
  IT.forEach(i=>{if(i.k=='art'){X.fillStyle='#b8860b';X.fillRect(mx+i.x*sx-2,my+i.y*sy-2,4,4)}});ci(mx+P.x*sx,my+P.y*sy,3,'#c00');X.fillStyle='#300';X.font='9px Cinzel';X.fillText('N',mx+62,my+8);

@@ -2,7 +2,7 @@
 function upPlayer(dt,ctl){let kx=(K.KeyD||K.ArrowRight?1:0)-(K.KeyA||K.ArrowLeft?1:0)+jx,ky=(K.KeyS||K.ArrowDown?1:0)-(K.KeyW||K.ArrowUp?1:0)+jy;if(!ctl)kx=ky=0;
  const l=Math.hypot(kx,ky);if(l>1){kx/=l;ky/=l}const mag=Math.min(1,l);let sprint=(K.ShiftLeft||K.ShiftRight||mag>.92&&touch)&&mag>.1&&P.st>0&&!K.__d;
  if(ctl&&(K.ShiftLeft||K.ShiftRight)&&db>0)sprint=false;
- P.cd-=dt;P.rage-=dt;P.skT-=dt;P.scd-=dt;if(P.skT<=0)P.sk=0;P.at-=dt;P.inv-=dt;P.noise-=dt;P.dcd-=dt;P.hf-=dt;P.cmT-=dt;if(P.cmT<=0)P.cmb=0;ab-=dt;db-=dt;eb-=dt;
+ P.cd-=dt*getWeapon().attackSpeed;P.rage-=dt;P.ward-=dt;P.skT-=dt;P.scd-=dt;if(P.skT<=0)P.sk=0;P.at-=dt;P.inv-=dt;P.noise-=dt;P.dcd-=dt;P.hf-=dt;P.cmT-=dt;if(P.cmT<=0)P.cmb=0;ab-=dt;db-=dt;eb-=dt;
  if(ctl&&ab>0){atk();ab=0}if(ctl&&sb>0){skill();sb=0}if(ctl&&fb>0){useDoor();fb=0}sb-=dt;fb-=dt;
  if(ctl&&db>0&&P.dcd<=0&&P.st>=20){P.dd=.18;P.dcd=.6;P.inv=.3;P.st-=20;P.dodges++;updatePlayerStat('dodge',1);if(l>.1){P.dx=kx/l*(l>1?1:l)||kx;P.dy=ky}SFX.swing();db=0;for(let i=0;i<6;i++)FX.push({k:'p',x:P.x,y:P.y,vx:R()*60-30,vy:R()*60-30,t:.4,c:'#777',s:4})}
  if(ctl&&eb>0&&P.meds>0&&P.hp<P.mh){P.meds--;P.hp=Math.min(P.mh,P.hp+30);P.used++;SFX.pick();TX.push({s:'+30',x:P.x,y:P.y-30,t:1,c:'#4f4',z:16});eb=0}
@@ -46,5 +46,5 @@ function trainStep(){const s=tr;
  else if(s==2){if(!I.d){const m=mk('sh',P.x+260,P.y,.5);m.sp0=1;go(m,'chase');M.push(m);I.d=m;I.k0=P.kills}if(P.kills>I.k0){nx()}}
  else if(s==3&&P.dodges>=1)nx();
  else if(s==4){if(!I.m){I.m={k:'med',x:P.x+200,y:P.y-100};IT.push(I.m);P.hp=60}if(P.used>=1)nx()}
- else if(s==5){if(!I.a){I.a={k:'art',x:P.x+250,y:P.y+60};IT.push(I.a)}if(P.art>=1){sv('ml_skin',1);playerProfile.skinUnlocked=1;savePlayerProfile();win()}}}
+ else if(s==5){if(!I.a){I.a={k:'art',x:P.x+250,y:P.y+60};IT.push(I.a)}if(P.art>=1){playerProfile.tutorialCompleted=true;sv('ml_skin',1);playerProfile.skinUnlocked=1;savePlayerProfile();win()}}}
 function nx(){tr++;I={ctl:I.ctl};SFX.lvl();say('Langkah selesai!',1.2)}

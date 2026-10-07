@@ -26,7 +26,7 @@ h1{font-family:Creepster,Cinzel,serif;font-weight:400;color:#b30000;font-size:cl
 #sk{position:fixed;z-index:7;left:calc(8px + env(safe-area-inset-left));bottom:calc(6px + env(safe-area-inset-bottom));opacity:.25;font:11px Cinzel;color:#fff;background:none;border:0;padding:12px}
 #rot{position:fixed;inset:0;background:#000;z-index:99;display:none;flex-direction:column;align-items:center;justify-content:center;gap:2vh;color:var(--gd);text-align:center;padding:5vw}
 #rot b{font-size:64px;display:block;animation:ro 2s infinite}@keyframes ro{0%,20%{transform:rotate(0)}60%,100%{transform:rotate(-90deg)}}
-@media (orientation:portrait){.touch #rot{display:flex}}
+@media (orientation:portrait){.touch #rot{display:flex;inset:auto;left:50%;top:8px;transform:translateX(-50%);width:min(88vw,420px);min-height:0;box-sizing:border-box;z-index:8;padding:8px 14px;flex-direction:row;gap:8px;background:#000b;border:1px solid #4a0000;border-radius:10px;font-size:11px;pointer-events:none}.touch #rot b{font-size:20px}}
 @media (prefers-reduced-motion:reduce){.b{animation:none}}
 input{user-select:text;-webkit-user-select:text;touch-action:auto}
 .in{font:600 clamp(16px,3.6vh,26px) Cinzel,serif;text-align:center;background:#0a0000;border:2px solid var(--bd);color:var(--gd);padding:1.2vh 2vh;width:min(80vw,380px);letter-spacing:.2em;text-transform:uppercase;outline:none}
@@ -59,3 +59,14 @@ input{user-select:text;-webkit-user-select:text;touch-action:auto}
 #tournamentStatus:empty{display:none}
 #credits{z-index:115}.creditsNames{max-height:32vh;overflow:auto;padding:1vh 3vh}
 @media(max-width:650px){.menu-nav{grid-template-columns:1fr;max-width:300px}.immersive-toggle{width:34px;height:34px;min-width:34px;min-height:34px;font-size:18px}}
+
+/* ===== PHASE 2 PROGRESSION UI ===== */
+.menu-nav-primary{grid-template-columns:repeat(4,minmax(100px,1fr));width:min(92vw,760px)}
+.game-panel{gap:1.2vh}.panel-points{color:#ffd700;font-size:clamp(14px,3vh,20px)}
+.item-grid{width:min(94vw,900px);max-height:58vh;overflow:auto;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding:4px;touch-action:pan-y}
+.item-card{background:#0d0505e8;border:1px solid #4a0000;padding:12px;min-height:150px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;text-align:center;box-shadow:inset 0 0 20px #000}
+.item-card.active{border-color:#ffd700;box-shadow:0 0 14px #ffd70044,inset 0 0 20px #000}
+.item-icon{font-size:34px;min-height:38px}.item-card b{color:#ffd700;font-size:15px}.item-card small{color:#bca;font-size:11px;line-height:1.4}.item-card .b{font-size:11px;min-width:120px;min-height:40px;padding:8px 12px;animation:none}
+@media(max-width:700px){.menu-nav-primary{grid-template-columns:repeat(2,minmax(100px,1fr));max-width:360px}.item-grid{grid-template-columns:1fr;max-height:55vh}.item-card{min-height:130px}}
+
+.b:disabled{opacity:.38;cursor:not-allowed;filter:grayscale(.5);transform:none!important;animation:none;box-shadow:inset 0 0 1vh #000}.b:disabled:active{transform:none}
