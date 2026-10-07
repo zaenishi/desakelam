@@ -1,9 +1,35 @@
 /* ===== DASAR ===== */
-const $=s=>document.querySelector(s),C=$('#c'),X=C.getContext('2d'),W=GAME_CONFIG.canvas.width,H=GAME_CONFIG.canvas.height,R=Math.random,PI=Math.PI;
-let WW=GAME_CONFIG.world.width,WH=GAME_CONFIG.world.height;const cl=(v,a,b)=>Math.max(a,Math.min(b,v)),dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),angd=(a,b)=>((a-b+3*PI)%(2*PI))-PI;
-const ci=(x,y,r,c)=>{X.fillStyle=c;X.beginPath();X.arc(x,y,r,0,7);X.fill()};
-const touch=matchMedia('(pointer:coarse)').matches;if(touch)document.body.classList.add('touch');
-let S='intro',MODE='classic',t=0,last=0,shake=0,hitstop=0,slow=1,flash=0,cam={x:0,y:0},it=0,I={},sc=null,msg=null;
-let FD=0,INR=0,OUT=null,ROOM=null,fsDone=false;
-let P,M=[],IT=[],PR=[],FX=[],TX=[],OB=[],DC=[],gt=0,wave=0,wT=0,tr=0,score=0,weather='clear',wTm=0,boss=0,fireflies=[],rain=[];
-const sv=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},ld=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}};
+const querySelector = s => document.querySelector(s), canvas = querySelector('#c'), context = canvas.getContext('2d'), canvasWidth = GAME_CONFIG.canvas.width, canvasHeight = GAME_CONFIG.canvas.height, random = Math.random, PI = Math.PI;
+let worldWidth = GAME_CONFIG.world.width, worldHeight = GAME_CONFIG.world.height;
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v)), dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y), angd = (a, b) => ((a - b + 3 * PI) % (2 * PI)) - PI;
+const ci = (x, y, r, c) => {
+  context.fillStyle = c;
+  context.beginPath();
+  context.arc(x,
+  y,
+  r,
+  0,
+  7);
+  context.fill()
+};
+const isTouchDevice = matchMedia('(pointer:coarse)').matches;
+if (isTouchDevice)document.body.classList.add('touch');
+let gameState = 'intro', MODE = 'classic', elapsedTime = 0, lastTimestamp = 0, screenShake = 0, hitStop = 0, timeScale = 1, screenFlash = 0, camera = {
+  x: 0,
+  y: 0
+}, introProgress = 0, runtimeState = {
+}, scareEffect = null, statusMessage = null;
+let player, monsters = [], items = [], projectiles = [], effects = [], floatingTexts = [], obstacles = [], groundDetails = [], gameTime = 0, currentWave = 0, waveTimer = 0, trainingStep = 0, score = 0, weather = 'clear', weatherTimer = 0, bossActive = 0, fireflies = [], rain = [];
+const saveLocalJson = (k, v) => {
+  try {
+    localStorage.setItem(k,
+    JSON.stringify(v))
+  } catch (e) {
+  }
+}, loadLocalJson = (k, d) => {
+  try {
+    return JSON.parse(localStorage.getItem(k))??d
+  } catch (e) {
+    return d
+  }
+};

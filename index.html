@@ -1,75 +1,245 @@
-<!DOCTYPE html><html lang="id"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-<title>Malam Kelam di Desa Terkutuk</title><meta name="theme-color" content="#0a0a0a">
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Creepster&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/main.css"></head><body>
-<canvas id="c" width="960" height="540"></canvas>
-<div id="tc"><div id="jz"></div><div id="jb"></div><div id="jk"></div>
-<button class="tb" id="bH">HIT</button><button class="tb" id="bD">DODGE</button><button class="tb" id="bE">MED</button><button class="tb" id="bS">SKILL</button><button class="tb" id="bI">MASUK</button></div>
-<button id="pb">II</button><button id="sk">LEWATI</button><button id="immersiveToggle" class="immersive-toggle" type="button" aria-label="Aktifkan layar penuh dan landscape" title="Layar penuh + landscape">⛶</button>
-<div class="ov hide" id="menu">
-  <div class="menu-atmosphere" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
-  <div class="home-shell">
-    <header class="home-brand">
-      <span class="home-kicker">HORROR SURVIVAL · WEB EDITION</span>
-      <h1>MALAM KELAM<br><em>DI DESA TERKUTUK</em></h1>
-      <div class="home-profile" id="mi"></div>
-    </header>
-
-    <nav class="home-nav home-nav-left" aria-label="Navigasi utama">
-      <button class="nav-orb" data-a="shop" aria-label="Shop" title="Shop"><span class="nav-icon">⚔</span><span class="nav-tip">SHOP</span></button>
-      <button class="nav-orb" data-a="character" aria-label="Character" title="Character"><span class="nav-icon">♙</span><span class="nav-tip">CHARACTER</span></button>
-      <button class="nav-orb" data-a="prof" aria-label="Profil" title="Profil"><span class="nav-icon">◉</span><span class="nav-tip">PROFIL</span></button>
-    </nav>
-
-    <nav class="home-nav home-nav-right" aria-label="Informasi">
-      <button class="nav-orb" data-a="rank" aria-label="Ranking" title="Ranking"><span class="nav-icon">♛</span><span class="nav-tip">RANKING</span></button>
-      <button class="nav-orb" data-a="credits" aria-label="Credits" title="Credits"><span class="nav-icon">✦</span><span class="nav-tip">CREDITS</span></button>
-      <button class="nav-orb" data-a="train" aria-label="Training" title="Training"><span class="nav-icon">⌁</span><span class="nav-tip">TRAINING</span></button>
-    </nav>
-
-    <div class="home-actions">
-      <button class="home-start b" data-a="classic" aria-label="Mulai permainan">START <span>▶</span></button>
-      <button class="home-tournament b" data-a="classic" id="tournamentBtn">TURNAMEN</button>
-      <div id="tournamentStatus"></div>
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+    <title>
+      Malam Kelam di Desa Terkutuk
+    </title>
+    <meta name="theme-color" content="#0a0a0a">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Creepster&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/main.css">
+  </head>
+  <body>
+    <canvas id="c" width="960" height="540">
+    </canvas>
+    <div id="tc">
+      <div id="jz">
+      </div>
+      <div id="jb">
+      </div>
+      <div id="jk">
+      </div>
+      <button class="tb" id="bH">
+        HIT
+      </button>
+      <button class="tb" id="bD">
+        DODGE
+      </button>
+      <button class="tb" id="bE">
+        MED
+      </button>
+      <button class="tb" id="bS">
+        SKILL
+      </button>
+      <button class="tb" id="bI">
+        MASUK
+      </button>
     </div>
-    <div class="home-stats" id="lb"></div>
-  </div>
-</div>
-<div class="ov hide" id="gate"><h1>KODE AKSES</h1><p style="max-width:80vw">Masukkan kode akses turnamen dari panitia.</p><input class="in" id="code" maxlength="16" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="KODE"><div class="er" id="ge"></div><button class="b" data-a="gate">MASUK</button></div>
-<div class="ov hide" id="reg"><h1 style="font-size:6vh">NAMA &amp; KARAKTER</h1><input class="in" id="nm" maxlength="12" autocomplete="off" placeholder="NAMA"><div class="chg" id="chg"></div><div class="er" id="re"></div><button class="b" data-a="reg">MULAI</button></div>
-<div class="ov hide" id="rank"><h1 style="font-size:6vh">RANKING</h1><div id="rs" style="color:#a99;font-size:clamp(10px,2.2vh,14px)"></div><div class="tbl" id="rl"></div><button class="b" data-a="close">TUTUP</button></div>
-<div class="ov hide" id="credits"><h1 style="font-size:6vh">CREDITS</h1><div id="creditsNames" class="creditsNames"></div><p>Terima kasih untuk semua yang membantu pengembangan dan pengujian.</p><button class="b" data-a="close">KEMBALI</button></div>
-<div class="ov hide" id="prof"><h1 style="font-size:5vh" id="pn"></h1><div id="pd" style="line-height:1.7"></div><div class="tbl" id="pa" style="max-height:30vh"></div><div class="row"><button class="b s" data-a="edit">UBAH PROFIL</button><button class="b s" data-a="close">TUTUP</button></div></div>
-<div class="ov hide" id="load"><h1 style="font-size:5vh">Memuat…</h1><div id="bar"><i></i></div><p id="tip"></p></div>
-<div class="ov hide" id="pause"><h1>JEDA</h1><button class="b" data-a="resume">LANJUT</button><button class="b" data-a="home">MENU</button></div>
-<div class="ov hide" id="end"><h1 id="et"></h1><p id="es" style="font-size:clamp(12px,2.8vh,20px);line-height:1.6"></p><button class="b" data-a="again">ULANGI</button><button class="b" data-a="home">MENU</button></div>
-
-<div class="ov hide game-panel" id="shop"><div class="panel-shell"><div class="panel-head"><div><span class="panel-kicker">ARSENAL</span><h1>SHOP</h1></div><div id="shopPoints" class="panel-points"></div></div><div class="shop-content"><section class="shop-section"><div class="section-head"><span>⚔</span><div><b>PEDANG</b><small>Senjata yang memengaruhi damage dan kecepatan serangan.</small></div></div><div id="shopList" class="item-grid"></div></section><section class="shop-section"><div class="section-head"><span>✦</span><div><b>SKILL</b><small>Beli lalu pilih satu skill aktif untuk gameplay.</small></div></div><div id="skillList" class="item-grid"></div></section></div><button class="b panel-close" data-a="close">KEMBALI</button></div></div>
-<div class="ov hide game-panel" id="character"><div class="panel-shell"><div class="panel-head"><div><span class="panel-kicker">IDENTITAS</span><h1>CHARACTER</h1></div><span class="locked-label">TERKUNCI</span></div><p class="panel-note">Karakter dipilih sekali saat registrasi dan tidak dapat diganti setelah akun dibuat.</p><div id="characterList" class="item-grid character-grid"></div><button class="b panel-close" data-a="close">KEMBALI</button></div></div>
-<div id="tournamentWarning"></div><div class="ov hide" id="tournamentEnd"><div id="tCountdownWrap"><div id="tCountdownTitle"></div><div id="tCountdown"></div></div><div id="tWinner"></div></div>
-<div id="rot" aria-live="assertive"><div class="rot-card"><b>↻</b><strong>PUTAR PERANGKAT</strong><span>Game membutuhkan orientasi landscape.</span><small>Putar perangkat ke samping. Jika belum otomatis, tekan tombol di bawah.</small><button id="rotAction" class="b rot-action" type="button">⛶ LAYAR PENUH & LANDSCAPE</button></div></div>
-<script src="js/config.js"></script>
-<script src="js/database.js"></script>
-<script src="js/core.js"></script>
-<script src="js/audio.js"></script>
-<script src="js/data.js"></script>
-<script src="js/entities.js"></script>
-<script src="js/input.js"></script>
-<script src="js/fullscreen.js"></script>
-<script src="js/tournament.js"></script>
-<script src="js/ui.js"></script>
-<script src="js/combat.js"></script>
-<script src="js/monsters.js"></script>
-<script src="js/update.js"></script>
-<script src="js/end.js"></script>
-<script src="js/render.js"></script>
-<script src="js/menu.js"></script>
-<script src="js/account.js"></script>
-<script src="js/inventory.js"></script>
-<script src="js/skills.js"></script>
-<script src="js/nests.js"></script>
-<script src="js/night.js"></script>
-<script src="js/interiors.js"></script>
-<script src="js/music.js"></script>
-<script src="js/main.js"></script></body></html>
+    <button id="pb">
+      II
+    </button>
+    <button id="sk">
+      LEWATI
+    </button>
+    <button id="immersiveToggle" class="immersive-toggle" type="button" aria-label="Aktifkan layar penuh dan landscape" title="Layar penuh + landscape">
+      ⛶
+    </button>
+    <div class="ov hide" id="menu">
+      <h1>
+        MALAM KELAM
+        <br>
+        DI DESA TERKUTUK
+      </h1>
+      <div id="mi">
+      </div>
+      <button class="b" data-a="classic" id="tournamentBtn">
+        TURNAMEN
+      </button>
+      <button class="b" data-a="train">
+        TRAINING
+      </button>
+      <div id="tournamentStatus">
+      </div>
+      <div class="menu-nav">
+        <button class="b s" data-a="rank">
+          RANKING
+        </button>
+        <button class="b s" data-a="prof">
+          PROFIL
+        </button>
+        <button class="b s" data-a="credits">
+          CREDITS
+        </button>
+      </div>
+      <div id="lb">
+      </div>
+    </div>
+    <div class="ov hide" id="gate">
+      <h1>
+        KODE AKSES
+      </h1>
+      <p style="max-width:80vw">
+        Masukkan kode akses turnamen dari panitia.
+      </p>
+      <input class="in" id="code" maxlength="16" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="KODE">
+      <div class="er" id="ge">
+      </div>
+      <button class="b" data-a="gate">
+        MASUK
+      </button>
+    </div>
+    <div class="ov hide" id="reg">
+      <h1 style="font-size:6vh">
+        NAMA &amp; KARAKTER
+      </h1>
+      <input class="in" id="nm" maxlength="12" autocomplete="off" placeholder="NAMA">
+      <div class="chg" id="chg">
+      </div>
+      <div class="er" id="re">
+      </div>
+      <button class="b" data-a="reg">
+        MULAI
+      </button>
+    </div>
+    <div class="ov hide" id="rank">
+      <h1 style="font-size:6vh">
+        RANKING
+      </h1>
+      <div id="rs" style="color:#a99;font-size:clamp(10px,2.2vh,14px)">
+      </div>
+      <div class="tbl" id="rl">
+      </div>
+      <button class="b" data-a="close">
+        TUTUP
+      </button>
+    </div>
+    <div class="ov hide" id="credits">
+      <h1 style="font-size:6vh">
+        CREDITS
+      </h1>
+      <div id="creditsNames" class="creditsNames">
+      </div>
+      <p>
+        Terima kasih untuk semua yang membantu pengembangan dan pengujian.
+      </p>
+      <button class="b" data-a="close">
+        KEMBALI
+      </button>
+    </div>
+    <div class="ov hide" id="prof">
+      <h1 style="font-size:5vh" id="pn">
+      </h1>
+      <div id="pd" style="line-height:1.7">
+      </div>
+      <div class="tbl" id="pa" style="max-height:30vh">
+      </div>
+      <div class="row">
+        <button class="b s" data-a="edit">
+          UBAH PROFIL
+        </button>
+        <button class="b s" data-a="close">
+          TUTUP
+        </button>
+      </div>
+    </div>
+    <div class="ov hide" id="load">
+      <h1 style="font-size:5vh">
+        Memuat…
+      </h1>
+      <div id="bar">
+        <i>
+        </i>
+      </div>
+      <p id="tip">
+      </p>
+    </div>
+    <div class="ov hide" id="pause">
+      <h1>
+        JEDA
+      </h1>
+      <button class="b" data-a="resume">
+        LANJUT
+      </button>
+      <button class="b" data-a="home">
+        MENU
+      </button>
+    </div>
+    <div class="ov hide" id="end">
+      <h1 id="et">
+      </h1>
+      <p id="es" style="font-size:clamp(12px,2.8vh,20px);line-height:1.6">
+      </p>
+      <button class="b" data-a="again">
+        ULANGI
+      </button>
+      <button class="b" data-a="home">
+        MENU
+      </button>
+    </div>
+    <div id="tournamentWarning">
+    </div>
+    <div class="ov hide" id="tournamentEnd">
+      <div id="tCountdownWrap">
+        <div id="tCountdownTitle">
+        </div>
+        <div id="tCountdown">
+        </div>
+      </div>
+      <div id="tWinner">
+      </div>
+    </div>
+    <div id="rot">
+      <b>
+        📱
+      </b>
+      Putar perangkat ke mode landscape untuk bermain
+    </div>
+    <script src="js/config.js">
+    </script>
+    <script src="js/database.js">
+    </script>
+    <script src="js/core.js">
+    </script>
+    <script src="js/audio.js">
+    </script>
+    <script src="js/data.js">
+    </script>
+    <script src="js/entities.js">
+    </script>
+    <script src="js/input.js">
+    </script>
+    <script src="js/fullscreen.js">
+    </script>
+    <script src="js/tournament.js">
+    </script>
+    <script src="js/ui.js">
+    </script>
+    <script src="js/combat.js">
+    </script>
+    <script src="js/monsters.js">
+    </script>
+    <script src="js/update.js">
+    </script>
+    <script src="js/end.js">
+    </script>
+    <script src="js/render.js">
+    </script>
+    <script src="js/menu.js">
+    </script>
+    <script src="js/account.js">
+    </script>
+    <script src="js/skills.js">
+    </script>
+    <script src="js/nests.js">
+    </script>
+    <script src="js/night.js">
+    </script>
+    <script src="js/interiors.js">
+    </script>
+    <script src="js/music.js">
+    </script>
+    <script src="js/main.js">
+    </script>
+  </body>
+</html>
