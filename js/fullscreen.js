@@ -1,33 +1,30 @@
 /* ===== IMMERSIVE MODE =====
- * Satu tombol kecil untuk fullscreen + landscape.
- * Browser tetap dapat memblokir fullscreen tanpa user gesture,
- * sehingga kita mencoba otomatis saat boot dan mengulang pada tap pertama.
+ * Satu jalur resmi untuk fullscreen + landscape.
+ * Portrait gameplay selalu diblokir dengan overlay fullscreen.
+ * Tombol overlay sendiri menjadi fallback user-gesture yang paling aman.
  */
-let immersiveActive = false;
-let immersiveAttempted = false;
-let fsDone = false;
-const immersiveButton = () => document.getElementById('immersiveToggle');
+let immersiveActive=false;
+let immersiveAttempted=false;
+let fsDone=false;
+const immersiveButton=()=>document.getElementById('immersiveToggle');
+const rotAction=()=>document.getElementById('rotAction');
 
-function isFullscreen(){
-  return !!(document.fullscreenElement || document.webkitFullscreenElement);
-}
+function isFullscreen(){return !!(document.fullscreenElement||document.webkitFullscreenElement);}
+function isMobileGameplay(){return !!(touch||matchMedia('(max-width:800px)').matches);}
+function isPortraitGameplay(){return !!(isMobileGameplay()&&innerHeight>innerWidth&&(S==='play'||S==='intro'));}
 
 function updateImmersiveButton(){
-  const button = immersiveButton();
-  if(!button) return;
-  immersiveActive = isFullscreen();
-  const portrait = isPortraitGameplay();
-  // Jangan sembunyikan tombol ketika fullscreen sudah aktif tetapi orientation
-  // lock gagal. Dalam kondisi itu tombol tetap diperlukan sebagai fallback.
-  button.classList.toggle('hide', !portrait && immersiveActive);
-  button.textContent = portrait ? '↻' : '⛶';
-  button.setAttribute('aria-label', portrait ? 'Coba aktifkan landscape' : 'Aktifkan layar penuh dan landscape');
-  button.title = portrait ? 'Coba aktifkan landscape' : 'Layar penuh + landscape';
+  const b=immersiveButton(); if(!b)return;
+  const portrait=isPortraitGameplay();
+  b.classList.toggle('hide',!portrait&&isFullscreen());
+  b.textContent=portrait?'↻':'⛶';
+  b.setAttribute('aria-label',portrait?'Aktifkan landscape':'Aktifkan layar penuh dan landscape');
+  b.title=portrait?'Aktifkan landscape':'Layar penuh + landscape';
 }
 
 async function requestLandscape(){
   try{
-    if(screen.orientation && typeof screen.orientation.lock === 'function'){
+    if(screen.orientation&&typeof screen.orientation.lock==='function'){
       await screen.orientation.lock('landscape');
       return true;
     }
@@ -36,100 +33,73 @@ async function requestLandscape(){
 }
 
 async function requestGameFullscreen(){
-  let fullscreenOk = isFullscreen();
-  try{
-    if(!fullscreenOk){
+  try{if(typeof au==='function')au();}catch(e){}
+  let ok=isFullscreen();
+  if(!ok){
+    try{
       const el=document.documentElement;
-      const fn=el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
-      if(fn){
-        const result=fn.call(el);
-        if(result && typeof result.then==='function') await result;
-      }
-      fullscreenOk=isFullscreen();
-    }
-  }catch(e){}
-
-  if(fullscreenOk){fsDone=true;await requestLandscape();}
-  fit();
-  updateImmersiveButton();
+      const fn=el.requestFullscreen||el.webkitRequestFullscreen||el.msRequestFullscreen;
+      if(fn){const r=fn.call(el);if(r&&typeof r.then==='function')await r;}
+    }catch(e){}
+    ok=isFullscreen();
+  }
+  if(ok)fsDone=true;
+  await requestLandscape();
   immersiveAttempted=true;
-  return fullscreenOk;
-}
-
-async function exitImmersiveMode(){
-  try{
-    if(screen.orientation && typeof screen.orientation.unlock==='function') screen.orientation.unlock();
-  }catch(e){}
-  try{
-    if(isFullscreen()){
-      const fn=document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
-      if(fn) await fn.call(document);
-    }
-  }catch(e){}
-  fsDone=false;
   fit();
-  updateImmersiveButton();
+  syncOrientationGate();
+  return ok;
 }
 
 async function toggleImmersiveMode(){
-  // Jika sudah fullscreen tetapi masih portrait, jangan keluar fullscreen.
-  // Coba orientation lock lagi dari user gesture.
-  if(isFullscreen() && isPortraitGameplay()){
-    const ok=await requestLandscape();
-    if(ok) syncOrientationGate();
-    else syncOrientationGate();
-    return ok;
-  }
-  if(isFullscreen()) return exitImmersiveMode();
-  return requestGameFullscreen();
+  if(isPortraitGameplay()) return requestGameFullscreen();
+  if(!isFullscreen()) return requestGameFullscreen();
+  try{if(screen.orientation&&typeof screen.orientation.unlock==='function')screen.orientation.unlock();}catch(e){}
+  try{
+    const fn=document.exitFullscreen||document.webkitExitFullscreen||document.msExitFullscreen;
+    if(fn)await fn.call(document);
+  }catch(e){}
+  fsDone=false;
+  syncOrientationGate();
 }
 
-async function enableImmersiveMode(){
-  try{ if(typeof au==='function') au(); }catch(e){}
-  if(isFullscreen()){
-    await requestLandscape();
-    updateImmersiveButton();
-    return;
-  }
-  await requestGameFullscreen();
-}
+async function enableImmersiveMode(){return requestGameFullscreen();}
 
-const immersiveTapHandler=(event)=>{ if(event.target && event.target.closest && event.target.closest('#immersiveToggle')) return; fsDone=true; void enableImmersiveMode(); };
-addEventListener('pointerdown', immersiveTapHandler, {capture:true, once:false});
-
-document.addEventListener('fullscreenchange',()=>{updateImmersiveButton();fit();syncOrientationGate()});
-document.addEventListener('webkitfullscreenchange',()=>{updateImmersiveButton();fit();syncOrientationGate()});
-
-const button=immersiveButton();
-if(button) button.addEventListener('click', e=>{e.stopPropagation();void toggleImmersiveMode()});
-
-let rz;
 function fit(){
+  if(typeof C==='undefined'||typeof W==='undefined'||typeof H==='undefined')return;
   const s=Math.min(innerWidth/W,innerHeight/H);
   C.style.transform=`translate(${(innerWidth-W*s)/2}px,${(innerHeight-H*s)/2}px) scale(${s})`;
 }
-addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(fit,80)});
-addEventListener('orientationchange',()=>setTimeout(()=>{fit();syncOrientationGate()},100));
-addEventListener('resize',()=>setTimeout(syncOrientationGate,40));
-fit();
-syncOrientationGate();
-setTimeout(()=>{ if(GAME_CONFIG.ui.autoFullscreen || GAME_CONFIG.ui.autoLandscape) void enableImmersiveMode(); },250);
 
-
-function isPortraitGameplay(){
-  const mobileLike = touch || matchMedia('(max-width: 800px)').matches;
-  return !!(mobileLike && innerHeight > innerWidth && (S === 'play' || S === 'intro'));
-}
 function syncOrientationGate(){
   const rot=document.getElementById('rot');
-  if(!rot)return;
   const blocked=isPortraitGameplay();
-  rot.classList.toggle('active',blocked);
-  rot.setAttribute('aria-hidden',String(!blocked));
-  const button=immersiveButton();
-  if(button){
-    button.classList.toggle('hide', !blocked && isFullscreen());
-    if(blocked){ button.textContent='↻'; button.setAttribute('aria-label','Coba aktifkan landscape'); button.title='Coba aktifkan landscape'; }
+  if(rot){
+    rot.classList.toggle('active',blocked);
+    rot.setAttribute('aria-hidden',String(!blocked));
   }
-  if(typeof setOrientationGameplayPause==='function') setOrientationGameplayPause(blocked);
+  updateImmersiveButton();
+  const rb=rotAction();
+  if(rb)rb.disabled=!blocked;
+  if(typeof setOrientationGameplayPause==='function')setOrientationGameplayPause(blocked);
 }
+
+const button=immersiveButton();
+if(button)button.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();void toggleImmersiveMode();});
+const rb=rotAction();
+if(rb)rb.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();void requestGameFullscreen();});
+
+document.addEventListener('fullscreenchange',()=>{fit();syncOrientationGate();});
+document.addEventListener('webkitfullscreenchange',()=>{fit();syncOrientationGate();});
+addEventListener('orientationchange',()=>setTimeout(()=>{fit();syncOrientationGate();},120));
+let rz;
+addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(()=>{fit();syncOrientationGate();},80);});
+
+fit();
+syncOrientationGate();
+setTimeout(()=>{
+  if(GAME_CONFIG.ui.autoFullscreen||GAME_CONFIG.ui.autoLandscape){
+    // Automatic requests may be rejected by the browser; never hide the fallback overlay.
+    void enableImmersiveMode();
+  }
+},250);
