@@ -7,7 +7,7 @@ function atk(){if(P.cd>0||P.st<8||P.dd>0)return;P.cd=.33;P.at=.22;P.st-=8;P.nois
  FX.push({k:'slash',x:P.x,y:P.y,a:P.face,t:.22,c:crit});NS.forEach(n=>{if(Math.hypot(n.x-P.x,n.y-P.y)<95){hitN(n,12*getCurrentCharacterClass().damageMultiplier*(P.rage>0?2:1)*(crit?2:1));hit=1}});if(crit)updatePlayerStat('crit',1);
  if(crit){FX.push({k:'bolt',x:P.x+Math.cos(P.face)*90,y:P.y+Math.sin(P.face)*90,t:.25});TX.push({s:'CRITICAL!',x:P.x,y:P.y-50,t:1,c:'#f33',z:20})}
  if(hit){hitstop=crit?.1:.05;shake=Math.max(shake,crit?10:5)}}
-function hurtM(m,d,crit){if(m.t.fly&&0)return;if(m.k=='sh')d*=1.5;m.hp-=d;m.fl=.1;const a=Math.atan2(m.y-P.y,m.x-P.x),kb=m.k=='wo'||m.k=='bo'?120:260;m.kx=Math.cos(a)*kb;m.ky=Math.sin(a)*kb;
+function hurtM(m,d,crit){if(m.t.fly&&0)return;if(m.k=='sh')d*=1.5;m.hp-=d;m.fl=.1;const a=Math.atan2(m.y-P.y,m.x-P.x),kb=m.k=='wo'||m.k=='bo'||m.k=='bc'?120:260;m.kx=Math.cos(a)*kb;m.ky=Math.sin(a)*kb;
  TX.push({s:Math.round(d),x:m.x,y:m.y-m.r-10,t:.9,c:crit?'#f22':'#fff',z:crit?22:13});blood(m.x,m.y,crit?14:7);(crit?SFX.crit:SFX.hit)();FX.push({k:'spark',x:m.x,y:m.y,t:.15});
  if(m.hp<=0){m.st='death';m.stt=0;SFX.die();P.kills++;addScore(m.guard?80+m.mh|0:8+(m.mh/3|0));P.sk++;P.skT=5;updatePlayerStat('kills',1);updatePlayerStat('combo',P.sk,1);if(m.boss)updatePlayerStat('boss',1);if(m.guard){IT.push({k:'art',x:m.x,y:m.y});say('Artefak jatuh dari penjaga!',3)}else if(R()<.15)IT.push({k:'med',x:m.x,y:m.y});
   if(m.k=='wo'&&m.boss)newNight(1500*night,'Gerbang terbuka!');if(m.guard||m.boss||!M.some(q=>q!=m&&q.st!='death'&&q.st=='chase')){slow=.3;shake=Math.max(shake,8)}}

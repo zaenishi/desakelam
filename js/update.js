@@ -17,7 +17,11 @@ function upGame(dt){const ctl=S=='play'||I.ctl;I.cdc=(I.cdc||0)-dt;if(S=='play')
   if(!INR)wT-=dt;if(wT<=0&&!INR){wave++;updatePlayerStat('wave',wave,1);wT=40;const n=Math.min(12,2+wave);for(let i=0;i<n;i++){const a=R()*7,x=cl(P.x+Math.cos(a)*520,40,WW-40),y=cl(P.y+Math.sin(a)*520,40,WH-40);if(hitO(x,y,24))continue;const m=mk(['sh','sp','bo','gh'][R()*4|0],x,y,1+wave*.1+(night-1)*.25);go(m,'chase');M.push(m)}
    say('Gelombang '+wave+' mendekat!',3);if(wave>1&&R()<.5){const m=mk('sh',P.x-Math.cos(P.face)*90,P.y-Math.sin(P.face)*90,1);if(!hitO(m.x,m.y,14)){go(m,'chase');M.push(m);scare()}}}
   wTm-=dt;if(wTm<=0){wTm=35+R()*25;weather=['clear','rain','fog','storm','rain','eclipse'][R()*6|0];if(weather=='storm')I.lt=3;if(weather=='eclipse'){const p=fp(R()*7|0,400),g=mk('wo',p.x,p.y,.5);g.guard=1;go(g,'patrol');M.push(g);say('GERHANA! Poin x2, monster elit muncul!',4)}}
-  if(P.rs+P.nt>=0&&!INR&&zoneAt(P.x,P.y)==6&&P.art>=5&&!boss){boss=1;const m=mk('wo',2000,1100,1);m.boss=1;go(m,'chase');M.push(m);scare();SFX.howl();say('BOSS: Cursed Werewolf!',4)}
+  if(!INR&&MODE=='classic'){
+   if(!boss&&night==1&&wave>=3){boss=1;spawnBoss('bc',Math.max(1.8,1+wave*.12),'Bone Colossus',cl(P.x-520,80,WW-80),cl(P.y-220,80,WH-80));}
+   if(!boss&&night==2&&P.art>=3){boss=2;spawnBoss('wo',2.4,'Cursed Werewolf Alpha',cl(P.x+520,80,WW-80),cl(P.y+180,80,WH-80));}
+   if(!boss&&night>=3&&P.art>=5){boss=3;spawnBoss('wo',3.1,'The Red Howler',cl(P.x-500,80,WW-80),cl(P.y+260,80,WH-80));}
+  }
   const dark=ds>.6||zoneAt(P.x,P.y)==5||weather=='fog',near=M.some(m=>m.st=='chase'&&dist(m,P)<250);
   P.sn=cl(P.sn+(dark?-1.2:.5)*dt*(near?3:1),0,100);if(P.sn<25&&R()<dt*.04)scare();
   if(P.sn<=0)P.hp-=2*dt,P.hf=.1;if(P.hp<=0&&S=='play')dmgP(0)}
@@ -40,6 +44,7 @@ function upGame(dt){const ctl=S=='play'||I.ctl;I.cdc=(I.cdc||0)-dt;if(S=='play')
  mus(dt);I.hb=(I.hb||0)-dt;if(AC&&dg){const c=M.some(m=>m.st=='chase');dg.gain.value=c?.09:.045;if(P.hp<P.mh*.4&&I.hb<=0){SFX.heart();I.hb=.4+P.hp/P.mh*1.2}if(c&&(I.dr=(I.dr||0)-dt)<=0){I.dr=.5;tone(55,.2,'sine',.25)}
   if((I.am=(I.am||0)-dt)<=0){I.am=6+R()*8;[SFX.howl,SFX.cricket][R()*2|0]()}}
  if(P.hp<P.mh)P.hp=Math.min(P.mh,P.hp+0)}
+function spawnBoss(kind,mult,name,x,y){let bx=x,by=y;for(let i=0;i<12&&((hitO(bx,by,44))||Math.hypot(bx-P.x,by-P.y)<360);i++){const a=R()*PI*2,d=420+R()*260;bx=cl(P.x+Math.cos(a)*d,60,WW-60);by=cl(P.y+Math.sin(a)*d,60,WH-60)}const m=mk(kind,bx,by,mult);m.boss=1;m.bossName=name;m.bossPhase=1;m.spd=1.05;go(m,'chase');M.push(m);shake=12;flash=.8;SFX.howl();say('BOSS: '+name+' — hadapi dengan hati-hati!',4);}
 function dk(h){return h>=18&&h<20?.3+(h-18)*.25:h>=20||h<4?.85:h>=4&&h<6?.85-(h-4)*.2:.4}
 function trainStep(){const s=tr;
  if(s==0&&P.walked>200)nx();else if(s==1&&P.swings>=3)nx();
