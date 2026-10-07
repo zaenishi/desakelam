@@ -1,8 +1,0 @@
-{
-  "name": "Desa kelam",
-  "short_name": "Desa kelam",
-  "description": "Game horor battle",
-  "scope": "./",
-  "display": "fullscreen",
-  "orientation": "landscape",
-}

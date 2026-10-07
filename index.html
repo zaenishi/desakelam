@@ -1,7 +1,6 @@
 <!DOCTYPE html><html lang="id"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <title>Malam Kelam di Desa Terkutuk</title><meta name="theme-color" content="#0a0a0a">
-<link rel="manifest" href="./manifest.json" />
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Creepster&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/main.css"></head><body>
 <canvas id="c" width="960" height="540"></canvas>
@@ -10,16 +9,21 @@
 <button id="pb">II</button><button id="sk">lewati</button>
 <div class="ov hide" id="menu"><h1>MALAM KELAM<br>DI DESA TERKUTUK</h1><div id="mi"></div>
 <button class="b" data-a="classic">TURNAMEN</button><button class="b" data-a="train">TRAINING</button>
-<div class="row"><button class="b s" data-a="rank">RANKING</button><button class="b s" data-a="prof">PROFIL</button></div><div id="lb"></div></div>
+<div id="tournamentStatus"></div>
+<div class="row"><button class="b s" data-a="rank">RANKING</button><button class="b s" data-a="prof">PROFIL</button><button class="b s" data-a="credits">CREDITS</button><button class="b s" data-a="fullscreen">FULLSCREEN</button></div><div id="lb"></div></div>
 <div class="ov hide" id="gate"><h1>KODE AKSES</h1><p style="max-width:80vw">Masukkan kode akses turnamen dari panitia.</p><input class="in" id="code" maxlength="16" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="KODE"><div class="er" id="ge"></div><button class="b" data-a="gate">MASUK</button></div>
 <div class="ov hide" id="reg"><h1 style="font-size:6vh">NAMA &amp; KARAKTER</h1><input class="in" id="nm" maxlength="12" autocomplete="off" placeholder="NAMA"><div class="chg" id="chg"></div><div class="er" id="re"></div><button class="b" data-a="reg">MULAI</button></div>
 <div class="ov hide" id="rank"><h1 style="font-size:6vh">RANKING</h1><div id="rs" style="color:#a99;font-size:clamp(10px,2.2vh,14px)"></div><div class="tbl" id="rl"></div><button class="b" data-a="close">TUTUP</button></div>
 <div class="ov hide" id="prof"><h1 style="font-size:5vh" id="pn"></h1><div id="pd" style="line-height:1.7"></div><div class="tbl" id="pa" style="max-height:30vh"></div><div class="row"><button class="b s" data-a="edit">UBAH PROFIL</button><button class="b s" data-a="close">TUTUP</button></div></div>
+<div class="ov hide" id="credits"><h1 style="font-size:6vh">CREDITS</h1><div id="creditsNames" class="creditsNames"></div><p>Terima kasih untuk semua yang ikut mengembangkan dan menguji game ini.</p><button class="b" data-a="close">KEMBALI</button></div>
 <div class="ov hide" id="load"><h1 style="font-size:5vh">Memuat…</h1><div id="bar"><i></i></div><p id="tip"></p></div>
 <div class="ov hide" id="pause"><h1>JEDA</h1><button class="b" data-a="resume">LANJUT</button><button class="b" data-a="home">MENU</button></div>
 <div class="ov hide" id="end"><h1 id="et"></h1><p id="es" style="font-size:clamp(12px,2.8vh,20px);line-height:1.6"></p><button class="b" data-a="again">ULANGI</button><button class="b" data-a="home">MENU</button></div>
+<div id="tournamentWarning" aria-live="assertive"></div>
+<div class="ov hide tournament-overlay" id="tournamentEnd"><div id="tCountdownWrap"><div id="tCountdownTitle"></div><div id="tCountdown"></div></div><div id="tWinner"></div></div>
 <div id="rot"><b>📱</b>Putar perangkat ke mode landscape untuk bermain</div>
 <script src="js/config.js"></script>
+<script src="js/database/providers/supabase.js"></script>
 <script src="js/database.js"></script>
 <script src="js/core.js"></script>
 <script src="js/audio.js"></script>
@@ -27,6 +31,7 @@
 <script src="js/entities.js"></script>
 <script src="js/input.js"></script>
 <script src="js/fullscreen.js"></script>
+<script src="js/tournament.js"></script>
 <script src="js/ui.js"></script>
 <script src="js/combat.js"></script>
 <script src="js/monsters.js"></script>
