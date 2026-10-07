@@ -1,80 +1,37 @@
-/*
- * ============================================================
- * FULLSCREEN + LANDSCAPE
- * ============================================================
- */
-
+/* ===== FULLSCREEN + LANDSCAPE ===== */
 let fsDone = false;
+let landscapeDone = false;
 
-async function requestGameFullscreen() {
-  try {
-    const element = document.documentElement;
-
-    const request =
-      element.requestFullscreen ||
-      element.webkitRequestFullscreen;
-
-    if (request) {
-      await request.call(element);
-    }
-  } catch {}
-
-  try {
-    if (
-      screen.orientation &&
-      typeof screen.orientation.lock === 'function'
-    ) {
+async function requestLandscape(){
+  try{
+    if(screen.orientation && typeof screen.orientation.lock === 'function'){
       await screen.orientation.lock('landscape');
+      landscapeDone = true;
     }
-  } catch {}
-
-  fsDone = true;
+  }catch(e){}
   fit();
 }
 
-function fit() {
-  const scale = Math.min(
-    innerWidth / W,
-    innerHeight / H
-  );
-
-  C.style.transform =
-    `translate(${
-      (innerWidth - W * scale) / 2
-    }px,${
-      (innerHeight - H * scale) / 2
-    }px) scale(${scale})`;
+async function requestGameFullscreen(){
+  try{
+    const el=document.documentElement;
+    const f=el.requestFullscreen||el.webkitRequestFullscreen;
+    if(f){
+      const result=f.call(el);
+      if(result && result.catch) await result.catch(()=>{});
+      fsDone=true;
+    }
+  }catch(e){}
+  await requestLandscape();
+  fit();
 }
 
-addEventListener(
-  'pointerdown',
-  () => {
-    au();
+async function enableImmersiveMode(){
+  try{au()}catch(e){}
+  if(GAME_CONFIG.ui.autoFullscreen && !fsDone) await requestGameFullscreen();
+  else if(GAME_CONFIG.ui.autoLandscape && !landscapeDone) await requestLandscape();
+}
 
-    if (
-      !fsDone &&
-      GAME_CONFIG.ui.autoFullscreen
-    ) {
-      void requestGameFullscreen();
-    }
-  },
-  { capture: true }
-);
-
-let resizeTimer;
-
-addEventListener('resize', () => {
-  clearTimeout(resizeTimer);
-
-  resizeTimer = setTimeout(
-    fit,
-    80
-  );
-});
-
-addEventListener(
-  'orientationchange',
-  () => setTimeout(fit, 200)
-);
-
-fit();
+addEventListener('pointerdown',()=>{void enableImmersiveMode()},{capture:true});
+let rz;function fit(){const s=Math.min(innerWidth/W,innerHeight/H);C.style.transform=`translate(${(innerWidth-W*s)/2}px,${(innerHeight-H*s)/2}px) scale(${s})`}
+addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(fit,80)});addEventListener('orientationchange',()=>setTimeout(fit,200));fit();

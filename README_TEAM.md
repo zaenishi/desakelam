@@ -1,175 +1,45 @@
-# Malam Kelam — Team Architecture
+# Malam Kelam — Team Structure
 
-## Struktur utama
+Versi ini sengaja memakai **baseline gameplay lama yang stabil**. Refactor dilakukan secara konservatif: modul gameplay/render tidak dibongkar total.
 
-```text
-index.html
-css/
-  main.css
+## Modul utama
+- `js/config.js` — seluruh konfigurasi game.
+- `js/database.js` — satu pintu untuk user/session/leaderboard. Saat migrasi ke Supabase/Firebase, pertahankan API `MLDatabase`.
+- `js/account.js` — profile, login/session, ranking, achievement.
+- `js/tournament.js` — jadwal, warning 1 menit, countdown, winner reveal.
+- `js/fullscreen.js` — fullscreen + landscape.
+- `js/skills.js` — skill dan cooldown.
+- `js/ui.js` — navigasi/menu.
+- `js/main.js` — game loop dan boot.
 
-js/
-  config.js                 # semua konfigurasi game
-  database.js               # data-access layer
-  database/providers/
-    supabase.js             # provider Supabase opsional
-
-  account.js                # profile, session, leaderboard
-  tournament.js             # jadwal & penutupan turnamen
-  skills.js                 # skill + cooldown
-  fullscreen.js             # fullscreen + landscape
-
-  core.js                   # state dasar
-  data.js                   # data dunia/monster
-  entities.js               # reset & entitas
-  input.js                  # keyboard/touch
-  update.js                 # game loop logic
-  combat.js                 # combat
-  monsters.js               # AI monster
-  render.js                 # rendering
-  ui.js                     # navigasi/menu
-  menu.js                   # scene intro/menu
-  end.js                    # menang/kalah
-  ...
-```
-
-## Aturan pengembangan tim
-
-### 1. Jangan akses database langsung dari gameplay
-
-Jangan membuat:
-
+## Tournament
+Atur di `GAME_CONFIG.tournament`:
 ```js
-localStorage.getItem(...)
-indexedDB.open(...)
-fetch(...)
+endTime: '16:30'
 ```
 
-di `combat.js`, `update.js`, `render.js`, dll.
-
-Gunakan:
-
+Matikan tournament:
 ```js
-MLDatabase.getCurrentUser()
-MLDatabase.saveUser(user)
-MLDatabase.submitScore(entry)
-MLDatabase.getLeaderboard()
+endTime: false
 ```
-
-Dengan pola ini database bisa diganti tanpa membongkar gameplay.
-
-### 2. Konfigurasi hanya di `config.js`
-
-Contoh mengaktifkan turnamen:
-
-```js
-tournament: {
-  enabled: true,
-  enabledToday: true,
-  date: null,
-  startTime: '00:00',
-  endTime: '16:30'
-}
-```
-
-Untuk membuat hari ini bukan turnamen:
-
+atau:
 ```js
 enabledToday: false
 ```
 
-Untuk mematikan turnamen:
+Saat tournament mati, tombol menjadi `START` dan mode classic tetap dapat dipakai untuk mengumpulkan leaderboard.
 
-```js
-enabled: false
-```
+## Session
+Jika `uid + name + accessCode` sudah tersimpan, reload tidak meminta login ulang.
 
-Untuk mode tanpa batas waktu:
+## Fullscreen / Landscape
+Browser mobile tidak selalu mengizinkan fullscreen/orientation lock tanpa gesture. Karena itu versi ini:
+1. mencoba otomatis pada tap pertama;
+2. menyediakan tombol `FULLSCREEN` dan `LANDSCAPE` di intro;
+3. menyediakan tombol yang sama di menu utama;
+4. tetap menampilkan layar rotasi bila perangkat masih portrait.
 
-```js
-endTime: false
-```
+## Realtime database
+Gameplay jangan memanggil Supabase/Firebase secara langsung. Tambahkan adapter/provider di belakang API `MLDatabase`, sehingga `account.js`, `tournament.js`, dan gameplay tidak perlu dirombak ketika backend diganti.
 
-Tombol otomatis berubah menjadi `START`.
-
-### 3. UID tidak dibuat ulang
-
-UID dibuat satu kali saat registrasi.
-
-Cache/session membuat reload halaman tidak meminta login/nama lagi selama profile masih tersedia.
-
-### 4. Leaderboard
-
-Mode sekarang:
-
-- IndexedDB sebagai database lokal.
-- localStorage sebagai cache cepat.
-- leaderboard mempertahankan skor terbaik.
-- provider Supabase tersedia sebagai jalur migrasi realtime.
-
-Untuk ratusan pemain sungguhan, gunakan Supabase/Firebase sebagai sumber utama dan anggap local cache hanya sebagai cache.
-
-### 5. Supabase
-
-Ubah di `js/config.js`:
-
-```js
-provider: 'supabase'
-```
-
-dan:
-
-```js
-DATABASE_CONFIG.remote.supabase.url = 'https://PROJECT.supabase.co'
-DATABASE_CONFIG.remote.supabase.anonKey = '...'
-```
-
-Jangan memasukkan `service_role` key ke frontend.
-
-Gunakan RLS di Supabase.
-
-### 6. Turnamen
-
-Pada `16:29` dengan `endTime: '16:30'`:
-
-```text
-SISA WAKTU 1 MENIT
-```
-
-Pada detik terakhir:
-
-```text
-3
-2
-1
-WAKTU HABIS
-```
-
-Kemudian:
-
-```text
-PEMENANG NO 1
-NAMA
-
-PEMENANG NO 2
-NAMA
-
-PEMENANG NO 3
-NAMA
-```
-
-dan user diarahkan ke Ranking.
-
-## Catatan penting untuk production
-
-Waktu turnamen saat ini menggunakan waktu lokal browser.
-
-Untuk turnamen resmi, server harus menjadi sumber waktu dan sumber kebenaran skor. Client hanya menampilkan timer.
-
-Solusi production yang disarankan:
-
-1. Server menentukan `tournament_start_at` dan `tournament_end_at`.
-2. Server memvalidasi submission score.
-3. Server menyimpan skor dengan user ID unik.
-4. Leaderboard realtime berasal dari server.
-5. Client hanya menerima snapshot leaderboard.
-6. Tutup turnamen berdasarkan server timestamp, bukan jam HP pemain.
+Untuk turnamen produksi, server time dan validasi skor harus menjadi sumber kebenaran; waktu browser hanya fallback untuk versi lokal.

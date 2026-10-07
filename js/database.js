@@ -1,17 +1,12 @@
 /*
  * ============================================================
- * DATABASE.JS — PROVIDER-AGNOSTIC DATA ACCESS LAYER
+ * DATABASE.JS — DATA ACCESS LAYER
  * ============================================================
+ * Gameplay tidak perlu tahu database yang dipakai.
+ * Gameplay hanya berkomunikasi dengan MLDatabase.
  *
- * Gameplay TIDAK boleh membaca localStorage/IndexedDB langsung.
- * Semua akses data melewati MLDatabase.
- *
- * Provider saat ini:
- *   IndexedDB + localStorage cache
- *
- * Provider berikutnya:
- *   Supabase / Firebase dapat diimplementasikan di layer ini
- *   tanpa mengubah account.js, tournament.js, atau gameplay.
+ * Saat nanti pindah ke Firebase/Supabase, API file ini
+ * dipertahankan agar file gameplay tidak perlu diubah.
  * ============================================================
  */
 
@@ -20,64 +15,39 @@ const MLDatabase = (() => {
   let databaseReady = false;
   let users = new Map();
   let leaderboard = [];
-  let activeProvider = DATABASE_CONFIG.provider;
-  let remoteProvider = null;
 
-  const clone = value => {
-    if (value === undefined || value === null) return value;
-    try { return JSON.parse(JSON.stringify(value)); }
-    catch { return value; }
-  };
-
-  const readCache = (key, fallback = null) => {
+  function readJson(key, fallback = null) {
     try {
-      const raw = localStorage.getItem(key);
-      if (!raw) return fallback;
-      const parsed = JSON.parse(raw);
-      if (parsed && parsed.value !== undefined && parsed.expiresAt) {
-        if (parsed.expiresAt > Date.now()) return parsed.value;
-        localStorage.removeItem(key);
-        return fallback;
-      }
-      return parsed;
-    } catch {
+      const value = localStorage.getItem(key);
+      return value ? JSON.parse(value) : fallback;
+    } catch (error) {
       return fallback;
     }
-  };
-
-  const writeCache = (key, value, ttlMs = 0) => {
-    try {
-      const payload = ttlMs > 0
-        ? { value, cachedAt: Date.now(), expiresAt: Date.now() + ttlMs }
-        : value;
-      localStorage.setItem(key, JSON.stringify(payload));
-    } catch {}
-  };
-
-  const removeCache = key => {
-    try { localStorage.removeItem(key); } catch {}
-  };
-
-  function normalizeUser(user = {}) {
-    const stats = user.stats || user.st || {};
-    return {
-      ...user,
-      uid: String(user.uid || ''),
-      name: String(user.name || '').trim(),
-      characterIndex: Number(user.characterIndex ?? user.ch ?? 0),
-      bestScore: Number(user.bestScore ?? user.best ?? 0),
-      gamesPlayed: Number(user.gamesPlayed ?? user.games ?? 0),
-      stats: { ...stats },
-      achievements: Array.isArray(user.achievements)
-        ? [...user.achievements]
-        : (Array.isArray(user.ach) ? [...user.ach] : []),
-      accessCode: String(user.accessCode || user.code || ''),
-      skinUnlocked: Number(user.skinUnlocked ?? user.skin ?? 0),
-      updatedAt: Number(user.updatedAt || Date.now())
-    };
   }
 
-  function normalizeLeaderboardEntry(entry = {}) {
+  function writeJson(key, value) {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch (error) {
+      /* Cache boleh gagal tanpa menghentikan game. */
+    }
+  }
+
+  function clone(value) {
+    return JSON.parse(JSON.stringify(value));
+  }
+
+  function getCachedUser() {
+    const cachedUser = readJson(DATABASE_CONFIG.cache.user, null);
+    if (cachedUser && cachedUser._cacheExpiresAt && cachedUser._cacheExpiresAt < Date.now()) {
+      try { localStorage.removeItem(DATABASE_CONFIG.cache.user); } catch (e) {}
+    } else if (cachedUser) return cachedUser;
+
+    const legacyUser = readJson(DATABASE_CONFIG.legacy.user, null);
+    return legacyUser && typeof legacyUser === 'object' ? legacyUser : null;
+  }
+
+  function normalizeLeaderboardEntry(entry) {
     return {
       uid: String(entry.uid || ''),
       name: String(entry.name || '?'),
@@ -85,117 +55,42 @@ const MLDatabase = (() => {
       score: Number(entry.score || 0),
       kills: Number(entry.kills || 0),
       night: Number(entry.night || 0),
-      timestamp: Number(entry.timestamp ?? entry.t ?? Date.now()),
-      updatedAt: Number(entry.updatedAt || Date.now())
+      timestamp: Number(entry.timestamp ?? entry.t ?? Date.now())
     };
   }
 
-  function readCachedUser() {
-    const cached = readCache(
-      DATABASE_CONFIG.cache.user,
-      null
-    );
+  function getCachedLeaderboard() {
+    const cachedLeaderboard = readJson(DATABASE_CONFIG.cache.leaderboard, null);
+    const legacyLeaderboard = readJson(DATABASE_CONFIG.legacy.leaderboard, []);
+    const source = Array.isArray(cachedLeaderboard)
+      ? cachedLeaderboard
+      : (Array.isArray(legacyLeaderboard) ? legacyLeaderboard : []);
 
-    if (cached && cached.uid) return normalizeUser(cached);
-
-    const legacy = readLegacyUser();
-    return legacy ? normalizeUser(legacy) : null;
-  }
-
-  function readLegacyUser() {
-    try {
-      const raw = localStorage.getItem(DATABASE_CONFIG.legacy.user);
-      return raw ? JSON.parse(raw) : null;
-    } catch {
-      return null;
-    }
-  }
-
-  function readCachedLeaderboard() {
-    const cached = readCache(
-      DATABASE_CONFIG.cache.leaderboard,
-      null
-    );
-
-    const legacy = (() => {
-      try {
-        const raw = localStorage.getItem(DATABASE_CONFIG.legacy.leaderboard);
-        return raw ? JSON.parse(raw) : [];
-      } catch {
-        return [];
-      }
-    })();
-
-    const source = Array.isArray(cached)
-      ? cached
-      : (Array.isArray(legacy) ? legacy : []);
-
-    return source
-      .filter(entry => entry && entry.uid)
-      .map(normalizeLeaderboardEntry);
+    return source.filter(entry => entry && entry.uid).map(normalizeLeaderboardEntry);
   }
 
   function cacheUser(user) {
-    if (!user || !user.uid) return;
-    const normalized = normalizeUser(user);
-    writeCache(
-      DATABASE_CONFIG.cache.user,
-      normalized,
-      GAME_CONFIG.cache.profileTtlMs
-    );
-    writeCache(
-      DATABASE_CONFIG.cache.session,
-      {
-        uid: normalized.uid,
-        loggedInAt: Date.now()
-      },
-      GAME_CONFIG.cache.sessionTtlMs
-    );
+    if (!user) return;
 
-    // Legacy migration/compatibility.
-    try {
-      localStorage.setItem(
-        DATABASE_CONFIG.legacy.user,
-        JSON.stringify(normalized)
-      );
-    } catch {}
+    const cached = Object.assign({}, user, { _cacheExpiresAt: Date.now() + (GAME_CONFIG.cache?.profileTtlMs || 2592000000) });
+    writeJson(DATABASE_CONFIG.cache.user, cached);
+    writeJson(DATABASE_CONFIG.cache.session, { uid: user.uid || '', expiresAt: Date.now() + (GAME_CONFIG.cache?.sessionTtlMs || 2592000000) });
+
+    /* Kompatibilitas dengan versi game lama. */
+    writeJson(DATABASE_CONFIG.legacy.user, user);
   }
 
   function cacheLeaderboard(entries) {
     const cleanEntries = (Array.isArray(entries) ? entries : [])
-      .filter(entry => entry && entry.uid)
-      .map(normalizeLeaderboardEntry)
-      .sort((a, b) => b.score - a.score)
+      .slice()
+      .sort((a, b) => (+b.score || 0) - (+a.score || 0))
       .slice(0, GAME_CONFIG.leaderboard.maxEntries);
 
-    writeCache(
-      DATABASE_CONFIG.cache.leaderboard,
-      cleanEntries,
-      GAME_CONFIG.cache.leaderboardTtlMs
-    );
-
-    try {
-      localStorage.setItem(
-        DATABASE_CONFIG.legacy.leaderboard,
-        JSON.stringify(cleanEntries)
-      );
-    } catch {}
+    writeJson(DATABASE_CONFIG.cache.leaderboard, cleanEntries);
+    writeJson(DATABASE_CONFIG.legacy.leaderboard, cleanEntries);
   }
 
-  function getSession() {
-    return readCache(DATABASE_CONFIG.cache.session, null);
-  }
-
-  function hasActiveSession() {
-    const session = getSession();
-    return !!(session && session.uid);
-  }
-
-  function clearSession() {
-    removeCache(DATABASE_CONFIG.cache.session);
-  }
-
-  function openIndexedDb() {
+  function openDatabase() {
     return new Promise(resolve => {
       if (!('indexedDB' in window)) {
         resolve(null);
@@ -203,37 +98,31 @@ const MLDatabase = (() => {
       }
 
       let request;
+
       try {
         request = indexedDB.open(
           DATABASE_CONFIG.name,
           DATABASE_CONFIG.version
         );
-      } catch {
+      } catch (error) {
         resolve(null);
         return;
       }
 
       request.onupgradeneeded = event => {
-        const db = event.target.result;
+        const databaseInstance = event.target.result;
 
-        if (!db.objectStoreNames.contains(DATABASE_CONFIG.stores.users)) {
-          db.createObjectStore(
+        if (!databaseInstance.objectStoreNames.contains(DATABASE_CONFIG.stores.users)) {
+          databaseInstance.createObjectStore(
             DATABASE_CONFIG.stores.users,
             { keyPath: 'uid' }
           );
         }
 
-        if (!db.objectStoreNames.contains(DATABASE_CONFIG.stores.leaderboard)) {
-          db.createObjectStore(
+        if (!databaseInstance.objectStoreNames.contains(DATABASE_CONFIG.stores.leaderboard)) {
+          databaseInstance.createObjectStore(
             DATABASE_CONFIG.stores.leaderboard,
             { keyPath: 'uid' }
-          );
-        }
-
-        if (!db.objectStoreNames.contains(DATABASE_CONFIG.stores.metadata)) {
-          db.createObjectStore(
-            DATABASE_CONFIG.stores.metadata,
-            { keyPath: 'key' }
           );
         }
       };
@@ -251,38 +140,18 @@ const MLDatabase = (() => {
       }
 
       try {
-        const tx = database.transaction(storeName, 'readonly');
-        const request = tx.objectStore(storeName).getAll();
+        const transaction = database.transaction(storeName, 'readonly');
+        const request = transaction.objectStore(storeName).getAll();
+
         request.onsuccess = () => resolve(request.result || []);
         request.onerror = () => resolve([]);
-      } catch {
+      } catch (error) {
         resolve([]);
       }
     });
   }
 
-  function getFromStore(storeName, key) {
-    return new Promise(resolve => {
-      if (!database) {
-        resolve(null);
-        return;
-      }
-
-      try {
-        const request = database
-          .transaction(storeName, 'readonly')
-          .objectStore(storeName)
-          .get(key);
-
-        request.onsuccess = () => resolve(request.result || null);
-        request.onerror = () => resolve(null);
-      } catch {
-        resolve(null);
-      }
-    });
-  }
-
-  function putToStore(storeName, value) {
+  function saveToStore(storeName, value) {
     return new Promise(resolve => {
       if (!database) {
         resolve(false);
@@ -290,118 +159,58 @@ const MLDatabase = (() => {
       }
 
       try {
-        const tx = database.transaction(storeName, 'readwrite');
-        tx.objectStore(storeName).put(clone(value));
-        tx.oncomplete = () => resolve(true);
-        tx.onerror = () => resolve(false);
-        tx.onabort = () => resolve(false);
-      } catch {
+        const transaction = database.transaction(storeName, 'readwrite');
+        transaction.objectStore(storeName).put(clone(value));
+
+        transaction.oncomplete = () => resolve(true);
+        transaction.onerror = () => resolve(false);
+        transaction.onabort = () => resolve(false);
+      } catch (error) {
         resolve(false);
       }
     });
-  }
-
-  function createRemoteProvider() {
-    if (activeProvider === 'supabase') {
-      if (typeof SupabaseDatabaseProvider === 'undefined') {
-        throw new Error('Supabase provider belum dimuat.');
-      }
-
-      return new SupabaseDatabaseProvider(
-        DATABASE_CONFIG.remote.supabase
-      );
-    }
-
-    /*
-     * Firebase dapat ditambahkan dengan kontrak provider yang sama.
-     */
-    if (activeProvider === 'firebase') {
-      throw new Error(
-        'Firebase provider belum dipasang. Gunakan adapter provider yang sama seperti Supabase.'
-      );
-    }
-
-    return null;
   }
 
   async function init() {
-    const cachedUser = readCachedUser();
-    const cachedLeaderboard = readCachedLeaderboard();
-
-    users.clear();
-    leaderboard = cachedLeaderboard.slice();
+    const cachedUser = getCachedUser();
+    const cachedLeaderboard = getCachedLeaderboard();
 
     if (cachedUser && cachedUser.uid) {
-      users.set(cachedUser.uid, cachedUser);
+      users.set(String(cachedUser.uid), clone(cachedUser));
     }
 
-    database = activeProvider === 'indexeddb'
-      ? await openIndexedDb()
-      : null;
+    leaderboard = cachedLeaderboard.slice();
+    cacheLeaderboard(leaderboard);
 
-    remoteProvider = null;
-
-    if (activeProvider !== 'indexeddb') {
-      try {
-        remoteProvider = createRemoteProvider();
-        await remoteProvider.init();
-
-        const remoteLeaderboard =
-          await remoteProvider.getLeaderboard();
-
-        if (Array.isArray(remoteLeaderboard)) {
-          leaderboard = remoteLeaderboard
-            .filter(entry => entry && entry.uid)
-            .map(normalizeLeaderboardEntry);
-        }
-
-        if (
-          typeof remoteProvider.subscribeLeaderboard === 'function'
-        ) {
-          remoteProvider.subscribeLeaderboard(entries => {
-            if (!Array.isArray(entries)) return;
-
-            leaderboard = entries
-              .filter(entry => entry && entry.uid)
-              .map(normalizeLeaderboardEntry)
-              .sort((a, b) => b.score - a.score)
-              .slice(0, GAME_CONFIG.leaderboard.maxEntries);
-
-            cacheLeaderboard(leaderboard);
-          });
-        }
-      } catch (error) {
-        if (GAME_CONFIG.app.debug) {
-          console.warn('[MLDatabase] Remote provider gagal:', error);
-        }
-
-        remoteProvider = null;
-      }
-    }
+    database = await openDatabase();
 
     if (database) {
       const storedUsers = await readAll(DATABASE_CONFIG.stores.users);
       const storedLeaderboard = await readAll(DATABASE_CONFIG.stores.leaderboard);
 
       storedUsers.forEach(user => {
-        const normalized = normalizeUser(user);
-        if (normalized.uid) users.set(normalized.uid, normalized);
+        if (user && user.uid) {
+          users.set(String(user.uid), user);
+        }
       });
 
       if (storedLeaderboard.length) {
-        leaderboard = storedLeaderboard
-          .filter(entry => entry && entry.uid)
-          .map(normalizeLeaderboardEntry);
+        leaderboard = storedLeaderboard.filter(entry => entry && entry.uid);
+      } else if (leaderboard.length) {
+        for (const entry of leaderboard) {
+          await saveToStore(DATABASE_CONFIG.stores.leaderboard, entry);
+        }
       }
 
-      if (cachedUser && cachedUser.uid && !users.has(cachedUser.uid)) {
-        await putToStore(DATABASE_CONFIG.stores.users, cachedUser);
+      if (cachedUser && cachedUser.uid && !users.has(String(cachedUser.uid))) {
+        await saveToStore(DATABASE_CONFIG.stores.users, cachedUser);
       }
 
       cacheLeaderboard(leaderboard);
 
-      const current = cachedUser && users.get(cachedUser.uid);
-      if (current) cacheUser(current);
+      if (cachedUser && cachedUser.uid && users.has(String(cachedUser.uid))) {
+        cacheUser(users.get(String(cachedUser.uid)));
+      }
     }
 
     databaseReady = true;
@@ -409,92 +218,63 @@ const MLDatabase = (() => {
   }
 
   function getCurrentUser() {
-    const session = getSession();
+    const session = readJson(DATABASE_CONFIG.cache.session, null);
 
-    if (session && session.uid) {
+    if (session && session.uid && (!session.expiresAt || session.expiresAt > Date.now())) {
       return clone(
-        users.get(String(session.uid)) ||
-        readCachedUser() ||
-        {}
+        users.get(String(session.uid)) || getCachedUser() || {}
       );
     }
 
-    return clone(readCachedUser() || {});
+    return clone(getCachedUser() || {});
   }
 
   async function saveUser(user) {
-    const normalized = normalizeUser(user);
-    if (!normalized.uid) return null;
+    if (!user || !user.uid) return null;
 
-    normalized.updatedAt = Date.now();
-    users.set(normalized.uid, normalized);
-    cacheUser(normalized);
+    users.set(String(user.uid), clone(user));
+    cacheUser(user);
+    await saveToStore(DATABASE_CONFIG.stores.users, user);
 
-    if (database && activeProvider === 'indexeddb') {
-      await putToStore(
-        DATABASE_CONFIG.stores.users,
-        normalized
-      );
-    }
+    return clone(user);
+  }
 
-    if (remoteProvider) {
-      try {
-        await remoteProvider.saveUser(normalized);
-      } catch (error) {
-        if (GAME_CONFIG.app.debug) {
-          console.warn('[MLDatabase] Gagal menyimpan user remote:', error);
-        }
-      }
-    }
-
-    return clone(normalized);
+  async function createUser(user) {
+    return saveUser(user);
   }
 
   async function getUser(uid) {
-    const userId = String(uid || '');
-    if (!userId) return getCurrentUser();
+    if (!uid) return getCurrentUser();
+
+    const userId = String(uid);
 
     if (users.has(userId)) {
       return clone(users.get(userId));
     }
 
-    if (remoteProvider) {
+    if (database) {
       try {
-        const user = await remoteProvider.getUser(userId);
+        const user = await new Promise(resolve => {
+          const request = database
+            .transaction(DATABASE_CONFIG.stores.users, 'readonly')
+            .objectStore(DATABASE_CONFIG.stores.users)
+            .get(userId);
+
+          request.onsuccess = () => resolve(request.result || null);
+          request.onerror = () => resolve(null);
+        });
 
         if (user) {
-          const normalized = normalizeUser(user);
-          users.set(userId, normalized);
-          cacheUser(normalized);
-          return clone(normalized);
+          users.set(userId, user);
+          cacheUser(user);
+          return clone(user);
         }
       } catch (error) {
-        if (GAME_CONFIG.app.debug) {
-          console.warn('[MLDatabase] Gagal mengambil user remote:', error);
-        }
+        /* Fallback ke cache. */
       }
     }
 
-    if (database && activeProvider === 'indexeddb') {
-      const user = await getFromStore(
-        DATABASE_CONFIG.stores.users,
-        userId
-      );
-
-      if (user) {
-        const normalized = normalizeUser(user);
-        users.set(userId, normalized);
-        cacheUser(normalized);
-        return clone(normalized);
-      }
-    }
-
-    const cached = readCachedUser();
-    return cached && cached.uid === userId ? clone(cached) : null;
-  }
-
-  async function createUser(user) {
-    return saveUser(user);
+    return null;
   }
 
   async function login(uid) {
@@ -502,62 +282,36 @@ const MLDatabase = (() => {
   }
 
   async function submitScore(entry) {
-    const normalized = normalizeLeaderboardEntry(entry);
-    if (!normalized.uid) return null;
+    if (!entry || !entry.uid) return;
 
-    const existingIndex = leaderboard.findIndex(
-      item => item.uid === normalized.uid
+    const normalizedEntry = {
+      uid: String(entry.uid),
+      name: String(entry.name || '?'),
+      characterIndex: Number(entry.characterIndex ?? entry.ch ?? 0),
+      score: Number(entry.score || 0),
+      kills: Number(entry.kills || 0),
+      night: Number(entry.night || 0),
+      timestamp: Number(entry.timestamp || entry.t || Date.now())
+    };
+
+    const existingEntry = leaderboard.find(
+      item => String(item.uid) === normalizedEntry.uid
     );
 
-    if (existingIndex >= 0) {
-      const existing = leaderboard[existingIndex];
-
-      /*
-       * Best-score mode mencegah skor lama yang lebih tinggi
-       * tertimpa skor sesi yang lebih rendah.
-       */
-      if (GAME_CONFIG.leaderboard.submitOnlyBestScore) {
-        normalized.score = Math.max(
-          Number(existing.score || 0),
-          Number(normalized.score || 0)
-        );
-      }
-
-      leaderboard[existingIndex] = {
-        ...existing,
-        ...normalized,
-        updatedAt: Date.now()
-      };
+    if (existingEntry) {
+      Object.assign(existingEntry, normalizedEntry);
     } else {
-      leaderboard.push(normalized);
+      leaderboard.push(normalizedEntry);
     }
 
-    leaderboard = leaderboard
-      .sort((a, b) => b.score - a.score)
-      .slice(0, GAME_CONFIG.leaderboard.maxEntries);
+    leaderboard.sort((a, b) => (+b.score || 0) - (+a.score || 0));
+    leaderboard = leaderboard.slice(0, GAME_CONFIG.leaderboard.maxEntries);
 
     cacheLeaderboard(leaderboard);
-
-    if (database && activeProvider === 'indexeddb') {
-      await putToStore(
-        DATABASE_CONFIG.stores.leaderboard,
-        leaderboard.find(item => item.uid === normalized.uid)
-      );
-    }
-
-    if (remoteProvider) {
-      try {
-        await remoteProvider.submitScore(
-          leaderboard.find(item => item.uid === normalized.uid)
-        );
-      } catch (error) {
-        if (GAME_CONFIG.app.debug) {
-          console.warn('[MLDatabase] Gagal mengirim skor remote:', error);
-        }
-      }
-    }
-
-    return clone(normalized);
+    await saveToStore(
+      DATABASE_CONFIG.stores.leaderboard,
+      normalizedEntry
+    );
   }
 
   function getLeaderboardSync() {
@@ -565,77 +319,23 @@ const MLDatabase = (() => {
   }
 
   async function getLeaderboard() {
-    if (remoteProvider) {
-      try {
-        const remoteEntries =
-          await remoteProvider.getLeaderboard();
-
-        if (Array.isArray(remoteEntries)) {
-          leaderboard = remoteEntries
-            .filter(entry => entry && entry.uid)
-            .map(normalizeLeaderboardEntry)
-            .sort((a, b) => b.score - a.score)
-            .slice(0, GAME_CONFIG.leaderboard.maxEntries);
-
-          cacheLeaderboard(leaderboard);
-        }
-      } catch (error) {
-        if (GAME_CONFIG.app.debug) {
-          console.warn('[MLDatabase] Gagal mengambil leaderboard remote:', error);
-        }
-      }
-    }
-
     return getLeaderboardSync();
-  }
-
-  /*
-   * Titik migrasi realtime.
-   *
-   * Supabase/Firebase adapter nanti cukup mengimplementasikan:
-   *   init()
-   *   getUser(uid)
-   *   saveUser(user)
-   *   submitScore(entry)
-   *   getLeaderboard()
-   *   subscribeLeaderboard(callback)
-   *
-   * Gameplay tidak perlu mengetahui detail provider.
-   */
-  async function setProvider(providerName) {
-    const allowed = ['indexeddb', 'supabase', 'firebase'];
-    if (!allowed.includes(providerName)) {
-      throw new Error(`Database provider tidak didukung: ${providerName}`);
-    }
-
-    activeProvider = providerName;
-    databaseReady = false;
-    remoteProvider = null;
-    return init();
   }
 
   return Object.freeze({
     init,
     ready: () => databaseReady,
-    provider: () => activeProvider,
-
-    getCachedUser: readCachedUser,
-    getCachedLeaderboard: readCachedLeaderboard,
+    getCachedUser,
+    getCachedLeaderboard,
     getCurrentUser,
     currentUser: getCurrentUser,
-    hasActiveSession,
-    clearSession,
-
     createUser,
     saveUser,
     getUser,
     login,
-
     submitScore,
     getLeaderboardSync,
     getLeaderboard,
-
-    setProvider,
     config: DATABASE_CONFIG
   });
 })();

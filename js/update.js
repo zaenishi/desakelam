@@ -11,9 +11,9 @@ function upPlayer(dt,ctl){let kx=(K.KeyD||K.ArrowRight?1:0)-(K.KeyA||K.ArrowLeft
   if(mag>.1){P.dx=kx;P.dy=ky;if(P.at<=0)P.face=Math.atan2(ky,kx);P.walked+=v*dt;if(sprint){P.st-=15*dt;P.noise=.3}P.sp-=dt;if(P.sp<=0){P.sp=sprint?.25:.4;SFX.step(zoneAt(P.x,P.y))}}}
  P.mv=mag>.1;if(!sprint&&P.at<=0)P.st=Math.min(100,P.st+(P.mv?14:24)*dt);P.st=Math.max(0,P.st);
  if(MODE=='train')P.st=100}
-function upGame(dt){const ctl=S=='play'||I.ctl;I.cdc=(I.cdc||0)-dt;if(S=='play'){I.ac=(I.ac||0)-dt;if(I.ac<=0){I.ac=1.5;checkAch()}I.sv=(I.sv||0)-dt;if(I.sv<=0){I.sv=GAME_CONFIG.gameplay.autosaveSeconds;savePlayerProfile()}}upPlayer(dt,ctl);
+function upGame(dt){const ctl=S=='play'||I.ctl;I.cdc=(I.cdc||0)-dt;if(S=='play'){I.ac=(I.ac||0)-dt;if(I.ac<=0){I.ac=1.5;checkAch()}I.sv=(I.sv||0)-dt;if(I.sv<=0){I.sv=10;savePlayerProfile()}}upPlayer(dt,ctl);
  const hr=((18*60+gt)/60)%24,ds=dk(hr);
- if(MODE=='classic'&&S=='play'){gt+=dt*2;score+=dt*GAME_CONFIG.gameplay.scorePerSecond;if(gt>=720)newNight(500*night,'Fajar... malam berikutnya lebih kelam.');
+ if(MODE=='classic'&&S=='play'){gt+=dt*2;score+=dt*3;if(gt>=720)newNight(500*night,'Fajar... malam berikutnya lebih kelam.');
   if(!INR)wT-=dt;if(wT<=0&&!INR){wave++;updatePlayerStat('wave',wave,1);wT=40;const n=Math.min(12,2+wave);for(let i=0;i<n;i++){const a=R()*7,x=cl(P.x+Math.cos(a)*520,40,WW-40),y=cl(P.y+Math.sin(a)*520,40,WH-40);if(hitO(x,y,24))continue;const m=mk(['sh','sp','bo','gh'][R()*4|0],x,y,1+wave*.1+(night-1)*.25);go(m,'chase');M.push(m)}
    say('Gelombang '+wave+' mendekat!',3);if(wave>1&&R()<.5){const m=mk('sh',P.x-Math.cos(P.face)*90,P.y-Math.sin(P.face)*90,1);if(!hitO(m.x,m.y,14)){go(m,'chase');M.push(m);scare()}}}
   wTm-=dt;if(wTm<=0){wTm=35+R()*25;weather=['clear','rain','fog','storm','rain','eclipse'][R()*6|0];if(weather=='storm')I.lt=3;if(weather=='eclipse'){const p=fp(R()*7|0,400),g=mk('wo',p.x,p.y,.5);g.guard=1;go(g,'patrol');M.push(g);say('GERHANA! Poin x2, monster elit muncul!',4)}}
@@ -23,7 +23,7 @@ function upGame(dt){const ctl=S=='play'||I.ctl;I.cdc=(I.cdc||0)-dt;if(S=='play')
   if(P.sn<=0)P.hp-=2*dt,P.hf=.1;if(P.hp<=0&&S=='play')dmgP(0)}
  if(MODE=='train'&&S=='play')trainStep();
  if(weather=='storm'){I.lt=(I.lt??4)-dt;if(I.lt<=0){I.lt=6+R()*6;flash=1;SFX.thunder();shake=Math.max(shake,5)}}
- NS.forEach(n=>{n.fl-=dt;n.cd-=dt;if(n.cd<=0&&Math.hypot(n.x-P.x,n.y-P.y)<450&&M.length<GAME_CONFIG.gameplay.maxMonsters){n.cd=10+R()*6;const m=mk(['sh','sp'][R()*2|0],n.x+28,n.y,1+(night-1)*.25);go(m,'chase');M.push(m)}});NS=NS.filter(n=>!n.dead);
+ NS.forEach(n=>{n.fl-=dt;n.cd-=dt;if(n.cd<=0&&Math.hypot(n.x-P.x,n.y-P.y)<450&&M.length<30){n.cd=10+R()*6;const m=mk(['sh','sp'][R()*2|0],n.x+28,n.y,1+(night-1)*.25);go(m,'chase');M.push(m)}});NS=NS.filter(n=>!n.dead);
  for(const m of M)upM(m,dt);M=M.filter(m=>!m.dead);
  for(let i=0;i<M.length;i++)for(let j=i+1;j<M.length;j++){const a=M[i],b=M[j],d=dist(a,b),q=a.r+b.r;if(d<q&&d>0){const p=(q-d)/2,nx=(a.x-b.x)/d,ny=(a.y-b.y)/d;mvE(a,nx*p,ny*p,a.t.fly);mvE(b,-nx*p,-ny*p,b.t.fly)}}
  PR.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.t-=dt;if(p.f){for(const m of M)if(m.st!='death'&&Math.hypot(p.x-m.x,p.y-m.y)<m.r+6){hurtM(m,p.d,0);p.t=0;break}}else if(Math.hypot(p.x-P.x,p.y-P.y)<P.r+6){dmgP(p.d);p.t=0}});PR=PR.filter(p=>p.t>0);
