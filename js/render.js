@@ -39,7 +39,7 @@ function dP(){
  else{X.moveTo(fx*10,-4+fy*8);X.lineTo(fx*10+Math.cos(P.face+sw)*30,-4+fy*8+Math.sin(P.face+sw)*30)}X.stroke();X.restore()
 }
 function dM(m){
- const T_=m.t,fx=Math.cos(m.face),fy=Math.sin(m.face),b=Math.sin(t*6+m.x)*2,r=m.r;X.save();X.translate(m.x,m.y);
+ const T_=m.t,fx=Math.cos(m.face),fy=Math.sin(m.face),b=Math.sin(t*6+m.x)*2,r=m.r;X.save();X.translate(m.x,m.y);if(m.st!=='death'){const moving=m.st==='chase'||m.st==='attack'||m.dash>0;X.translate(0,Math.sin(t*(moving?11:3)+m.x*.02)*(moving?2.8:1.5));X.rotate(Math.sin(t*(moving?8:2.2)+m.y*.015)*(moving?.055:.025)+(m.st==='attack'?Math.sin(m.stt*18)*.07:0))}
  if(m.st==='death'){X.globalAlpha=1-m.stt/.7;X.rotate(m.stt*3);X.scale(1-m.stt*.4,1-m.stt*.4)}
  X.fillStyle='#0007';X.beginPath();X.ellipse(0,r*.7,r,r*.4,0,0,7);X.fill();if(m.guard){X.shadowColor='#ffd700';X.shadowBlur=18}
  const att=m.st==='attack'?1+m.stt*.5:1;X.scale(att,att);
