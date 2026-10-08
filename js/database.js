@@ -1,26 +1,185 @@
-/* ===== DATABASE LAYER: IndexedDB/cache + optional Supabase ===== */
-const MLDatabase=(()=>{let database=null,databaseReady=false,users=new Map(),leaderboard=[];
-const readJson=(k,d=null)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}};
-const writeJson=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
-const clone=v=>JSON.parse(JSON.stringify(v));
-function remote(){const r=DATABASE_CONFIG.remote.supabase;return r&&r.url&&r.anonKey?r:null}
-function headers(){return {'apikey':DATABASE_CONFIG.remote.supabase.anonKey,'Authorization':'Bearer '+DATABASE_CONFIG.remote.supabase.anonKey,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'}}
-function getCachedUser(){const c=readJson(DATABASE_CONFIG.cache.user,null);if(c&&c._cacheExpiresAt&&c._cacheExpiresAt<Date.now())try{localStorage.removeItem(DATABASE_CONFIG.cache.user)}catch(e){}else if(c)return c;return readJson(DATABASE_CONFIG.legacy.user,null)}
-function norm(e){return{uid:String(e.uid||''),name:String(e.name||'?'),characterIndex:Number(e.characterIndex??e.character_index??e.ch??0),score:Number(e.score||0),kills:Number(e.kills||0),night:Number(e.night||0),timestamp:Number(e.timestamp??e.timestamp_ms??e.t??Date.now()),roundId:String(e.roundId||e.round_id||tournamentRoundId())}}
-function currentRoundOnly(arr){const round=tournamentRoundId();return (Array.isArray(arr)?arr:[]).filter(e=>norm(e).roundId===round).map(norm)}
-function getCachedLeaderboard(){const c=readJson(DATABASE_CONFIG.cache.leaderboard,null),l=readJson(DATABASE_CONFIG.legacy.leaderboard,[]);return currentRoundOnly(Array.isArray(c)?c:l)}
-function cacheUser(u){if(!u)return;writeJson(DATABASE_CONFIG.cache.user,Object.assign({},u,{_cacheExpiresAt:Date.now()+GAME_CONFIG.cache.profileTtlMs}));writeJson(DATABASE_CONFIG.cache.session,{uid:u.uid||'',expiresAt:Date.now()+GAME_CONFIG.cache.sessionTtlMs});writeJson(DATABASE_CONFIG.legacy.user,u)}
-function cacheLeaderboard(a){const clean=currentRoundOnly(a).sort((a,b)=>b.score-a.score).slice(0,GAME_CONFIG.leaderboard.maxEntries);writeJson(DATABASE_CONFIG.cache.leaderboard,clean);writeJson(DATABASE_CONFIG.legacy.leaderboard,clean)}
-function openDatabase(){return new Promise(resolve=>{if(!('indexedDB'in window))return resolve(null);let req;try{req=indexedDB.open(DATABASE_CONFIG.name,DATABASE_CONFIG.version)}catch(e){return resolve(null)}req.onupgradeneeded=e=>{const db=e.target.result;if(!db.objectStoreNames.contains('users'))db.createObjectStore('users',{keyPath:'uid'});if(!db.objectStoreNames.contains('leaderboard'))db.createObjectStore('leaderboard',{keyPath:'uid'})};req.onsuccess=e=>resolve(e.target.result);req.onerror=()=>resolve(null)})}
-function readAll(store){return new Promise(resolve=>{if(!database)return resolve([]);try{const r=database.transaction(store,'readonly').objectStore(store).getAll();r.onsuccess=()=>resolve(r.result||[]);r.onerror=()=>resolve([])}catch(e){resolve([])}})}
-function saveStore(store,v){return new Promise(resolve=>{if(!database)return resolve(false);try{const tx=database.transaction(store,'readwrite');tx.objectStore(store).put(clone(v));tx.oncomplete=()=>resolve(true);tx.onerror=()=>resolve(false);tx.onabort=()=>resolve(false)}catch(e){resolve(false)}})}
-async function remoteLeaderboard(){const r=remote();if(!r)return[];try{const q=`${r.url.replace(/\/$/,'')}/rest/v1/${r.leaderboardTable}?select=uid,name,character_index,score,kills,night,timestamp_ms,round_id&round_id=eq.${encodeURIComponent(tournamentRoundId())}&order=score.desc&limit=${GAME_CONFIG.leaderboard.maxEntries}`;const res=await fetch(q,{headers:headers()});if(!res.ok)return[];return currentRoundOnly(await res.json())}catch(e){return[]}}
-async function remoteUpsert(e){const r=remote();if(!r)return false;try{const url=`${r.url.replace(/\/$/,'')}/rest/v1/${r.leaderboardTable}`;const body={uid:e.uid,name:e.name,character_index:e.characterIndex,score:e.score,kills:e.kills,night:e.night,timestamp_ms:e.timestamp,round_id:e.roundId};const res=await fetch(url,{method:'POST',headers:headers(),body:JSON.stringify(body)});return res.ok}catch(e){return false}}
-async function init(){const cu=getCachedUser();leaderboard=getCachedLeaderboard();if(cu?.uid)users.set(String(cu.uid),clone(cu));database=await openDatabase();if(database){for(const u of await readAll('users'))if(u?.uid)users.set(String(u.uid),u);const sl=await readAll('leaderboard');if(sl.length)leaderboard=currentRoundOnly(sl);else if(leaderboard.length)for(const e of leaderboard)await saveStore('leaderboard',e)}const remoteLB=await remoteLeaderboard();if(remoteLB.length){leaderboard=remoteLB;for(const e of remoteLB)await saveStore('leaderboard',e)}cacheLeaderboard(leaderboard);if(cu?.uid&&users.has(String(cu.uid)))cacheUser(users.get(String(cu.uid)));databaseReady=true;return true}
-function getCurrentUser(){const s=readJson(DATABASE_CONFIG.cache.session,null);if(s?.uid&&(!s.expiresAt||s.expiresAt>Date.now()))return clone(users.get(String(s.uid))||getCachedUser()||{});return clone(getCachedUser()||{})}
-async function remoteUserUpsert(u){const r=remote();if(!r)return false;try{const url=`${r.url.replace(/\/$/,'')}/rest/v1/${r.usersTable}`;const body={uid:u.uid,name:u.name,character_index:u.characterIndex,best_score:u.bestScore,games_played:u.gamesPlayed,stats:u.stats||{},achievements:u.achievements||[],access_code:u.accessCode||null};const res=await fetch(url,{method:'POST',headers:headers(),body:JSON.stringify(body)});return res.ok}catch(e){return false}}
-async function saveUser(u){if(!u?.uid)return null;users.set(String(u.uid),clone(u));cacheUser(u);await saveStore('users',u);void remoteUserUpsert(u);return clone(u)}
-async function getUser(uid){if(!uid)return getCurrentUser();const id=String(uid);if(users.has(id))return clone(users.get(id));if(database)try{const u=await new Promise(resolve=>{const r=database.transaction('users','readonly').objectStore('users').get(id);r.onsuccess=()=>resolve(r.result||null);r.onerror=()=>resolve(null)});if(u){users.set(id,u);cacheUser(u);return clone(u)}}catch(e){}return null}
-async function refreshLeaderboard(){const r=await remoteLeaderboard();if(r.length){leaderboard=r.sort((a,b)=>b.score-a.score).slice(0,GAME_CONFIG.leaderboard.maxEntries);cacheLeaderboard(leaderboard);for(const e of leaderboard)await saveStore('leaderboard',e)}return clone(leaderboard)}
-async function submitScore(e){if(!e?.uid)return;const n=norm(e),old=leaderboard.find(x=>x.uid===n.uid);if(old)Object.assign(old,n);else leaderboard.push(n);leaderboard=leaderboard.sort((a,b)=>b.score-a.score).slice(0,GAME_CONFIG.leaderboard.maxEntries);cacheLeaderboard(leaderboard);await saveStore('leaderboard',n);void remoteUpsert(n)}
-return Object.freeze({init,ready:()=>databaseReady,getCachedUser,getCachedLeaderboard,getCurrentUser,currentUser:getCurrentUser,saveUser,createUser:saveUser,getUser,login:getUser,submitScore,getLeaderboardSync:()=>clone(leaderboard),getLeaderboard:async()=>clone(leaderboard),refreshLeaderboard,config:DATABASE_CONFIG})})();
+/*
+ * ============================================================
+ * DATABASE.JS — DATA ACCESS LAYER
+ * ============================================================
+ * Gameplay tidak perlu tahu database yang dipakai.
+ * Gameplay hanya berkomunikasi dengan MLDatabase.
+ *
+ * Saat nanti pindah ke Firebase/Supabase, API file ini
+ * dipertahankan agar file gameplay tidak perlu diubah.
+ * ============================================================
+ */
+const MLDatabase =(() => {
+  let database = null; let databaseReady = false; let users = new Map(); let leaderboard =[]; function readJson(key, fallback = null) {
+    try {
+      const value = localStorage.getItem(key); return value?JSON.parse(value):fallback; 
+    } catch(error) {
+      return fallback; 
+    }
+  }
+  function writeJson(key, value) {
+    try {
+      localStorage.setItem(key, JSON.stringify(value)); 
+    } catch(error) {
+      /* Cache boleh gagal tanpa menghentikan game. */
+    }
+  }
+  function clone(value) {
+    return JSON.parse(JSON.stringify(value)); 
+  }
+  function getCachedUser() {
+    const cachedUser = readJson(DATABASE_CONFIG.cache.user, null); if(cachedUser && cachedUser._cacheExpiresAt && cachedUser._cacheExpiresAt < Date.now()) {
+      try {
+        localStorage.removeItem(DATABASE_CONFIG.cache.user); 
+      } catch(e) {
+      }
+    } else if(cachedUser)return cachedUser; const legacyUser = readJson(DATABASE_CONFIG.legacy.user, null); return legacyUser && typeof legacyUser === 'object'?legacyUser:null; 
+  }
+  function normalizeLeaderboardEntry(entry) {
+    return {
+      uid:String(entry.uid || ''), name:String(entry.name || '?'), characterIndex:Number(entry.characterIndex ?? entry.ch ?? 0), score:Number(entry.score || 0), kills:Number(entry.kills || 0), night:Number(entry.night || 0), timestamp:Number(entry.timestamp ?? entry.t ?? Date.now())
+    }; 
+  }
+  function getCachedLeaderboard() {
+    const cachedLeaderboard = readJson(DATABASE_CONFIG.cache.leaderboard, null); const legacyLeaderboard = readJson(DATABASE_CONFIG.legacy.leaderboard, []); const source = Array.isArray(cachedLeaderboard)?cachedLeaderboard:(Array.isArray(legacyLeaderboard)?legacyLeaderboard:[]); return source.filter(entry => entry && entry.uid).map(normalizeLeaderboardEntry); 
+  }
+  function cacheUser(user) {
+    if(!user)return; const cached = Object.assign({
+    }, user, {
+      _cacheExpiresAt:Date.now() +(GAME_CONFIG.cache?.profileTtlMs || 2592000000)
+    }); writeJson(DATABASE_CONFIG.cache.user, cached); writeJson(DATABASE_CONFIG.cache.session, {
+      uid:user.uid || '', expiresAt:Date.now() +(GAME_CONFIG.cache?.sessionTtlMs || 2592000000)
+    }); 
+    /* Kompatibilitas dengan versi game lama. */
+    writeJson(DATABASE_CONFIG.legacy.user, user); 
+  }
+  function cacheLeaderboard(entries) {
+    const cleanEntries =(Array.isArray(entries)?entries:[]).slice().sort((a, b) =>( + b.score || 0) -( + a.score || 0)).slice(0, GAME_CONFIG.leaderboard.maxEntries); writeJson(DATABASE_CONFIG.cache.leaderboard, cleanEntries); writeJson(DATABASE_CONFIG.legacy.leaderboard, cleanEntries); 
+  }
+  function openDatabase() {
+    return new Promise(resolve => {
+      if(!('indexedDB' in window)) {
+        resolve(null); return; 
+      }
+      let request; try {
+        request = indexedDB.open(DATABASE_CONFIG.name, DATABASE_CONFIG.version); 
+      } catch(error) {
+        resolve(null); return; 
+      }
+      request.onupgradeneeded = event => {
+        const databaseInstance = event.target.result; if(!databaseInstance.objectStoreNames.contains(DATABASE_CONFIG.stores.users)) {
+          databaseInstance.createObjectStore(DATABASE_CONFIG.stores.users, {
+            keyPath:'uid'
+          }); 
+        }
+        if(!databaseInstance.objectStoreNames.contains(DATABASE_CONFIG.stores.leaderboard)) {
+          databaseInstance.createObjectStore(DATABASE_CONFIG.stores.leaderboard, {
+            keyPath:'uid'
+          }); 
+        }
+      }; request.onsuccess = event => resolve(event.target.result); request.onerror =() => resolve(null); 
+    }); 
+  }
+  function readAll(storeName) {
+    return new Promise(resolve => {
+      if(!database) {
+        resolve([]); return; 
+      }
+      try {
+        const transaction = database.transaction(storeName, 'readonly'); const request = transaction.objectStore(storeName).getAll(); request.onsuccess =() => resolve(request.result ||[]); request.onerror =() => resolve([]); 
+      } catch(error) {
+        resolve([]); 
+      }
+    }); 
+  }
+  function saveToStore(storeName, value) {
+    return new Promise(resolve => {
+      if(!database) {
+        resolve(false); return; 
+      }
+      try {
+        const transaction = database.transaction(storeName, 'readwrite'); transaction.objectStore(storeName).put(clone(value)); transaction.oncomplete =() => resolve(true); transaction.onerror =() => resolve(false); transaction.onabort =() => resolve(false); 
+      } catch(error) {
+        resolve(false); 
+      }
+    }); 
+  }
+  async function init() {
+    const cachedUser = getCachedUser(); const cachedLeaderboard = getCachedLeaderboard(); if(cachedUser && cachedUser.uid) {
+      users.set(String(cachedUser.uid), clone(cachedUser)); 
+    }
+    leaderboard = cachedLeaderboard.slice(); cacheLeaderboard(leaderboard); database = await openDatabase(); if(database) {
+      const storedUsers = await readAll(DATABASE_CONFIG.stores.users); const storedLeaderboard = await readAll(DATABASE_CONFIG.stores.leaderboard); storedUsers.forEach(user => {
+        if(user && user.uid) {
+          users.set(String(user.uid), user); 
+        }
+      }); if(storedLeaderboard.length) {
+        leaderboard = storedLeaderboard.filter(entry => entry && entry.uid); 
+      } else if(leaderboard.length) {
+        for(const entry of leaderboard) {
+          await saveToStore(DATABASE_CONFIG.stores.leaderboard, entry); 
+        }
+      }
+      if(cachedUser && cachedUser.uid && !users.has(String(cachedUser.uid))) {
+        await saveToStore(DATABASE_CONFIG.stores.users, cachedUser); 
+      }
+      cacheLeaderboard(leaderboard); if(cachedUser && cachedUser.uid && users.has(String(cachedUser.uid))) {
+        cacheUser(users.get(String(cachedUser.uid))); 
+      }
+    }
+    databaseReady = true; return true; 
+  }
+  function getCurrentUser() {
+    const session = readJson(DATABASE_CONFIG.cache.session, null); if(session && session.uid &&(!session.expiresAt || session.expiresAt > Date.now())) {
+      return clone(users.get(String(session.uid)) || getCachedUser() || {
+      }); 
+    }
+    return clone(getCachedUser() || {
+    }); 
+  }
+  async function saveUser(user) {
+    if(!user || !user.uid)return null; users.set(String(user.uid), clone(user)); cacheUser(user); await saveToStore(DATABASE_CONFIG.stores.users, user); return clone(user); 
+  }
+  async function createUser(user) {
+    return saveUser(user); 
+  }
+  async function getUser(uid) {
+    if(!uid)return getCurrentUser(); const userId = String(uid); if(users.has(userId)) {
+      return clone(users.get(userId)); 
+    }
+    if(database) {
+      try {
+        const user = await new Promise(resolve => {
+          const request = database.transaction(DATABASE_CONFIG.stores.users, 'readonly').objectStore(DATABASE_CONFIG.stores.users).get(userId); request.onsuccess =() => resolve(request.result || null); request.onerror =() => resolve(null); 
+        }); if(user) {
+          users.set(userId, user); cacheUser(user); return clone(user); 
+        }
+      } catch(error) {
+        /* Fallback ke cache. */
+      }
+    }
+    return null; 
+  }
+  async function login(uid) {
+    return getUser(uid); 
+  }
+  async function submitScore(entry) {
+    if(!entry || !entry.uid)return; const normalizedEntry = {
+      uid:String(entry.uid), name:String(entry.name || '?'), characterIndex:Number(entry.characterIndex ?? entry.ch ?? 0), score:Number(entry.score || 0), kills:Number(entry.kills || 0), night:Number(entry.night || 0), timestamp:Number(entry.timestamp || entry.t || Date.now())
+    }; const existingEntry = leaderboard.find(item => String(item.uid) === normalizedEntry.uid); if(existingEntry) {
+      Object.assign(existingEntry, normalizedEntry); 
+    } else {
+      leaderboard.push(normalizedEntry); 
+    }
+    leaderboard.sort((a, b) =>( + b.score || 0) -( + a.score || 0)); leaderboard = leaderboard.slice(0, GAME_CONFIG.leaderboard.maxEntries); cacheLeaderboard(leaderboard); await saveToStore(DATABASE_CONFIG.stores.leaderboard, normalizedEntry); 
+  }
+  function getLeaderboardSync() {
+    return clone(leaderboard); 
+  }
+  async function getLeaderboard() {
+    return getLeaderboardSync(); 
+  }
+  return Object.freeze({
+    init, ready:() => databaseReady, getCachedUser, getCachedLeaderboard, getCurrentUser, currentUser:getCurrentUser, createUser, saveUser, getUser, login, submitScore, getLeaderboardSync, getLeaderboard, config:DATABASE_CONFIG
+  }); 
+})();

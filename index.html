@@ -1,34 +1,45 @@
-<!DOCTYPE html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"><title>Malam Kelam — Desa Bersih</title><meta name="theme-color" content="#08090a"><link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Creepster&display=swap" rel="stylesheet"><link rel="stylesheet" href="css/main.css"></head><body>
+<!DOCTYPE html><html lang="id"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>Malam Kelam di Desa Terkutuk</title><meta name="theme-color" content="#0a0a0a">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Creepster&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/main.css"></head><body>
 <canvas id="c" width="960" height="540"></canvas>
-<div id="tc"><div id="jz"></div><div id="jb"></div><div id="jk"></div><button class="tb" id="bH">HIT</button><button class="tb" id="bD">DODGE</button><button class="tb" id="bE">MED</button><button class="tb" id="bS">SKILL</button><button class="tb" id="bI">MASUK</button></div>
-<button id="pb">II</button><button id="sk">LEWATI</button><button id="immersiveToggle" class="immersive-toggle" type="button" aria-label="Fullscreen">⛶</button>
-
-<div class="ov hide" id="menu">
-  <div class="menu-shell">
-    <div class="menu-top"><button class="profile-chip b" data-a="prof"><span class="profile-icon">◉</span><span><b id="mi">PEMAIN</b><small>PROFILE</small></span></button><div class="menu-brand"><span>MALAM KELAM</span><small>DESA YANG HARUS DISELAMATKAN</small></div></div>
-    <div class="menu-hero"><div class="hero-copy"><span class="eyebrow">ESCAPE • CLEAN • SURVIVE</span><h1>MALAM KELAM<br><em>DI DESA TERKUTUK</em></h1><p>Basmi monster sampah. Kumpulkan poin. Selamatkan desa.</p><div id="tournamentStatus" class="status"></div></div><div class="hero-character" id="heroCharacter"></div></div>
-    <div class="menu-dock"><button class="b start-btn" data-a="classic" id="tournamentBtn"><strong>START</strong><small id="startSub"></small></button><button class="b train-btn" data-a="train"><strong>TRAINING</strong><small>LATIHAN</small></button></div>
-    <div class="side-slider"><button class="slider-handle" id="navToggle">›</button><div class="side-links"><button class="icon-nav b" data-a="rank"><span>🏆</span><small>LEADERBOARD</small></button><button class="icon-nav b" data-a="shop"><span>⚒</span><small>SHOP</small></button><button class="icon-nav b" data-a="credits"><span>✦</span><small>CREDITS</small></button></div></div>
-    <div id="lb"></div>
-  </div>
-</div>
-
-<div class="ov hide" id="gate"><div class="panel"><span class="eyebrow">TURNAMEN SEKOLAH</span><h1>KODE AKSES</h1><p>Masukkan kode akses yang diberikan dari Lab Komputer.</p><input class="in" id="code" maxlength="16" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="KODE AKSES"><div class="er" id="ge"></div><button class="b" data-a="gate">MASUK</button></div></div>
-<div class="ov hide" id="reg"><div class="panel wide"><span class="eyebrow">PLAYER SETUP</span><h1>NAMA & KARAKTER</h1><input class="in" id="nm" maxlength="12" autocomplete="off" placeholder="NAMA PEMAIN"><div class="chg" id="chg"></div><div class="er" id="re"></div><button class="b" data-a="reg">MULAI PETUALANGAN</button></div></div>
-<div class="ov hide" id="rank"><div class="panel wide"><span class="eyebrow">ROUND SCOREBOARD</span><h1>LEADERBOARD</h1><div id="rs"></div><div class="tbl" id="rl"></div><button class="b" data-a="close">KEMBALI</button></div></div>
-<div class="ov hide" id="credits"><div class="panel"><span class="eyebrow">DEVELOPMENT</span><h1>CREDITS</h1><div id="creditsNames" class="creditsNames"></div><p>Demo karya Ekskul Komputer 4.0.<br>Terima kasih untuk semua pengembang dan penguji.</p><button class="b" data-a="close">KEMBALI</button></div></div>
-<div class="ov hide" id="prof"><div class="panel wide profile-panel"><div id="profileVisual"></div><div class="profile-heading"><div><h1 id="pn"></h1><small id="profileId"></small></div></div><div id="pd"></div><div class="tbl achievements" id="pa"></div><div class="row"><button class="b s" data-a="close">KEMBALI</button></div></div></div>
-
-<div class="ov hide" id="shop"><div class="panel shop-panel"><div class="shop-head"><div><span class="eyebrow">ECONOMY</span><h1>SHOP</h1></div><div class="money">◈ <b id="shopMoney">0</b></div></div><div class="shop-layout"><aside class="quiz-card" id="quizPanel"><span class="eyebrow">EDUCATION MODE</span><h2>QUIZ 30 DETIK</h2><p>Jawab soal dasar untuk mendapatkan uang.</p><div id="quizQuestion">Tekan mulai</div><input class="in" id="quizAnswer" inputmode="numeric" placeholder="jawaban"><div class="quiz-meta"><b id="quizTime">30s</b><span id="quizResult"></span></div><div class="row"><button class="b s" id="quizStart">MULAI QUIZ</button><button class="b s" id="quizSubmit">JAWAB</button><button class="b s" id="quizClose">SELESAI</button></div></aside><section><div class="shop-section-title">UPGRADE KARAKTER</div><div id="shopItems"></div><div id="shopMsg"></div></section></div><button class="b" data-a="close">KEMBALI</button></div></div>
-
-<div class="ov hide" id="load"><div class="panel"><h1>MEMUAT…</h1><div id="bar"><i></i></div><p id="tip"></p></div></div>
-<div class="ov hide" id="pause"><div class="panel"><h1>JEDA</h1><button class="b" data-a="resume">LANJUT</button><button class="b" data-a="home">MENU</button></div></div>
-<div class="ov hide" id="end"><div class="panel"><h1 id="et"></h1><p id="es"></p><button class="b" data-a="again">ULANGI</button><button class="b" data-a="home">MENU</button></div></div>
-<div class="ov hide" id="tournamentStart"><div class="panel tournament-start"><span class="eyebrow">ROUND TERBUKA</span><h1>MODE TURNAMEN</h1><div id="tournamentStartInfo"></div><p>Kejar poin setinggi mungkin.<br>Leaderboard disembunyikan sampai waktu berakhir.</p></div></div>
-<div id="tournamentWarning"></div>
-<div class="ov hide" id="tournamentEnd"><div id="tCountdownWrap"><div id="tCountdownTitle"></div><div id="tCountdown"></div></div><div id="tWinner"></div></div>
-<div class="ov hide" id="cleanCinematic"><div class="clean-cinema"><div id="cleanScene" class="clean-scene dirty"><div class="cinema-village"></div></div><div id="cleanCopy">Sampah telah dibersihkan...</div></div></div>
+<div id="tc"><div id="jz"></div><div id="jb"></div><div id="jk"></div>
+<button class="tb" id="bH">HIT</button><button class="tb" id="bD">DODGE</button><button class="tb" id="bE">MED</button><button class="tb" id="bS">SKILL</button><button class="tb" id="bI">MASUK</button></div>
+<button id="pb">II</button><button id="sk">LEWATI</button><button id="immersiveToggle" class="immersive-toggle" type="button" aria-label="Aktifkan layar penuh dan landscape" title="Layar penuh + landscape">⛶</button>
+<div class="ov hide" id="menu"><h1>MALAM KELAM<br>DI DESA TERKUTUK</h1><div id="mi"></div>
+<button class="b" data-a="classic" id="tournamentBtn">TURNAMEN</button><button class="b" data-a="train">TRAINING</button><div id="tournamentStatus"></div>
+<div class="menu-nav"><button class="b s" data-a="rank">RANKING</button><button class="b s" data-a="prof">PROFIL</button><button class="b s" data-a="credits">CREDITS</button></div><div id="lb"></div></div>
+<div class="ov hide" id="gate"><h1>KODE AKSES</h1><p style="max-width:80vw">Masukkan kode akses turnamen dari panitia.</p><input class="in" id="code" maxlength="16" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="KODE"><div class="er" id="ge"></div><button class="b" data-a="gate">MASUK</button></div>
+<div class="ov hide" id="reg"><h1 style="font-size:6vh">NAMA &amp; KARAKTER</h1><input class="in" id="nm" maxlength="12" autocomplete="off" placeholder="NAMA"><div class="chg" id="chg"></div><div class="er" id="re"></div><button class="b" data-a="reg">MULAI</button></div>
+<div class="ov hide" id="rank"><h1 style="font-size:6vh">RANKING</h1><div id="rs" style="color:#a99;font-size:clamp(10px,2.2vh,14px)"></div><div class="tbl" id="rl"></div><button class="b" data-a="close">TUTUP</button></div>
+<div class="ov hide" id="credits"><h1 style="font-size:6vh">CREDITS</h1><div id="creditsNames" class="creditsNames"></div><p>Terima kasih untuk semua yang membantu pengembangan dan pengujian.</p><button class="b" data-a="close">KEMBALI</button></div>
+<div class="ov hide" id="prof"><h1 style="font-size:5vh" id="pn"></h1><div id="pd" style="line-height:1.7"></div><div class="tbl" id="pa" style="max-height:30vh"></div><div class="row"><button class="b s" data-a="edit">UBAH PROFIL</button><button class="b s" data-a="close">TUTUP</button></div></div>
+<div class="ov hide" id="load"><h1 style="font-size:5vh">Memuat…</h1><div id="bar"><i></i></div><p id="tip"></p></div>
+<div class="ov hide" id="pause"><h1>JEDA</h1><button class="b" data-a="resume">LANJUT</button><button class="b" data-a="home">MENU</button></div>
+<div class="ov hide" id="end"><h1 id="et"></h1><p id="es" style="font-size:clamp(12px,2.8vh,20px);line-height:1.6"></p><button class="b" data-a="again">ULANGI</button><button class="b" data-a="home">MENU</button></div>
+<div id="tournamentWarning"></div><div class="ov hide" id="tournamentEnd"><div id="tCountdownWrap"><div id="tCountdownTitle"></div><div id="tCountdown"></div></div><div id="tWinner"></div></div>
 <div id="rot"><b>📱</b>Putar perangkat ke mode landscape untuk bermain</div>
-<script src="js/config.js"></script><script src="js/database.js"></script><script src="js/core.js"></script><script src="js/audio.js"></script><script src="js/data.js"></script><script src="js/entities.js"></script><script src="js/input.js"></script><script src="js/fullscreen.js"></script><script src="js/tournament.js"></script><script src="js/ui.js"></script><script src="js/combat.js"></script><script src="js/monsters.js"></script><script src="js/update.js"></script><script src="js/end.js"></script><script src="js/render.js"></script><script src="js/menu.js"></script><script src="js/account.js"></script><script src="js/shop.js"></script><script src="js/skills.js"></script><script src="js/nests.js"></script><script src="js/night.js"></script><script src="js/interiors.js"></script><script src="js/music.js"></script><script src="js/main.js"></script>
-<script>document.addEventListener('click',e=>{if(e.target.closest('#navToggle'))document.querySelector('.side-slider').classList.toggle('open')});</script>
-</body></html>
+<script src="js/config.js"></script>
+<script src="js/database.js"></script>
+<script src="js/core.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/data.js"></script>
+<script src="js/entities.js"></script>
+<script src="js/input.js"></script>
+<script src="js/fullscreen.js"></script>
+<script src="js/tournament.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/combat.js"></script>
+<script src="js/monsters.js"></script>
+<script src="js/update.js"></script>
+<script src="js/end.js"></script>
+<script src="js/render.js"></script>
+<script src="js/menu.js"></script>
+<script src="js/account.js"></script>
+<script src="js/skills.js"></script>
+<script src="js/nests.js"></script>
+<script src="js/night.js"></script>
+<script src="js/interiors.js"></script>
+<script src="js/music.js"></script>
+<script src="js/main.js"></script></body></html>
