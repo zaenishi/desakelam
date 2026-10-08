@@ -9,7 +9,6 @@ create table if not exists public.users (
   access_code text,
   updated_at timestamptz not null default now()
 );
-
 create table if not exists public.leaderboard (
   uid text primary key references public.users(uid) on delete cascade,
   name text not null,
@@ -18,7 +17,8 @@ create table if not exists public.leaderboard (
   kills integer not null default 0,
   night integer not null default 0,
   timestamp_ms bigint not null default 0,
+  round_id text not null default 'normal',
   updated_at timestamptz not null default now()
 );
-
-create index if not exists leaderboard_score_idx on public.leaderboard(score desc);
+alter table public.leaderboard add column if not exists round_id text not null default 'normal';
+create index if not exists leaderboard_round_score_idx on public.leaderboard(round_id,score desc);
