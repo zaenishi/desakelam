@@ -1,230 +1,31 @@
-/*
- * ============================================================
- * ACCOUNT.JS — PROFIL, KODE AKSES, RANKING, ACHIEVEMENT
- * ============================================================
- */
-const DEFAULT_PLAYER_PROFILE = {
-  name:'',
-  uid:'',
-  characterIndex:0,
-  bestScore:0,
-  gamesPlayed:0,
-  stats: {
-  },
-  achievements:[],
-  accessCode:'',
-  skinUnlocked:0
-};
-function normalizePlayerProfile(savedProfile = {
-}) {
-  return Object.assign({
-  }, DEFAULT_PLAYER_PROFILE, {
-    name:savedProfile.name || '', uid:savedProfile.uid || '', characterIndex:Number(savedProfile.characterIndex ?? savedProfile.ch ?? 0), bestScore:Number(savedProfile.bestScore ?? savedProfile.best ?? 0), gamesPlayed:Number(savedProfile.gamesPlayed ?? savedProfile.games ?? 0), stats:savedProfile.stats || savedProfile.st || {
-    }, achievements:Array.isArray(savedProfile.achievements)?savedProfile.achievements:(Array.isArray(savedProfile.ach)?savedProfile.ach:[]), accessCode:savedProfile.accessCode || savedProfile.code || '', skinUnlocked:Number(savedProfile.skinUnlocked ?? savedProfile.skin ?? 0)
-  });
-}
-let playerProfile = normalizePlayerProfile(MLDatabase.getCachedUser() || {
-});
-let selectedCharacterIndex = playerProfile.characterIndex || 0;
-let leaderboardCache = MLDatabase.getCachedLeaderboard();
-let interiorIndex = 0;
-let interiorObject = null;
-let currentRoom = null;
-let monsterNests =[];
-let night = 1;
-let foundDocuments = 0;
-function getCurrentCharacterClass() {
-  return CHARACTER_CLASSES[playerProfile.characterIndex] || CHARACTER_CLASSES[0];
-}
-function isLoggedIn() {
-  return Boolean(playerProfile.uid && playerProfile.name && playerProfile.accessCode);
-}
-function savePlayerProfile() {
-  sv(DATABASE_CONFIG.legacy.user, playerProfile);
-  MLDatabase.saveUser(playerProfile);
-}
-function getNightDifficultyMultiplier() {
-  return 1 +(night - 1) * 0.3;
-}
-function escapeHtml(value) {
-  return String(value).replace(/[&<>\"]/g, character =>({
-    '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;'
-  }
-  [character]));
-}
-function updatePlayerStat(statKey, amount, setMaximum = false) {
-  const stats = playerProfile.stats;
-  stats[statKey] = setMaximum?Math.max(stats[statKey] || 0, amount):(stats[statKey] || 0) + amount;
-}
-function addScore(amount) {
-  score += Math.round(amount *(1 + Math.min(4, player.sk / 3|0)) *(weather === 'eclipse'?2:1));
-}
-function checkAchievements() {
-  for(const achievement of ACHIEVEMENTS) {
-    if(playerProfile.achievements.includes(achievement.id))continue;
-    const value = achievement.statKey === 'best'?Math.max(playerProfile.bestScore, score|0):(playerProfile.stats[achievement.statKey] || 0);
-    const target = Number(achievement.target ?? achievement.id.slice(achievement.statKey.length));
-    if(value >= target) {
-      playerProfile.achievements.push(achievement.id);
-      say('🏆 ' + achievement.name, 4);
-      SFX.lvl();
-      score += 50;
-      savePlayerProfile();
-      break;
-    }
-  }
-}
-function createPlayerId(seedText) {
-  let hash = 0;
-  for(const character of seedText) {
-    hash =(hash * 31 + character.charCodeAt(0))>>>0;
-  }
-  return 'ML-' + hash.toString(36).toUpperCase().padStart(5, '0').slice(0, 6);
-}
-function createRandomPlayerId() {
-  return 'ML-' + Math.random().toString(36).slice(2, 8).toUpperCase();
-}
-async function initDatabase() {
-  await MLDatabase.init();
-  if(playerProfile.uid) {
-    const savedProfile = await MLDatabase.getUser(playerProfile.uid);
-    if(savedProfile) {
-      playerProfile = Object.assign(playerProfile, savedProfile);
-    }
-  }
-  leaderboardCache = MLDatabase.getLeaderboardSync();
-  savePlayerProfile();
-}
-function getLeaderboardEntries() {
-  return leaderboardCache;
-}
-function getPlayerRank(value) {
-  return 1 + getLeaderboardEntries().filter(entry => entry.uid !== playerProfile.uid && entry.score > value).length;
-}
-function getMyRank() {
-  return getPlayerRank(Math.max(playerProfile.bestScore, score|0));
-}
-function submitScore(finalScore) {
-  finalScore |= 0;
-  if(finalScore > playerProfile.bestScore) {
-    playerProfile.bestScore = finalScore;
-  }
-  savePlayerProfile();
-  const leaderboardEntry = {
-    uid:playerProfile.uid,
-    name:playerProfile.name,
-    characterIndex:playerProfile.characterIndex,
-    score:playerProfile.bestScore,
-    kills:playerProfile.stats.kills || 0,
-    night:playerProfile.stats.night || 0,
-    timestamp:Date.now()
-  };
-  const existingEntry = leaderboardCache.find(entry => entry.uid === playerProfile.uid);
-  if(existingEntry) {
-    Object.assign(existingEntry, leaderboardEntry);
-  } else {
-    leaderboardCache.push(leaderboardEntry);
-  }
-  leaderboardCache.sort((a, b) => b.score - a.score);
-  leaderboardCache = leaderboardCache.slice(0, GAME_CONFIG.leaderboard.maxEntries);
-  MLDatabase.submitScore(leaderboardEntry);
-}
-function routePlayer() {
-  // Session lengkap: langsung ke menu, jangan tampilkan login lagi.
-  if(isLoggedIn()) {
-    toMenu();
-    return;
-  }
-  if(!playerProfile.accessCode) {
-    show('menu', 0);
-    show('gate', 1);
-  } else if(!playerProfile.name) {
-    showRegistration();
-  } else {
-    toMenu();
-  }
-}
-function submitAccessCode() {
-  const accessCode = domQuery('#code').value.trim().toUpperCase();
-  if(ACCESS_CODES.includes(accessCode)) {
-    playerProfile.accessCode = accessCode;
-    savePlayerProfile();
-    SFX.pick();
-    show('gate', 0);
-    showRegistration();
-  } else {
-    domQuery('#ge').textContent = 'Kode tidak valid. Hubungi panitia.';
-    SFX.hurt();
-  }
-}
-function showRegistration() {
-  ['menu', 'gate', 'prof'].forEach(id => show(id, 0));
-  domQuery('#nm').value = playerProfile.name || '';
-  domQuery('#chg').innerHTML = CHARACTER_CLASSES.map((character, index) => `
-    <button class="chc" data-i="${index}">
-      <b>${character.emoji}</b>${character.name}
-    </button>
-  `).join('');
-  selectCharacter(playerProfile.characterIndex || 0);
-  show('reg', 1);
-}
-function selectCharacter(characterIndex) {
-  selectedCharacterIndex = characterIndex;
-  document.querySelectorAll('.chc').forEach(button => {
-    button.classList.toggle('on', Number(button.dataset.i) === characterIndex); 
-  });
-  const character = CHARACTER_CLASSES[characterIndex] || CHARACTER_CLASSES[0];
-  domQuery('#re').style.color = '#caa';
-  domQuery('#re').textContent = `${character.skillName}: ${character.description} · HP x${character.hpMultiplier} · Speed x${character.speedMultiplier}`;
-}
-function submitRegistration() {
-  const playerName = domQuery('#nm').value.trim().replace(GAME_CONFIG.registration.allowedNamePattern, '');
-  if(playerName.length < GAME_CONFIG.registration.minNameLength) {
-    domQuery('#re').style.color = '#f55';
-    domQuery('#re').textContent = `Nama minimal ${GAME_CONFIG.registration.minNameLength} karakter (huruf/angka).`;
-    SFX.hurt();
-    return;
-  }
-  playerProfile.name = GAME_CONFIG.registration.uppercaseName === false?playerName:playerName.toUpperCase();
-  playerProfile.characterIndex = selectedCharacterIndex;
-  if(!playerProfile.uid) {
-    playerProfile.uid = createPlayerId(`${playerProfile.name}-${Date.now()}-${Math.random()}`) || createRandomPlayerId();
-  }
-  savePlayerProfile();
-  toMenu();
-}
-function openRanking() {
-  show('menu', 0);
-  renderRanking();
-  show('rank', 1);
-}
-function renderRanking() {
-  const entries = getLeaderboardEntries().slice().sort((a, b) => b.score - a.score).slice(0, GAME_CONFIG.leaderboard.displayEntries);
-  domQuery('#rs').textContent = 'Database lokal — IndexedDB + cache browser';
-  domQuery('#rl').innerHTML = entries.length?entries.map((entry, index) => {
-    const character = CHARACTER_CLASSES[entry.characterIndex] || CHARACTER_CLASSES[0]; return `
-          <div class="rw ${entry.uid===playerProfile.uid?'me':''}">
-            <span>${['🥇','🥈','🥉'][index]||(index+1)+'.'}</span>
-            <span>${escapeHtml(entry.name)} <small>${escapeHtml(entry.uid)}</small></span>
-            <span>${character?character.emoji:''}</span>
-            <span>${entry.score}</span>
-          </div>
-        `; 
-  }).join(''):'<div class="rw">Belum ada skor. Jadilah yang pertama!</div>';
-}
-function openProfile() {
-  show('menu', 0);
-  const character = getCurrentCharacterClass();
-  const stats = playerProfile.stats;
-  domQuery('#pn').textContent = `${playerProfile.name} - ${playerProfile.uid} [${character.name}]`;
-  domQuery('#pd').innerHTML = `${character.emoji} Skill: ${character.skillName}<br>
-    Skor terbaik ${playerProfile.bestScore} · Rank #${getPlayerRank(playerProfile.bestScore)}<br>
-    Monster ${stats.kills||0} · Artefak ${stats.art||0} · Malam ${stats.night||0} · Main ${playerProfile.gamesPlayed}<br>
-    Achievement ${playerProfile.achievements.length}/${ACHIEVEMENTS.length}`;
-  domQuery('#pa').innerHTML = ACHIEVEMENTS.map(achievement => `
-    <span class="ac ${playerProfile.achievements.includes(achievement.id)?'on':''}">
-      ${achievement.name}
-    </span>
-  `).join('');
-  show('prof', 1);
-}
+/* ===== ACCOUNT, PROFILE, CHARACTER UI, LEADERBOARD ===== */
+const DEFAULT_PLAYER_PROFILE={name:'',uid:'',characterIndex:0,bestScore:0,gamesPlayed:0,stats:{},achievements:[],accessCode:'',skinUnlocked:0,coins:0,swordLevel:0,skillLevel:0};
+function normalizePlayerProfile(p={}){return Object.assign({},DEFAULT_PLAYER_PROFILE,{name:p.name||'',uid:p.uid||'',characterIndex:Number(p.characterIndex??p.ch??0),bestScore:Number(p.bestScore??p.best??0),gamesPlayed:Number(p.gamesPlayed??p.games??0),stats:p.stats||p.st||{},achievements:Array.isArray(p.achievements)?p.achievements:(Array.isArray(p.ach)?p.ach:[]),accessCode:p.accessCode||p.code||'',skinUnlocked:Number(p.skinUnlocked??p.skin??0),coins:Number(p.coins||0),swordLevel:Number(p.swordLevel||0),skillLevel:Number(p.skillLevel||0)});}
+let playerProfile=normalizePlayerProfile(MLDatabase.getCachedUser()||{}),selectedCharacterIndex=playerProfile.characterIndex||0,leaderboardCache=MLDatabase.getCachedLeaderboard();
+let interiorIndex=0,interiorObject=null,currentRoom=null,monsterNests=[],night=1,foundDocuments=0;
+function getCurrentCharacterClass(){return CHARACTER_CLASSES[playerProfile.characterIndex]||CHARACTER_CLASSES[0]}
+function isLoggedIn(){return Boolean(playerProfile.uid&&playerProfile.name&&playerProfile.accessCode)}
+function savePlayerProfile(){sv(DATABASE_CONFIG.legacy.user,playerProfile);MLDatabase.saveUser(playerProfile)}
+function getNightDifficultyMultiplier(){return 1+(night-1)*.3}
+function escapeHtml(v){return String(v).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function updatePlayerStat(k,a,setMaximum=false){const st=playerProfile.stats;st[k]=setMaximum?Math.max(st[k]||0,a):(st[k]||0)+a}
+function addScore(amount){score+=Math.round(amount*(1+Math.min(4,P.sk/3|0))*(weather==='eclipse'?2:1))}
+function addCoins(amount){playerProfile.coins=Math.max(0,playerProfile.coins+Math.max(0,Math.round(amount)));savePlayerProfile();shopRender&&shopRender()}
+function checkAchievements(){for(const a of ACHIEVEMENTS){if(playerProfile.achievements.includes(a.id))continue;const v=a.statKey==='best'?Math.max(playerProfile.bestScore,score|0):(playerProfile.stats[a.statKey]||0);if(v>=a.target){playerProfile.achievements.push(a.id);say('🏆 '+a.name,4);SFX.lvl();score+=50;savePlayerProfile();break}}}
+function createPlayerId(seed){let h=0;for(const c of seed)h=(h*31+c.charCodeAt(0))>>>0;return'ML-'+h.toString(36).toUpperCase().padStart(5,'0').slice(0,6)}
+function createRandomPlayerId(){return'ML-'+Math.random().toString(36).slice(2,8).toUpperCase()}
+async function initDatabase(){await MLDatabase.init();if(playerProfile.uid){const s=await MLDatabase.getUser(playerProfile.uid);if(s)playerProfile=Object.assign(playerProfile,s)}leaderboardCache=MLDatabase.getLeaderboardSync();savePlayerProfile()}
+function getLeaderboardEntries(){return leaderboardCache}
+function getPlayerRank(v){return 1+getLeaderboardEntries().filter(e=>e.uid!==playerProfile.uid&&e.score>v).length}
+function getMyRank(){return getPlayerRank(Math.max(playerProfile.bestScore,score|0))}
+function submitScore(finalScore){finalScore|=0;if(finalScore>playerProfile.bestScore)playerProfile.bestScore=finalScore;savePlayerProfile();const tournamentRound=typeof Tournament!=='undefined'&&(Tournament.isWithinWindow()||Tournament.isPastEnd());const e={uid:playerProfile.uid,name:playerProfile.name,characterIndex:playerProfile.characterIndex,score:tournamentRound?finalScore:playerProfile.bestScore,kills:playerProfile.stats.kills||0,night:playerProfile.stats.night||0,timestamp:Date.now(),roundId:tournamentRoundId()};const old=leaderboardCache.find(x=>x.uid===playerProfile.uid);if(old)Object.assign(old,e);else leaderboardCache.push(e);leaderboardCache.sort((a,b)=>b.score-a.score);leaderboardCache=leaderboardCache.slice(0,GAME_CONFIG.leaderboard.maxEntries);MLDatabase.submitScore(e)}
+function characterArt(characterIndex,animated=true){const c=CHARACTER_CLASSES[characterIndex]||CHARACTER_CLASSES[0];const a=animated?' char-float':'';return `<div class="character-art ${c.weaponType}${a}" style="--accent:${c.color}"><div class="char-shadow"></div><div class="char-cape"></div><div class="char-body"></div><div class="char-head"><i></i><i></i></div><div class="char-weapon"></div></div>`}
+function renderCharacterCards(){const el=$('#chg');if(!el)return;el.innerHTML=CHARACTER_CLASSES.map((c,i)=>`<button class="chc ${i===selectedCharacterIndex?'on':''}" data-i="${i}"><div class="char-card-art">${characterArt(i,false)}</div><strong>${c.name}</strong><small>${c.weapon}</small></button>`).join('')}
+function routePlayer(){if(isLoggedIn()){toMenu();return}if(!playerProfile.accessCode){show('menu',0);show('gate',1)}else if(!playerProfile.name)showRegistration();else toMenu()}
+function submitAccessCode(){const code=$('#code').value.trim().toUpperCase();if(ACCESS_CODES.includes(code)){playerProfile.accessCode=code;savePlayerProfile();SFX.pick();show('gate',0);showRegistration()}else{$('#ge').textContent='Kode tidak valid. Hubungi panitia.';SFX.hurt()}}
+function showRegistration(){['menu','gate','prof','rank','credits','shop'].forEach(id=>show(id,0));$('#nm').value=playerProfile.name||'';renderCharacterCards();selectCharacter(playerProfile.characterIndex||0);show('reg',1)}
+function selectCharacter(i){selectedCharacterIndex=i;document.querySelectorAll('.chc').forEach(b=>b.classList.toggle('on',+b.dataset.i===i));const c=CHARACTER_CLASSES[i]||CHARACTER_CLASSES[0];$('#re').style.color='#caa';$('#re').innerHTML=`<b>${c.skillName}</b> · ${c.description}<br><span>Senjata: ${c.weapon} · HP ×${c.hpMultiplier} · Speed ×${c.speedMultiplier}</span>`}
+function submitRegistration(){const name=$('#nm').value.trim().replace(GAME_CONFIG.registration.allowedNamePattern,'');if(name.length<GAME_CONFIG.registration.minNameLength){$('#re').style.color='#f55';$('#re').textContent=`Nama minimal ${GAME_CONFIG.registration.minNameLength} karakter.`;SFX.hurt();return}playerProfile.name=GAME_CONFIG.registration.uppercaseName===false?name:name.toUpperCase();playerProfile.characterIndex=selectedCharacterIndex;if(!playerProfile.uid)playerProfile.uid=createPlayerId(`${playerProfile.name}-${Date.now()}-${Math.random()}`)||createRandomPlayerId();savePlayerProfile();toMenu()}
+function openRanking(){if(Tournament&&Tournament.isWithinWindow()){say('Leaderboard disembunyikan selama turnamen.',3);return}show('menu',0);renderRanking();show('rank',1)}
+function renderRanking(){const entries=getLeaderboardEntries().slice().sort((a,b)=>b.score-a.score).slice(0,GAME_CONFIG.leaderboard.displayEntries);$('#rs').textContent=Tournament&&Tournament.isWithinWindow()?'Leaderboard dikunci selama turnamen.':'Peringkat lokal / server (jika Supabase diaktifkan).';$('#rl').innerHTML=entries.length?entries.map((e,i)=>{const c=CHARACTER_CLASSES[e.characterIndex]||CHARACTER_CLASSES[0];return `<div class="rw ${e.uid===playerProfile.uid?'me':''}"><span class="rank-medal">${['🥇','🥈','🥉'][i]||(i+1)+'.'}</span><span class="rank-player"><b>${escapeHtml(e.name)}</b><small>${escapeHtml(e.uid)}</small></span><span>${c.emoji}</span><strong>${e.score}</strong></div>`}).join(''):'<div class="rw">Belum ada skor pada ronde ini.</div>'}
+function openProfile(){show('menu',0);const c=getCurrentCharacterClass(),st=playerProfile.stats;$('#profileVisual').innerHTML=characterArt(playerProfile.characterIndex,true);$('#pn').textContent=playerProfile.name;$('#profileId').textContent=playerProfile.uid;$('#pd').innerHTML=`<div class="profile-grid"><div><small>SKOR TERBAIK</small><b>${playerProfile.bestScore}</b></div><div><small>RANK</small><b>#${getPlayerRank(playerProfile.bestScore)}</b></div><div><small>MONSTER</small><b>${st.kills||0}</b></div><div><small>MALAM</small><b>${st.night||0}</b></div><div><small>MAIN</small><b>${playerProfile.gamesPlayed}</b></div><div><small>UANG</small><b>${playerProfile.coins}</b></div></div><p class="profile-line">${c.name} · ${c.weapon} · ${c.skillName}</p>`;$('#pa').innerHTML=ACHIEVEMENTS.map(a=>`<span class="ac ${playerProfile.achievements.includes(a.id)?'on':''}">${a.name}</span>`).join('');show('prof',1)}
