@@ -11,4 +11,20 @@ hurt:()=>{tone(200,.3,'sawtooth',.2,-120);noise(.2,.3,600)},die:()=>{tone(180,.7
 scare:()=>{noise(.9,.5,5000);tone(880,.8,'sawtooth',.25,300);tone(932,.8,'sawtooth',.25,300);tone(60,1,'square',.3)},pick:()=>{tone(1200,.25,'sine',.12);tone(1800,.3,'sine',.1,0,.08)},
 lvl:()=>[523,659,784,1046].forEach((f,i)=>tone(f,.4,'triangle',.15,0,i*.12)),door:()=>{tone(90,.8,'sawtooth',.08,60);tone(50,.3,'square',.2,0,.8)},
 thunder:()=>noise(1.6,.6,300),heart:()=>{tone(60,.12,'sine',.45);tone(55,.12,'sine',.35,0,.17)},step:z=>noise(.05,.07,z==0||z==4?1500:z==1||z==2?500:2500),
-bell:()=>{tone(880,.9,'sine',.22,-180);tone(1320,.8,'sine',.16,-260,0.12);tone(1760,.7,'sine',.1,-320,0.24)},howl:()=>tone(380,1.6,'sine',.08,-120),cricket:()=>{for(let i=0;i<4;i++)tone(4200,.04,'square',.01,0,i*.08)}};
+howl:()=>tone(380,1.6,'sine',.08,-120),cricket:()=>{for(let i=0;i<4;i++)tone(4200,.04,'square',.01,0,i*.08)}};
+
+/* SFX tambahan: turnamen, shop, sinematik */
+Object.assign(SFX,{
+ gong:()=>{[[92,3.6,.34],[138,3.2,.2],[181,2.8,.16],[243,2.2,.1],[311,1.6,.07]].forEach(([f,d,v])=>tone(f,d,'sine',v));noise(1.2,.25,400)},
+ tick:()=>{tone(880,.12,'square',.12);tone(440,.2,'sine',.1)},
+ tickLow:()=>{tone(220,.25,'sawtooth',.16);tone(110,.3,'square',.14)},
+ coin:()=>{tone(1318,.12,'square',.09);tone(1760,.25,'square',.09,0,.08)},
+ wrong:()=>{tone(180,.35,'sawtooth',.16,-60);tone(150,.4,'square',.1,0,.1)},
+ buy:()=>{[659,880,1175].forEach((f,i)=>tone(f,.25,'triangle',.12,0,i*.07))},
+ deny:()=>{tone(140,.18,'square',.14);tone(110,.22,'square',.14,0,.12)},
+ chime:()=>[784,988,1175,1568].forEach((f,i)=>tone(f,.9,'sine',.09,0,i*.18)),
+ cheer:()=>{noise(.7,.18,3200);tone(520,.5,'triangle',.06,260)},
+ fanfare:()=>[523,523,523,698,880,698,880,1046].forEach((f,i)=>tone(f,.35,'square',.07,0,i*.14)),
+ zap:()=>{tone(900,.2,'sawtooth',.1,-600);noise(.12,.12,4000)},
+ shoot:()=>{noise(.08,.1,6000);tone(520,.1,'triangle',.08,-300)}
+});

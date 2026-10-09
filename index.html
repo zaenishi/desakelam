@@ -1,35 +1,157 @@
-<!DOCTYPE html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"><title>Malam Kelam — Desa Bersih</title><meta name="theme-color" content="#08090a"><link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Creepster&display=swap" rel="stylesheet"><link rel="stylesheet" href="css/main.css"></head><body>
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>Malam Kelam di Desa Terkutuk</title><meta name="theme-color" content="#0a0a0a">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Creepster&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/main.css"></head>
+<body data-ui="INTRO">
 <canvas id="c" width="960" height="540"></canvas>
-<div id="tc"><div id="jz"></div><div id="jb"></div><div id="jk"></div><button class="tb" id="bH">HIT</button><button class="tb" id="bD">DODGE</button><button class="tb" id="bE">MED</button><button class="tb" id="bS">SKILL</button><button class="tb" id="bI">MASUK</button></div>
-<button id="pb">II</button><button id="sk">LEWATI</button><button id="immersiveToggle" class="immersive-toggle" type="button" aria-label="Fullscreen">⛶</button>
 
-<div class="ov hide" id="menu">
-  <div class="menu-shell">
-    <div class="menu-top"><button class="profile-chip b" data-a="prof"><span class="profile-icon">◉</span><span><b id="mi">PEMAIN</b><small>PROFILE</small></span></button><div class="menu-brand"><span>MALAM KELAM</span><small>DESA YANG HARUS DISELAMATKAN</small></div></div>
-    <div class="menu-hero"><div class="hero-copy"><span class="eyebrow">ESCAPE • CLEAN • SURVIVE</span><h1>MALAM KELAM<br><em>DI DESA TERKUTUK</em></h1><p>Basmi monster sampah. Kumpulkan poin. Selamatkan desa.</p><div id="tournamentStatus" class="status"></div></div><div class="hero-character" id="heroCharacter"></div></div>
-    <div class="menu-dock"><button class="b start-btn" data-a="classic" id="tournamentBtn"><strong>START</strong><small id="startSub"></small></button><button class="b train-btn" data-a="train"><strong>TRAINING</strong><small>LATIHAN</small></button></div>
-    <div class="side-slider"><button class="slider-handle" id="navToggle">›</button><div class="side-links"><button class="icon-nav b" data-a="rank"><span>🏆</span><small>LEADERBOARD</small></button><button class="icon-nav b" data-a="shop"><span>⚒</span><small>SHOP</small></button><button class="icon-nav b" data-a="credits"><span>✦</span><small>CREDITS</small></button></div></div>
-    <div id="lb"></div>
-  </div>
-</div>
+<!-- ===== KONTROL GAMEPLAY (hanya tampil di GAMEPLAY_STATE, diatur CSS lewat body[data-ui]) ===== -->
+<div id="tc"><div id="jz"></div><div id="jb"></div><div id="jk"></div>
+<button class="tb" id="bH">HIT</button><button class="tb" id="bD">DODGE</button><button class="tb" id="bE">MED</button><button class="tb" id="bS">SKILL</button><button class="tb" id="bI">MASUK</button></div>
+<button id="pb" aria-label="Jeda">II</button><button id="sk">LEWATI</button><button id="cineSkip">LEWATI ▸</button>
+<button id="immersiveToggle" class="immersive-toggle" type="button" aria-label="Layar penuh dan landscape" title="Layar penuh + landscape">⛶</button>
 
-<div class="ov hide" id="gate"><div class="panel"><span class="eyebrow">TURNAMEN SEKOLAH</span><h1>KODE AKSES</h1><p>Masukkan kode akses yang diberikan dari Lab Komputer.</p><input class="in" id="code" maxlength="16" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="KODE AKSES"><div class="er" id="ge"></div><button class="b" data-a="gate">MASUK</button></div></div>
-<div class="ov hide" id="reg"><div class="panel wide"><span class="eyebrow">PLAYER SETUP</span><h1>NAMA & KARAKTER</h1><input class="in" id="nm" maxlength="12" autocomplete="off" placeholder="NAMA PEMAIN"><div class="chg" id="chg"></div><div class="er" id="re"></div><button class="b" data-a="reg">MULAI PETUALANGAN</button></div></div>
-<div class="ov hide" id="rank"><div class="panel wide"><span class="eyebrow">ROUND SCOREBOARD</span><h1>LEADERBOARD</h1><div id="rs"></div><div class="tbl" id="rl"></div><button class="b" data-a="close">KEMBALI</button></div></div>
-<div class="ov hide" id="credits"><div class="panel"><span class="eyebrow">DEVELOPMENT</span><h1>CREDITS</h1><div id="creditsNames" class="creditsNames"></div><p>Demo karya Ekskul Komputer 4.0.<br>Terima kasih untuk semua pengembang dan penguji.</p><button class="b" data-a="close">KEMBALI</button></div></div>
-<div class="ov hide" id="prof"><div class="panel wide profile-panel"><div id="profileVisual"></div><div class="profile-heading"><div><h1 id="pn"></h1><small id="profileId"></small></div></div><div id="pd"></div><div class="tbl achievements" id="pa"></div><div class="row"><button class="b s" type="button" data-a="close">KEMBALI</button></div></div></div>
-
-<div class="ov hide" id="shop"><div class="panel shop-panel"><div class="shop-head"><div><span class="eyebrow">ECONOMY</span><h1>SHOP</h1><p>Tingkatkan senjata dan skill karakter.</p></div><div class="shop-head-actions"><div class="money">◈ <b id="shopMoney">0</b></div><button class="modal-close" type="button" id="shopCloseTop" aria-label="Tutup shop">×</button></div></div><section class="shop-upgrades"><div class="shop-section-title">UPGRADE KARAKTER</div><div id="shopItems"></div><div id="shopMsg" role="status" aria-live="polite"></div></section><div class="shop-actions"><button class="b" type="button" id="openQuizPage">SOAL EDUKASI · CARI UANG</button><button class="b shop-back" data-a="close">KEMBALI</button></div></div></div>
-<div class="ov hide" id="quizPage"><div class="panel quiz-page-panel"><div class="quiz-page-head"><div><span class="eyebrow">EDUCATION MODE</span><h1>SOAL EDUKASI</h1><p>Jawab soal dengan benar untuk mendapatkan uang.</p></div><button class="modal-close" type="button" id="quizPageClose" aria-label="Kembali ke shop">×</button></div><div class="quiz-card" id="quizPanel"><h2>QUIZ 30 DETIK</h2><p id="quizInstruction">Tekan mulai untuk memulai kuis.</p><div id="quizQuestion">Tekan mulai</div><input class="in" id="quizAnswer" inputmode="numeric" type="number" enterkeyhint="done" autocomplete="off" placeholder="Ketik jawaban di sini"><div class="quiz-meta"><b id="quizTime">30s</b><span id="quizResult" role="status" aria-live="polite"></span></div><div class="quiz-page-actions"><button class="b" id="quizStart" type="button">MULAI QUIZ</button><button class="b" id="quizSubmit" type="button">JAWAB</button></div><button class="b quiz-finish" id="quizClose" type="button">SELESAI & KEMBALI KE SHOP</button></div></div></div>
-
-<div class="ov hide" id="load"><div class="panel"><h1>MEMUAT…</h1><div id="bar"><i></i></div><p id="tip"></p></div></div>
-<div class="ov hide" id="pause"><div class="panel"><h1>JEDA</h1><button class="b" data-a="resume">LANJUT</button><button class="b" data-a="home">MENU</button></div></div>
-<div class="ov hide" id="end"><div class="panel"><h1 id="et"></h1><p id="es"></p><button class="b" data-a="again">ULANGI</button><button class="b" data-a="home">MENU</button></div></div>
-<div class="ov hide" id="tournamentStart"><div class="panel tournament-start"><span class="eyebrow">ROUND TERBUKA</span><h1>MODE TURNAMEN</h1><div id="tournamentStartInfo"></div><p>Kejar poin setinggi mungkin.<br>Leaderboard disembunyikan sampai waktu berakhir.</p></div></div>
+<!-- ===== HUD TURNAMEN (non-intrusif) ===== -->
+<div id="tBar"></div><div id="tFinal"></div><div id="tVignette"></div>
+<div id="tPop"><div class="tp-title">MODE TURNAMEN DIMULAI!</div><div class="tp-sub">Turnamen berakhir dalam <b id="tPopTime">--:--</b></div><div class="tp-hint">Kumpulkan skor setinggi mungkin. Leaderboard dikunci sampai turnamen selesai!</div></div>
 <div id="tournamentWarning"></div>
-<div class="ov hide" id="tournamentEnd"><div id="tCountdownWrap"><div id="tCountdownTitle"></div><div id="tCountdown"></div></div><div id="tWinner"></div></div>
-<div class="ov hide" id="cleanCinematic"><div class="clean-cinema"><div id="cleanScene" class="clean-scene dirty"><div class="cinema-village"></div></div><div id="cleanCopy">Sampah telah dibersihkan...</div></div></div>
+<div id="toast"></div>
+
+<!-- ===== MENU UTAMA ===== -->
+<section class="ov hide menu" id="menu">
+  <button class="profile-bar" id="profileBar" type="button" aria-label="Buka profil">
+    <canvas id="pbAvatar" width="56" height="56"></canvas>
+    <span class="pb-text"><b id="pbName">PLAYER</b><small id="pbSub"></small></span>
+  </button>
+  <div class="menu-title"><h1>MALAM KELAM<br>DI DESA TERKUTUK</h1><div id="mi"></div><div id="lb"></div></div>
+
+  <aside class="drawer" id="drawer">
+    <button class="drawer-tab" id="drawerTab" type="button" aria-label="Buka menu samping"><span class="arrow">&gt;</span></button>
+    <nav class="drawer-menu">
+      <button class="dr-item" data-go="credits" type="button"><svg viewBox="0 0 48 48" class="ic ic-credits"><path d="M24 4l5.5 11.6 12.5 1.7-9.2 8.7 2.4 12.5L24 32.5 12.8 38.5l2.4-12.5L6 17.3l12.5-1.7z"/></svg><span>Credits</span></button>
+      <button class="dr-item" data-go="shop" type="button"><svg viewBox="0 0 48 48" class="ic ic-shop"><circle cx="24" cy="24" r="17"/><text x="24" y="31" text-anchor="middle">$</text></svg><span>Shop</span></button>
+      <button class="dr-item" data-go="rank" type="button" id="drRank"><svg viewBox="0 0 48 48" class="ic ic-trophy"><path d="M14 6h20v12a10 10 0 0 1-20 0zM14 10H6c0 8 3 12 8 13M34 10h8c0 8-3 12-8 13M21 28h6v7h6v6H15v-6h6z"/></svg><span>Leaderboard</span><i class="lock" id="rankLock">🔒</i></button>
+    </nav>
+  </aside>
+
+  <div class="start-cluster">
+    <button class="b trn" data-a="train" type="button"><span>TRAINING</span></button>
+    <button class="b start" data-a="classic" id="startBtn" type="button"><span class="st-main">START</span><span class="st-sub" id="startSub" hidden></span></button>
+  </div>
+</section>
+
+<!-- ===== KODE AKSES ===== -->
+<section class="ov hide" id="gate"><h1>KODE AKSES</h1><p style="max-width:80vw">Masukkan kode akses turnamen dari panitia.</p>
+<input class="in" id="code" maxlength="16" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="KODE"><div class="er" id="ge"></div><button class="b" data-a="gate">MASUK</button></section>
+
+<!-- ===== PILIH KARAKTER (CHARACTER_SELECT_STATE) ===== -->
+<section class="ov hide charsel" id="charsel">
+  <header class="cs-head"><h2>PILIH KARAKTER</h2><div class="cs-lock" id="csLock" hidden>🔒 Karakter terkunci selama sesi ini</div></header>
+  <div class="cs-main">
+    <div class="cs-stage"><canvas id="csStage" width="360" height="380"></canvas><div class="cs-name" id="csName"></div><div class="cs-role" id="csRole"></div></div>
+    <div class="cs-info">
+      <p class="cs-desc" id="csDesc"></p>
+      <div class="cs-stats" id="csStats"></div>
+      <div class="cs-cards">
+        <div class="cs-card"><canvas id="csWeapon" width="230" height="120"></canvas><div class="cc-t">⚔️ <b id="csWName"></b></div><small id="csWDesc"></small></div>
+        <div class="cs-card"><canvas id="csSkill" width="230" height="120"></canvas><div class="cc-t">✨ <b id="csSName"></b></div><small id="csSDesc"></small></div>
+      </div>
+    </div>
+  </div>
+  <div class="cs-thumbs" id="csThumbs"></div>
+  <footer class="cs-foot">
+    <input class="in" id="nm" maxlength="12" autocomplete="off" placeholder="NAMA">
+    <button class="b s" data-a="csBack" id="csBack" type="button">KEMBALI</button>
+    <button class="b" data-a="reg" type="button" id="csConfirm">PILIH & MULAI</button>
+  </footer>
+  <div class="er" id="re"></div>
+</section>
+
+<!-- ===== LEADERBOARD (LEADERBOARD_STATE) ===== -->
+<section class="ov hide rank" id="rank">
+  <h1 id="rankTitle">RANKING</h1>
+  <div class="rank-tabs" id="rankTabs"></div>
+  <div id="rs"></div>
+  <div class="podium" id="podium"></div>
+  <div class="tbl" id="rl"></div>
+  <div class="row"><button class="b" data-a="rankClose" id="rankClose" type="button">TUTUP</button></div>
+</section>
+
+<!-- ===== EDUSHOP (SHOP_STATE) ===== -->
+<section class="ov hide shop" id="shop">
+  <header class="shop-head">
+    <button class="b s" data-a="shopBack" type="button">← KEMBALI</button>
+    <h2>EDUSHOP</h2>
+    <div class="coin-pill" id="coinPill"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><text x="12" y="16.5" text-anchor="middle">$</text></svg><b id="coinVal">0</b></div>
+  </header>
+  <div class="shop-tabs" id="shopTabs"><button class="tab on" data-cat="upgrade" type="button">⚡ Upgrade Skill</button><button class="tab" data-cat="weapon" type="button">⚔️ Pedang / Senjata Unik</button></div>
+  <div class="shop-grid" id="shopGrid"></div>
+  <aside class="quiz-panel" id="quizPanel">
+    <button class="quiz-tab" id="quizTab" type="button"><span>📝 KUIS<br>KOIN</span></button>
+    <div class="quiz-body" id="quizBody"></div>
+  </aside>
+</section>
+
+<!-- ===== MODAL PROFIL ===== -->
+<section class="ov hide modal" id="prof">
+  <div class="card prof-card">
+    <button class="x" data-a="closeModal" aria-label="Tutup" type="button">×</button>
+    <div class="prof-left"><canvas id="pmChar" width="240" height="290"></canvas><div class="prof-class" id="pmClass"></div></div>
+    <div class="prof-right">
+      <h2 id="pn"></h2><small id="pid"></small>
+      <div class="stat-grid" id="pd"></div>
+      <div class="tbl ach" id="pa"></div>
+      <div class="row"><button class="b s" data-a="edit" type="button">UBAH PROFIL</button><button class="b s" data-a="closeModal" type="button">TUTUP</button></div>
+    </div>
+  </div>
+</section>
+
+<section class="ov hide modal" id="credits"><div class="card credits-card"><h2>CREDITS</h2><div id="creditsNames" class="creditsNames"></div><p>Terima kasih untuk semua yang membantu pengembangan dan pengujian.</p><button class="b s" data-a="closeModal" type="button">KEMBALI</button></div></section>
+
+<!-- ===== LOADING / JEDA / HASIL ===== -->
+<section class="ov hide" id="load"><h1 style="font-size:5vh">Memuat…</h1><div id="bar"><i></i></div><p id="tip"></p></section>
+<section class="ov hide" id="pause"><h1>JEDA</h1><button class="b" data-a="resume" type="button">LANJUT</button><button class="b" data-a="home" type="button">MENU</button></section>
+<section class="ov hide" id="end"><h1 id="et"></h1><p id="es" style="font-size:clamp(12px,2.8vh,20px);line-height:1.6"></p><button class="b" data-a="again" type="button">ULANGI</button><button class="b" data-a="home" type="button">MENU</button></section>
+
+<!-- ===== AKHIR TURNAMEN ===== -->
+<section class="ov hide" id="tournamentEnd"><div id="tHabis">TURNAMEN HABIS!</div>
+<div id="tWinCard"><h2>🏆 PEMENANG TURNAMEN</h2><div id="tWinners"></div></div></section>
+
 <div id="rot"><b>📱</b>Putar perangkat ke mode landscape untuk bermain</div>
-<script src="js/config.js"></script><script src="js/database.js"></script><script src="js/core.js"></script><script src="js/audio.js"></script><script src="js/data.js"></script><script src="js/entities.js"></script><script src="js/input.js"></script><script src="js/fullscreen.js"></script><script src="js/tournament.js"></script><script src="js/ui.js"></script><script src="js/combat.js"></script><script src="js/monsters.js"></script><script src="js/update.js"></script><script src="js/end.js"></script><script src="js/render.js"></script><script src="js/menu.js"></script><script src="js/account.js"></script><script src="js/shop.js"></script><script src="js/skills.js"></script><script src="js/nests.js"></script><script src="js/night.js"></script><script src="js/interiors.js"></script><script src="js/music.js"></script><script src="js/main.js"></script>
-<script>document.addEventListener('click',e=>{if(e.target.closest('#navToggle'))document.querySelector('.side-slider').classList.toggle('open')});</script>
+
+<script src="js/config.js"></script>
+<script src="js/edudata.js"></script>
+<script src="js/database.js"></script>
+<script src="js/core.js"></script>
+<script src="js/state.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/data.js"></script>
+<script src="js/entities.js"></script>
+<script src="js/input.js"></script>
+<script src="js/fullscreen.js"></script>
+<script src="js/sprites.js"></script>
+<script src="js/account.js"></script>
+<script src="js/economy.js"></script>
+<script src="js/tournament.js"></script>
+<script src="js/skills.js"></script>
+<script src="js/combat.js"></script>
+<script src="js/monsters.js"></script>
+<script src="js/update.js"></script>
+<script src="js/end.js"></script>
+<script src="js/render.js"></script>
+<script src="js/menu.js"></script>
+<script src="js/nests.js"></script>
+<script src="js/night.js"></script>
+<script src="js/interiors.js"></script>
+<script src="js/music.js"></script>
+<script src="js/cinematic.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/ui-menu.js"></script>
+<script src="js/ui-profile.js"></script>
+<script src="js/ui-charselect.js"></script>
+<script src="js/ui-leaderboard.js"></script>
+<script src="js/ui-shop.js"></script>
+<script src="js/main.js"></script>
 </body></html>

@@ -78,8 +78,18 @@ async function enableImmersiveMode(){
   await requestGameFullscreen();
 }
 
-const immersiveTapHandler=(event)=>{ if(event.target && event.target.closest && event.target.closest('#immersiveToggle')) return; void enableImmersiveMode(); };
-addEventListener('pointerdown', immersiveTapHandler, {capture:true, once:false});
+/* Gesture pertama saja: aktifkan audio + coba fullscreen/landscape (tombol ⛶ tersedia untuk manual). */
+const immersiveTapHandler=(event)=>{
+  if(event.target && event.target.closest && event.target.closest('#immersiveToggle')) return;
+  removeEventListener('pointerdown', immersiveTapHandler, true);
+  removeEventListener('keydown', firstKeyHandler, true);
+  fsDone = true;
+  try{ au(); }catch(e){}
+  if(GAME_CONFIG.ui.autoFullscreen || GAME_CONFIG.ui.autoLandscape) void enableImmersiveMode();
+};
+const firstKeyHandler=()=>{ removeEventListener('pointerdown', immersiveTapHandler, true); removeEventListener('keydown', firstKeyHandler, true); fsDone = true; try{ au(); }catch(e){} };
+addEventListener('pointerdown', immersiveTapHandler, {capture:true});
+addEventListener('keydown', firstKeyHandler, {capture:true});
 
 document.addEventListener('fullscreenchange',()=>{updateImmersiveButton();fit()});
 document.addEventListener('webkitfullscreenchange',()=>{updateImmersiveButton();fit()});

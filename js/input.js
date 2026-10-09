@@ -7,3 +7,6 @@ jz.addEventListener('pointerdown',e=>{jid=e.pointerId;jo={x:e.clientX,y:e.client
 jz.addEventListener('pointermove',e=>{if(e.pointerId!=jid)return;const dx=e.clientX-jo.x,dy=e.clientY-jo.y,l=Math.hypot(dx,dy)||1,m=Math.min(l,50);jx=dx/l*m/50;jy=dy/l*m/50;jk.style.left=jo.x-22+jx*50+'px';jk.style.top=jo.y-22+jy*50+'px'});
 const je=e=>{if(e.pointerId==jid){jid=null;jx=jy=0;jb.style.display=jk.style.display='none'}};jz.addEventListener('pointerup',je);jz.addEventListener('pointercancel',je);
 [['#bS',()=>sb=.12],['#bI',()=>fb=.12],['#bH',()=>ab=.12],['#bD',()=>db=.12],['#bE',()=>eb=.12]].forEach(([s,f])=>$(s).addEventListener('pointerdown',e=>{e.preventDefault();f();au()}));
+
+/* Dipanggil tiap pindah state agar tidak ada input 'nyangkut' (joystick/tombol). */
+function resetInput(){ab=db=eb=sb=fb=0;jx=jy=0;jid=null;for(const k in K)K[k]=0;if(jb)jb.style.display='none';if(jk)jk.style.display='none'}

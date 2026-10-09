@@ -15,6 +15,7 @@ const MLDatabase = (() => {
   let databaseReady = false;
   let users = new Map();
   let leaderboard = [];
+  let tboards = {}; /* { [tid]: { [uid]: entry } } skor khusus turnamen */
 
   function readJson(key, fallback = null) {
     try {
@@ -125,6 +126,13 @@ const MLDatabase = (() => {
             { keyPath: 'uid' }
           );
         }
+
+        if (!databaseInstance.objectStoreNames.contains(DATABASE_CONFIG.stores.tournament)) {
+          databaseInstance.createObjectStore(
+            DATABASE_CONFIG.stores.tournament,
+            { keyPath: 'key' }
+          );
+        }
       };
 
       request.onsuccess = event => resolve(event.target.result);
@@ -171,6 +179,39 @@ const MLDatabase = (() => {
     });
   }
 
+  function pruneTournaments() {
+    const ids = Object.keys(tboards);
+    if (ids.length <= 6) return;
+    const newest = id => Math.max(0, ...Object.values(tboards[id]).map(e => e.timestamp || 0));
+    ids.sort((x, y) => newest(y) - newest(x)).slice(6).forEach(id => { delete tboards[id]; });
+  }
+
+  function persistTournaments() {
+    pruneTournaments();
+    writeJson(DATABASE_CONFIG.cache.tournament, tboards);
+  }
+
+  /* Skor turnamen: hanya naik (best score per pemain per turnamen). */
+  async function submitTournamentScore(tid, entry) {
+    if (!tid || !entry || !entry.uid) return false;
+    const board = tboards[tid] || (tboards[tid] = {});
+    const uid = String(entry.uid);
+    const normalized = normalizeLeaderboardEntry(entry);
+    const old = board[uid];
+    if (old && old.score >= normalized.score) return false;
+    board[uid] = normalized;
+    persistTournaments();
+    await saveToStore(DATABASE_CONFIG.stores.tournament, Object.assign({ key: tid + '|' + uid, tid }, normalized));
+    return true;
+  }
+
+  function getTournamentBoardSync(tid) {
+    const board = tboards[tid] || {};
+    return Object.values(board)
+      .map(e => Object.assign({}, e))
+      .sort((a, b) => (b.score - a.score) || (a.timestamp - b.timestamp));
+  }
+
   async function init() {
     const cachedUser = getCachedUser();
     const cachedLeaderboard = getCachedLeaderboard();
@@ -181,6 +222,8 @@ const MLDatabase = (() => {
 
     leaderboard = cachedLeaderboard.slice();
     cacheLeaderboard(leaderboard);
+
+    tboards = readJson(DATABASE_CONFIG.cache.tournament, {}) || {};
 
     database = await openDatabase();
 
@@ -193,6 +236,15 @@ const MLDatabase = (() => {
           users.set(String(user.uid), user);
         }
       });
+
+      const storedTournament = await readAll(DATABASE_CONFIG.stores.tournament);
+      storedTournament.forEach(row => {
+        if (!row || !row.tid || !row.uid) return;
+        const board = tboards[row.tid] || (tboards[row.tid] = {});
+        const old = board[row.uid];
+        if (!old || old.score < row.score) board[row.uid] = normalizeLeaderboardEntry(row);
+      });
+      persistTournaments();
 
       if (storedLeaderboard.length) {
         leaderboard = storedLeaderboard.filter(entry => entry && entry.uid);
@@ -336,6 +388,8 @@ const MLDatabase = (() => {
     submitScore,
     getLeaderboardSync,
     getLeaderboard,
+    submitTournamentScore,
+    getTournamentBoardSync,
     config: DATABASE_CONFIG
   });
 })();

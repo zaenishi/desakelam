@@ -1,68 +1,34 @@
-# MALAM KELAM — DESA BERSIH
-Demo karya Ekskul Komputer 4.0 untuk turnamen sekolah.
+# Malam Kelam di Desa Terkutuk — v5 (Edisi Turnamen & Edukasi Lingkungan)
 
-## Struktur penting
-- `index.html` — halaman dan overlay UI.
-- `css/main.css` — visual/menu/profile/shop/tournament.
-- `js/config.js` — seluruh konfigurasi utama.
-- `js/tournament.js` — ronde turnamen, timer, warning, pemenang, cinematic.
-- `js/shop.js` — ekonomi + kuis edukasi 30 detik.
-- `js/account.js` — profil, karakter, skor.
-- `js/database.js` — IndexedDB/cache + Supabase opsional.
-- `js/combat.js` — senjata dan combat.
-- `js/render.js` — visual karakter/monster.
+Buka `index.html` (disarankan lewat server lokal, mis. `python3 -m http.server`). Tanpa build step.
 
-## Mengatur turnamen
-Edit `GAME_CONFIG.tournament` di `js/config.js`.
+## Struktur
+| File | Fungsi |
+|---|---|
+| `js/config.js` | **Semua pengaturan** (turnamen, kode akses, karakter, shop-kuis) |
+| `js/edudata.js` | Harga upgrade/senjata & bank soal pengetahuan |
+| `js/state.js` | UI state machine (`UI.set(...)`) + `createScope()` pembersih timer/listener |
+| `js/tournament.js` | Fase turnamen, timer, pop-up, hitung mundur, urutan akhir, reset sesi |
+| `js/economy.js` | `Economy` (koin) & `Loadout` (upgrade skill + senjata) — satu-satunya pintu ubah koin |
+| `js/account.js` | Profil, skor, achievement, kode akses |
+| `js/database.js` | IndexedDB + cache; store baru `tournament` (skor khusus turnamen) |
+| `js/sprites.js` | Karakter 2D prosedural + preview senjata/skill |
+| `js/combat.js`, `skills.js` | Serangan & skill unik per karakter, stun |
+| `js/cinematic.js` | Sinematik "Desa Kelam menjadi cerah" |
+| `js/ui*.js`, `css/main.css`, `index.html` | Layar: menu, profil, pilih karakter, leaderboard, shop |
 
-Contoh:
-```js
-tournament: {
-  enabled: true,
-  enabledToday: true,
-  date: '2026-10-10',
-  days: null,
-  startTime: '08:00',
-  endTime: '15:00',
-  warningMinutes: 1,
-  countdownSeconds: 5,
-  topWinners: 3,
-  revealDelayMs: 2200,
-  redirectToLeaderboard: true,
-  requireAccessCode: true
-}
-```
+## Mengatur turnamen (`js/config.js` → `GAME_CONFIG.tournament`)
+- `active`: `true/false`
+- `mode: "time"` → jendela harian `startTime`–`endTime` (jam lokal perangkat)
+- `mode: "date"` → berakhir pada `targetDate`
+- `mode: "session"` → timer `durationMinutes` dimulai saat START pertama (tambahan, cocok untuk uji coba)
+- `accessCodeRequired`: wajib kode akses atau tidak (kode di `ACCESS_CODES`)
 
-- `date: null` berarti ronde mengikuti tanggal saat game dijalankan.
-- `days: [1,2,3,4,5]` berarti hanya Senin–Jumat. Sistem memakai ISO weekday: Senin=1 ... Minggu=7.
-- Jika turnamen aktif, leaderboard disembunyikan sampai ronde selesai.
-- Ronde baru otomatis memakai `roundId` tanggal baru sehingga skor ronde sebelumnya tidak tercampur.
+## Aturan state UI
+`body[data-ui]` diisi oleh `UI.set()`. CSS menampilkan kontrol gameplay (`#tc`, `#pb`, `#bI`) **hanya** saat `GAMEPLAY`.
+Setiap layar memakai `scope.on/interval/timeout/raf` sehingga semuanya dibuang otomatis saat pindah layar.
 
-## Turnamen antar perangkat
-Untuk demo satu perangkat, IndexedDB/cache sudah cukup.
-Untuk turnamen sungguhan antar siswa/perangkat, isi:
-`DATABASE_CONFIG.remote.supabase.url`
-dan
-`DATABASE_CONFIG.remote.supabase.anonKey`
-di `js/config.js`, lalu jalankan `SUPABASE_SCHEMA.sql` pada project Supabase.
-
-Tanpa backend remote, setiap browser memiliki leaderboard sendiri. Ini bukan bug; browser memang tidak dapat berbagi database lokal dengan perangkat lain.
-
-## Kode akses
-Kode berada di `ACCESS_CODES` pada `js/config.js`.
-
-## Shop
-- Uang hanya didapat dari kuis edukasi 30 detik.
-- Jawaban benar memberi reward.
-- Jawaban salah tidak memberi reward.
-- Uang dapat dipakai untuk upgrade senjata dan skill.
-- Level upgrade disimpan pada profile.
-
-## Catatan karakter
-Karakter dipilih saat registrasi dan tidak menyediakan opsi ganti karakter setelah akun dibuat. Setiap karakter memiliki senjata, efek basic attack, dan skill yang berbeda.
-
-## Pemeriksaan
-Seluruh file JavaScript pada release ini telah diperiksa dengan `node --check` dan tidak memiliki syntax error.
-
-
-V9 recovery note: combat, input, skills, and database modules are restored from V4. Character weapon silhouettes are a rendering-only addition; monster AI, movement, and hit/damage rules remain V4. Shop and quiz actions route through one central UI click dispatcher. Static syntax/reference checks only; interactive browser/device testing is still required.
+## Batasan yang perlu diketahui
+- Leaderboard tersimpan **lokal per browser/perangkat**. Untuk turnamen lintas perangkat, perlu backend bersama
+  (skema Supabase ada di `SUPABASE_SCHEMA.sql`, belum disambungkan ke game).
+- Waktu turnamen memakai jam perangkat pemain.

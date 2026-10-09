@@ -1,23 +1,97 @@
-/* ===== UI / NAVIGATION ===== */
-function setGameplayControls(active){const tc=$('#tc');if(tc){tc.style.display=active&&touch?'block':'none';tc.classList.toggle('active',!!(active&&touch))}const pb=$('#pb');if(pb)pb.style.display=active?'block':'none';const bi=$('#bI');if(bi)bi.style.display=active&&touch?'block':'none';if(!active){jx=jy=0;const base=$('#jb'),knob=$('#jk');if(base)base.style.display='none';if(knob)knob.style.display='none';if(typeof resetJoystickVisual==='function')resetJoystickVisual()}}
-document.addEventListener('click',e=>{
- const target=e.target;
- const cc=target.closest?.('.chc');if(cc){SFX.click();selectCharacter(+cc.dataset.i);return}
- const buy=target.closest?.('[data-buy]');if(buy){SFX.click();shopBuy(buy.dataset.buy);return}
- const direct=target.closest?.('#openQuizPage,#quizPageClose,#quizClose,#quizStart,#quizSubmit,#shopCloseTop');
- if(direct){SFX.click();const id=direct.id;if(id==='openQuizPage')quizOpenPage();else if(id==='quizPageClose'||id==='quizClose')quizClosePage();else if(id==='quizStart')quizStart();else if(id==='quizSubmit')quizSubmit();else if(id==='shopCloseTop')shopClose();return}
- const b=target.closest?.('.b');if(!b)return;SFX.click();const r=document.createElement('i'),q=b.getBoundingClientRect();r.className='rp';r.style.left=e.clientX-q.left-5+'px';r.style.top=e.clientY-q.top-5+'px';b.appendChild(r);setTimeout(()=>r.remove(),600);
- const a=b.dataset.a;
- if(a==='train'||a==='classic')begin(a);else if(a==='again')begin(MODE);else if(a==='home')toMenu();else if(a==='resume')pauseT();else if(a==='rank')openRanking();else if(a==='prof')openProfile();else if(a==='credits')openCredits();else if(a==='shop')shopOpen();else if(a==='close')toMenu();else if(a==='shop-close')shopClose();else if(a==='quiz-close')quizClosePage();else if(a==='gate')submitAccessCode();else if(a==='reg')submitRegistration();else if(a==='edit')showRegistration()
+/*
+ * ============================================================
+ * UI.JS — aksi tombol global + state: INTRO, GATE, LOADING,
+ *         GAMEPLAY, PAUSE, END, TOURNAMENT_END
+ * (Layar lain ada di ui-menu / ui-profile / ui-charselect /
+ *  ui-leaderboard / ui-shop .js)
+ * ============================================================
+ */
+const Actions = {
+  classic() { startRun('classic'); },
+  train() { startRun('train'); },
+  again() { startRun(MODE); },
+  home() { goHome(); },
+  resume() { pauseT(); },
+  gate() { submitAccessCode(); },
+  reg() { submitRegistration(); },
+  edit() { UI.set(CHARACTER_SELECT_STATE, { first: false }); },
+  csBack() { UI.set(MENU_STATE); },
+  shopBack() { UI.set(MENU_STATE); },
+  closeModal(btn) { const m = btn.closest('.modal'); if (m) UI.closeModal(m.id); },
+  rankClose() {
+    if (UI.params.mode === 'winners') Tournament.finishSession(); /* reset sesi setelah halaman pemenang */
+    UI.set(MENU_STATE);
+  }
+};
+
+/* Satu listener global (didaftarkan sekali, bukan per layar). */
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-a]');
+  if (!b || b.disabled) return;
+  SFX.click();
+  if (b.classList.contains('b')) {
+    const r = document.createElement('i'), q = b.getBoundingClientRect();
+    r.className = 'rp'; r.style.left = e.clientX - q.left - 5 + 'px'; r.style.top = e.clientY - q.top - 5 + 'px';
+    b.appendChild(r); setTimeout(() => r.remove(), 600);
+  }
+  const fn = Actions[b.dataset.a];
+  if (fn) fn(b, e);
 });
-document.addEventListener('pointerover',e=>{if(e.target.closest?.('.b'))SFX.hover()});
-const show=(id,v)=>{const e=$('#'+id);if(e)e.classList.toggle('hide',!v)};
-function pauseT(){if(S==='play'){S='pause';show('pause',1);setGameplayControls(false);SFX.back()}else if(S==='pause'){S='play';show('pause',0);setGameplayControls(true)}}
-$('#pb').onclick=pauseT;
-$('#sk').onclick=()=>{if(S==='intro')endIntro()};
-function renderLB(){const c=getCurrentCharacterClass();$('#mi').textContent=playerProfile.name?`${escapeHtml(playerProfile.name)} · ${escapeHtml(playerProfile.uid)}`:'PEMAIN';$('#lb').innerHTML=playerProfile.name?`<span>Skor terbaik <b>${playerProfile.bestScore}</b></span>`:'';if(typeof Tournament!=='undefined'){const b=$('#tournamentBtn');if(b){const title=b.querySelector('strong');if(title)title.textContent=Tournament.getMenuLabel();else b.textContent=Tournament.getMenuLabel()}const st=$('#tournamentStatus');if(st)st.textContent=Tournament.getStatusText();const ss=$('#startSub');if(ss)ss.textContent=Tournament.isWithinWindow()?`TURNAMEN MODE · ${Tournament.getStatusText().replace('Aktif · ','')}`:''}}
-function toMenu(){if(S==='pause'&&MODE==='classic'&&P)submitScore(score|0);S='menu';['pause','end','load','gate','reg','rank','prof','credits','shop','quizPage','tournamentEnd','tournamentStart'].forEach(i=>show(i,0));show('menu',1);setGameplayControls(false);$('#sk').style.display='none';$('#tc').style.display='none';$('#bI').style.display='none';renderLB()}
-function endIntro(){if(S!=='intro')return;S='menu';M=[];slow=1;$('#sk').style.display='none';routePlayer()}
-function begin(m){I={};K.__d=0;ab=db=eb=sb=fb=0;jx=jy=0;S='load';show('menu',0);show('end',0);show('rank',0);show('prof',0);show('shop',0);show('load',1);$('#tip').textContent=TIPS[R()*TIPS.length|0];SFX.door();const bar=$('#bar i');bar.style.transition='none';bar.style.width='0';requestAnimationFrame(()=>{bar.style.transition='width 1.6s';bar.style.width='100%'});setTimeout(()=>{reset(m);if(m==='classic'){playerProfile.gamesPlayed++;savePlayerProfile()}S='play';show('load',0);setGameplayControls(true);$('#sk').style.display='none';last=performance.now()},1700)}
-function openCredits(){show('menu',0);$('#creditsNames').innerHTML=(GAME_CONFIG.ui.credits||[]).map(escapeHtml).map(n=>`<div>${n}</div>`).join('');show('credits',1)}
-function closeCredits(){show('credits',0);show('menu',1);S='menu';renderLB()}
+document.addEventListener('pointerover', e => { if (e.target.closest && e.target.closest('.b')) SFX.hover(); });
+
+function pauseT() {
+  if (UI.is(GAMEPLAY_STATE)) { UI.set(PAUSE_STATE); SFX.back(); }
+  else if (UI.is(PAUSE_STATE)) UI.set(GAMEPLAY_STATE);
+}
+$('#pb').addEventListener('click', pauseT);
+$('#sk').addEventListener('click', () => endIntro());
+
+function goHome() {
+  if (UI.is(PAUSE_STATE) && MODE == 'classic' && P) submitScore(score | 0);
+  UI.set(MENU_STATE);
+}
+function endIntro() {
+  if (!UI.is(INTRO_STATE)) return;
+  M = []; slow = 1; routePlayer();
+}
+function startRun(mode) {
+  if (UI.is(LOADING_STATE) || UI.is(GAMEPLAY_STATE)) return;
+  if (mode === 'classic') Tournament.onStart();
+  UI.set(LOADING_STATE, { mode });
+}
+
+UI.register(INTRO_STATE, {
+  enter() { it = 0; I = {}; reset('classic'); P.x = 300; P.y = 430; }
+});
+UI.register(GATE_STATE, {
+  enter(scope) {
+    $('#code').value = ''; $('#ge').textContent = '';
+    scope.timeout(() => $('#code').focus(), 300);
+    scope.on($('#code'), 'keydown', e => { if (e.key === 'Enter') submitAccessCode(); });
+  }
+});
+UI.register(LOADING_STATE, {
+  enter(scope, p) {
+    $('#tip').textContent = TIPS[R() * TIPS.length | 0]; SFX.door();
+    const bar = $('#bar i'); bar.style.transition = 'none'; bar.style.width = '0';
+    requestAnimationFrame(() => { bar.style.transition = 'width 1.6s'; bar.style.width = '100%'; });
+    scope.timeout(() => {
+      reset(p.mode);
+      if (p.mode == 'classic') { newRun(); playerProfile.gamesPlayed++; savePlayerProfile(); }
+      UI.set(GAMEPLAY_STATE, { fresh: true });
+    }, 1700);
+  }
+});
+UI.register(GAMEPLAY_STATE, {
+  enter(scope, p) {
+    last = performance.now();
+    if (p.fresh) Tournament.flushPopup();
+  }
+});
+UI.register(PAUSE_STATE, { enter() {} });
+UI.register(END_STATE, {
+  enter(scope, p) { scope.timeout(() => show('end', 1), p.delay ?? 900); }
+});
+UI.register(TOURNAMENT_END_STATE, {
+  enter(scope, p) { Tournament.showEndScreen(scope, p.tid); }
+});
