@@ -2,6 +2,7 @@
 <html lang="id"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <title>Malam Kelam di Desa Terkutuk</title><meta name="theme-color" content="#0a0a0a">
+<meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-fullscreen">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Creepster&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/main.css"></head>
 <body data-ui="INTRO">
@@ -36,6 +37,7 @@
     </nav>
   </aside>
 
+  <div id="dbStatus"></div>
   <div class="start-cluster">
     <button class="b trn" data-a="train" type="button"><span>TRAINING</span></button>
     <button class="b start" data-a="classic" id="startBtn" type="button"><span class="st-main">START</span><span class="st-sub" id="startSub" hidden></span></button>
@@ -124,6 +126,7 @@
 <script src="js/config.js"></script>
 <script src="js/edudata.js"></script>
 <script src="js/database.js"></script>
+<script src="js/db-firebase.js"></script>
 <script src="js/core.js"></script>
 <script src="js/state.js"></script>
 <script src="js/audio.js"></script>

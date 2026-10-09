@@ -40,6 +40,8 @@ function init() {
 }
 async function boot() {
   await initDatabase();
+  const dbs = MLDatabase.status();
+  if (dbs.provider === 'firebase' && !dbs.online) setTimeout(() => toast('Firebase gagal terhubung — memakai database lokal', 'bad'), 800);
   Tournament.init();
   addEventListener('pagehide', () => { if (S == 'play' && MODE == 'classic') submitScore(score | 0); });
   document.addEventListener('visibilitychange', () => { if (document.hidden && GAME_CONFIG.gameplay.pauseWhenHidden && S == 'play') pauseT(); });

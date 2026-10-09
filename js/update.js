@@ -1,6 +1,6 @@
 /* ===== UPDATE ===== */
 function upPlayer(dt,ctl){let kx=(K.KeyD||K.ArrowRight?1:0)-(K.KeyA||K.ArrowLeft?1:0)+jx,ky=(K.KeyS||K.ArrowDown?1:0)-(K.KeyW||K.ArrowUp?1:0)+jy;if(!ctl)kx=ky=0;
- const l=Math.hypot(kx,ky);if(l>1){kx/=l;ky/=l}const mag=Math.min(1,l);let sprint=(K.ShiftLeft||K.ShiftRight||mag>.92&&touch)&&mag>.1&&P.st>0&&!K.__d;
+ const l=Math.hypot(kx,ky);if(l>1){kx/=l;ky/=l}const mag=Math.min(1,l);let sprint=(K.ShiftLeft||K.ShiftRight||Math.hypot(jx,jy)>.92)&&mag>.1&&P.st>0&&!K.__d;
  if(ctl&&(K.ShiftLeft||K.ShiftRight)&&db>0)sprint=false;
  P.cd-=dt;P.rage-=dt;P.skT-=dt;P.scd-=dt;if(P.skT<=0)P.sk=0;P.at-=dt;P.inv-=dt;P.noise-=dt;P.dcd-=dt;P.hf-=dt;P.cmT-=dt;if(P.cmT<=0)P.cmb=0;ab-=dt;db-=dt;eb-=dt;
  if(ctl&&ab>0){atk();ab=0}if(ctl&&sb>0){skill();sb=0}if(ctl&&fb>0){useDoor();fb=0}sb-=dt;fb-=dt;
@@ -41,10 +41,16 @@ function upGame(dt){const ctl=S=='play'||I.ctl;I.cdc=(I.cdc||0)-dt;if(S=='play')
   if((I.am=(I.am||0)-dt)<=0){I.am=6+R()*8;[SFX.howl,SFX.cricket][R()*2|0]()}}
  if(P.hp<P.mh)P.hp=Math.min(P.mh,P.hp+0)}
 function dk(h){return h>=18&&h<20?.3+(h-18)*.25:h>=20||h<4?.85:h>=4&&h<6?.85-(h-4)*.2:.4}
+/* Titik terdekat yang bisa dijangkau (bukan di dalam bangunan / luar peta) -> Training tidak bisa macet. */
+function freeSpot(x,y,r){
+ const ok=(a,b)=>a>24&&a<WW-24&&b>24&&b<WH-24&&!hitO(a,b,r);
+ if(ok(x,y))return{x,y};
+ for(let d=30;d<=480;d+=30)for(let k=0;k<16;k++){const a=k*PI/8,nx=x+Math.cos(a)*d,ny=y+Math.sin(a)*d;if(ok(nx,ny))return{x:nx,y:ny}}
+ return{x:P.x,y:P.y}}
 function trainStep(){const s=tr;
  if(s==0&&P.walked>200)nx();else if(s==1&&P.swings>=3)nx();
- else if(s==2){if(!I.d){const m=mk('sh',P.x+260,P.y,.5);m.sp0=1;go(m,'chase');M.push(m);I.d=m;I.k0=P.kills}if(P.kills>I.k0){nx()}}
+ else if(s==2){if(!I.d){const q=freeSpot(P.x+260,P.y,16),m=mk('sh',q.x,q.y,.5);m.sp0=1;go(m,'chase');M.push(m);I.d=m;I.k0=P.kills}if(P.kills>I.k0){nx()}}
  else if(s==3&&P.dodges>=1)nx();
- else if(s==4){if(!I.m){I.m={k:'med',x:P.x+200,y:P.y-100};IT.push(I.m);P.hp=60}if(P.used>=1)nx()}
- else if(s==5){if(!I.a){I.a={k:'art',x:P.x+250,y:P.y+60};IT.push(I.a)}if(P.art>=1){sv('ml_skin',1);playerProfile.skinUnlocked=1;savePlayerProfile();win()}}}
+ else if(s==4){if(!I.m){const q=freeSpot(P.x+200,P.y-100,14);I.m={k:'med',x:q.x,y:q.y};IT.push(I.m);P.hp=60}if(P.used>=1)nx()}
+ else if(s==5){if(!I.a){const q=freeSpot(P.x+250,P.y+60,16);I.a={k:'art',x:q.x,y:q.y};IT.push(I.a)}if(P.art>=1){sv('ml_skin',1);playerProfile.skinUnlocked=1;savePlayerProfile();win()}}}
 function nx(){tr++;I={ctl:I.ctl};SFX.lvl();say('Langkah selesai!',1.2)}

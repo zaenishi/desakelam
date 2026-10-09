@@ -85,6 +85,7 @@ UI.register(LOADING_STATE, {
 UI.register(GAMEPLAY_STATE, {
   enter(scope, p) {
     last = performance.now();
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); /* input nama/kode tidak boleh menelan tombol gerak */
     if (p.fresh) Tournament.flushPopup();
   }
 });

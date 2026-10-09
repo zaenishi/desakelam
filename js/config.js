@@ -90,8 +90,32 @@ const GAME_CONFIG = Object.freeze({
   }
 });
 
+/*
+ * ============================================================
+ * PINDAH DATABASE KE FIREBASE (3 langkah)
+ * ============================================================
+ *  1. Buat project Firebase + Firestore (lihat FIREBASE_SETUP.md).
+ *  2. Salin nilai "firebaseConfig" dari Firebase Console ke FIREBASE_CONFIG di bawah.
+ *  3. Ubah DATABASE_CONFIG.provider dari 'indexeddb' menjadi 'firebase'.
+ * Selesai. Kode gameplay tidak perlu diubah. Jika Firebase gagal terhubung
+ * (offline / config salah), game otomatis memakai database lokal.
+ * Untuk kembali ke lokal: ubah provider kembali ke 'indexeddb'.
+ */
+const FIREBASE_CONFIG = {
+  apiKey: '',
+  authDomain: '',
+  projectId: '',
+  storageBucket: '',
+  messagingSenderId: '',
+  appId: '',
+  useAnonymousAuth: false,   // true bila Firestore rules Anda mensyaratkan login anonim
+  sdkVersion: '10.12.2',     // versi Firebase JS SDK (compat) yang dimuat dari CDN
+  sdkBaseUrl: ''             // opsional: alamat SDK self-host bila CDN diblokir jaringan sekolah
+};
+
 const DATABASE_CONFIG = Object.freeze({
-  provider: 'indexeddb',
+  provider: 'indexeddb',      // 'indexeddb' (lokal) | 'firebase'
+  remoteTimeoutMs: 7000,      // batas waktu menunggu Firebase saat start
   name: 'malam_kelam_db',
   version: 3,
   stores: {
@@ -108,10 +132,8 @@ const DATABASE_CONFIG = Object.freeze({
     prefix: 'ml:v3:'
   },
   remote: {
-    supabase: { url: '', anonKey: '', usersTable: 'users', leaderboardTable: 'leaderboard' },
-    firebase: { config: {} }
+    supabase: { url: '', anonKey: '', usersTable: 'users', leaderboardTable: 'leaderboard' }
   },
-  realtime: { enabled: false, pollIntervalMs: 5000 },
   legacy: { user: 'ml_me', leaderboard: 'ml_lb2', skin: 'ml_skin' }
 });
 

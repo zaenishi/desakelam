@@ -5,8 +5,9 @@
  * Gameplay tidak perlu tahu database yang dipakai.
  * Gameplay hanya berkomunikasi dengan MLDatabase.
  *
- * Saat nanti pindah ke Firebase/Supabase, API file ini
- * dipertahankan agar file gameplay tidak perlu diubah.
+ * Pindah database: isi FIREBASE_CONFIG lalu ubah DATABASE_CONFIG.provider
+ * menjadi 'firebase' (lihat config.js & FIREBASE_SETUP.md). API file ini
+ * tidak berubah sehingga file gameplay tidak perlu disentuh.
  * ============================================================
  */
 
@@ -16,6 +17,14 @@ const MLDatabase = (() => {
   let users = new Map();
   let leaderboard = [];
   let tboards = {}; /* { [tid]: { [uid]: entry } } skor khusus turnamen */
+
+  /* ---- lapisan remote (opsional, mis. Firebase). IndexedDB tetap jadi cache/offline ---- */
+  let remote = null;
+  const remoteState = { provider: 'indexeddb', online: false, error: '' };
+  const userTimers = new Map();
+  const sentSig = new Map();
+  let unsubBoard = null, tWatch = { tid: '', unsub: null };
+  const withTimeout = (promise, ms) => Promise.race([promise, new Promise((_, rej) => setTimeout(() => rej(new Error('timeout ' + ms + 'ms')), ms))]);
 
   function readJson(key, fallback = null) {
     try {
@@ -202,6 +211,7 @@ const MLDatabase = (() => {
     board[uid] = normalized;
     persistTournaments();
     await saveToStore(DATABASE_CONFIG.stores.tournament, Object.assign({ key: tid + '|' + uid, tid }, normalized));
+    if (remote) remote.submitTournamentScore(tid, normalized).catch(e => console.warn('[database] skor turnamen gagal dikirim:', e.message));
     return true;
   }
 
@@ -211,6 +221,56 @@ const MLDatabase = (() => {
       .map(e => Object.assign({}, e))
       .sort((a, b) => (b.score - a.score) || (a.timestamp - b.timestamp));
   }
+
+  /* Gabungkan data remote ke papan lokal: skor tertinggi per pemain menang. */
+  function mergeLeaderboard(entries) {
+    const map = new Map(leaderboard.map(e => [String(e.uid), e]));
+    (entries || []).forEach(raw => {
+      if (!raw || !raw.uid) return;
+      const e = normalizeLeaderboardEntry(raw), old = map.get(e.uid);
+      if (!old || e.score >= old.score) map.set(e.uid, e);
+    });
+    leaderboard = [...map.values()].sort((a, b) => (+b.score || 0) - (+a.score || 0)).slice(0, GAME_CONFIG.leaderboard.maxEntries);
+    cacheLeaderboard(leaderboard);
+  }
+  function mergeTournament(tid, rows) {
+    const b = tboards[tid] || (tboards[tid] = {});
+    (rows || []).forEach(raw => {
+      if (!raw || !raw.uid) return;
+      const e = normalizeLeaderboardEntry(raw), old = b[e.uid];
+      if (!old || e.score > old.score) b[e.uid] = e;
+    });
+    persistTournaments();
+  }
+  async function initRemote() {
+    const provider = DATABASE_CONFIG.provider || 'indexeddb';
+    remoteState.provider = provider; remoteState.online = false; remoteState.error = '';
+    if (provider === 'indexeddb') return;
+    if (provider === 'firebase' && typeof FirebaseRemote !== 'undefined') remote = FirebaseRemote;
+    if (!remote) { remoteState.error = 'Provider "' + provider + '" tidak tersedia'; return; }
+    try {
+      const ms = DATABASE_CONFIG.remoteTimeoutMs || 7000;
+      await withTimeout(remote.connect(), ms);
+      mergeLeaderboard(await withTimeout(remote.fetchLeaderboard(GAME_CONFIG.leaderboard.maxEntries), ms));
+      unsubBoard = remote.subscribeLeaderboard(rows => { mergeLeaderboard(rows); Events.emit('leaderboard'); }, GAME_CONFIG.leaderboard.maxEntries);
+      remoteState.online = true;
+    } catch (error) {
+      console.warn('[database] ' + provider + ' gagal, memakai database lokal:', error.message);
+      remoteState.error = error.message; remote = null;
+    }
+  }
+  /* Mulai mendengarkan skor turnamen (real-time antar perangkat). */
+  function watchTournament(tid) {
+    if (!remote || !tid || tWatch.tid === tid) return;
+    if (tWatch.unsub) { try { tWatch.unsub(); } catch (e) {} }
+    tWatch = { tid, unsub: remote.subscribeTournament(tid, rows => { mergeTournament(tid, rows); Events.emit('tboard', tid); }) };
+  }
+  /* Tarik skor turnamen terbaru dari server (dipanggil sebelum pengumuman juara). */
+  async function syncTournament(tid, ms = 4000) {
+    if (!remote || !tid) return false;
+    try { mergeTournament(tid, await withTimeout(remote.fetchTournament(tid), ms)); return true; } catch (e) { return false; }
+  }
+  const status = () => ({ provider: remoteState.provider, online: remoteState.online, error: remoteState.error });
 
   async function init() {
     const cachedUser = getCachedUser();
@@ -265,6 +325,7 @@ const MLDatabase = (() => {
       }
     }
 
+    await initRemote();
     databaseReady = true;
     return true;
   }
@@ -287,6 +348,12 @@ const MLDatabase = (() => {
     users.set(String(user.uid), clone(user));
     cacheUser(user);
     await saveToStore(DATABASE_CONFIG.stores.users, user);
+
+    if (remote) { /* tulis ke server maksimal tiap 2,5 dtk per pemain */
+      const uid = String(user.uid);
+      clearTimeout(userTimers.get(uid));
+      userTimers.set(uid, setTimeout(() => { if (remote) remote.saveUser(clone(user)).catch(() => {}); }, 2500));
+    }
 
     return clone(user);
   }
@@ -324,6 +391,13 @@ const MLDatabase = (() => {
       } catch (error) {
         /* Fallback ke cache. */
       }
+    }
+
+    if (remote) {
+      try {
+        const user = await withTimeout(remote.getUser(userId), 4000);
+        if (user) { users.set(userId, user); cacheUser(user); return clone(user); }
+      } catch (error) { /* tetap lokal */ }
     }
 
     return null;
@@ -364,6 +438,14 @@ const MLDatabase = (() => {
       DATABASE_CONFIG.stores.leaderboard,
       normalizedEntry
     );
+
+    if (remote) {
+      const sig = [normalizedEntry.score, normalizedEntry.kills, normalizedEntry.night, normalizedEntry.name, normalizedEntry.characterIndex].join('|');
+      if (sentSig.get(normalizedEntry.uid) !== sig) {
+        sentSig.set(normalizedEntry.uid, sig);
+        remote.submitScore(normalizedEntry).catch(() => sentSig.delete(normalizedEntry.uid));
+      }
+    }
   }
 
   function getLeaderboardSync() {
@@ -390,6 +472,9 @@ const MLDatabase = (() => {
     getLeaderboard,
     submitTournamentScore,
     getTournamentBoardSync,
+    watchTournament,
+    syncTournament,
+    status,
     config: DATABASE_CONFIG
   });
 })();
