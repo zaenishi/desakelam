@@ -1,11 +1,36 @@
 /* ===== INPUT ===== */
-const K={};let ab=0,db=0,eb=0,sb=0,fb=0,jx=0,jy=0,jid=null,jo;
-addEventListener('keydown',e=>{if(e.target.tagName=='INPUT')return;K[e.code]=1;if(e.code=='KeyK'||e.code=='KeyQ')sb=.12;if(e.code=='KeyF')fb=.12;if(e.code=='Space'||e.code=='KeyJ'){ab=.12;e.preventDefault()}if(e.code.startsWith('Shift'))db=.12;if(e.code=='KeyE')eb=.12;if(e.code=='Escape')pauseT();au()});
-addEventListener('keyup',e=>K[e.code]=0);
-const jz=$('#jz'),jb=$('#jb'),jk=$('#jk');
-function resetJoystickVisual(){jb.style.left='5vw';jb.style.right='auto';jb.style.top='auto';jb.style.bottom='5vh';jk.style.left='calc(5vw + 28px)';jk.style.right='auto';jk.style.top='auto';jk.style.bottom='calc(5vh + 28px)'}
-resetJoystickVisual();
-jz.addEventListener('pointerdown',e=>{if(S!=='play')return;jid=e.pointerId;jo={x:e.clientX,y:e.clientY};try{jz.setPointerCapture(jid)}catch(_){}jb.style.left=(jo.x-50)+'px';jb.style.top=(jo.y-50)+'px';jb.style.bottom='auto';jk.style.left=(jo.x-22)+'px';jk.style.top=(jo.y-22)+'px';jk.style.bottom='auto'});
-jz.addEventListener('pointermove',e=>{if(e.pointerId!=jid)return;const dx=e.clientX-jo.x,dy=e.clientY-jo.y,l=Math.hypot(dx,dy)||1,m=Math.min(l,50);jx=dx/l*m/50;jy=dy/l*m/50;jk.style.left=jo.x-22+jx*50+'px';jk.style.top=jo.y-22+jy*50+'px'});
-const je=e=>{if(e.pointerId==jid){jid=null;jx=jy=0;resetJoystickVisual()}};jz.addEventListener('pointerup',je);jz.addEventListener('pointercancel',je);
-[['#bS',()=>sb=.12],['#bI',()=>fb=.12],['#bH',()=>ab=.12],['#bD',()=>db=.12],['#bE',()=>eb=.12]].forEach(([s,f])=>$(s).addEventListener('pointerdown',e=>{e.preventDefault();f();au()}));
+const keys = {
+};
+let attackBuffer = 0, dodgeBuffer = 0, medkitBuffer = 0, skillBuffer = 0, doorBuffer = 0, joystickX = 0, joystickY = 0, joystickPointerId = null, joystickOrigin;
+addEventListener('keydown', e => {
+  if(e.target.tagName == 'INPUT')return; keys[e.code] = 1; if(e.code == 'KeyK' || e.code == 'KeyQ')skillBuffer = .12; if(e.code == 'KeyF')doorBuffer = .12; if(e.code == 'Space' || e.code == 'KeyJ') {
+    attackBuffer = .12; e.preventDefault()
+  }
+  if(e.code.startsWith('Shift'))dodgeBuffer = .12; if(e.code == 'KeyE')medkitBuffer = .12; if(e.code == 'Escape')pauseT(); au()
+});
+addEventListener('keyup', e => keys[e.code] = 0);
+const jz = domQuery('#jz'), jb = domQuery('#jb'), jk = domQuery('#jk');
+jz.addEventListener('pointerdown', e => {
+  joystickPointerId = e.pointerId; joystickOrigin = {
+    x:e.clientX, y:e.clientY
+  }; try {
+    jz.setPointerCapture(joystickPointerId)
+  } catch(_) {
+  }
+  jb.style.cssText = `display:block;left:${joystickOrigin.x-50}px;top:${joystickOrigin.y-50}px`; jk.style.cssText = `display:block;left:${joystickOrigin.x-22}px;top:${joystickOrigin.y-22}px`
+});
+jz.addEventListener('pointermove', e => {
+  if(e.pointerId != joystickPointerId)return; const dx = e.clientX - joystickOrigin.x, dy = e.clientY - joystickOrigin.y, l = Math.hypot(dx, dy) || 1, m = Math.min(l, 50); joystickX = dx / l * m / 50; joystickY = dy / l * m / 50; jk.style.left = joystickOrigin.x - 22 + joystickX * 50 + 'px'; jk.style.top = joystickOrigin.y - 22 + joystickY * 50 + 'px'
+});
+const je = e => {
+  if(e.pointerId == joystickPointerId) {
+    joystickPointerId = null;
+    joystickX = joystickY = 0;
+    jb.style.display = jk.style.display = 'none'
+  }
+};
+jz.addEventListener('pointerup', je);
+jz.addEventListener('pointercancel', je);
+[['#bS', () => skillBuffer = .12], ['#bI', () => doorBuffer = .12], ['#bH', () => attackBuffer = .12], ['#bD', () => dodgeBuffer = .12], ['#bE', () => medkitBuffer = .12]].forEach(([s, f]) => domQuery(s).addEventListener('pointerdown', e => {
+  e.preventDefault(); f(); au()
+}));
