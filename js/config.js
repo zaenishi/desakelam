@@ -58,11 +58,11 @@ const GAME_CONFIG = Object.freeze({
   /* ===================== TURNAMEN ===================== */
   tournament: {
     active: true,                       // boolean
-    mode: 'session',                       // "time" | "date" | "session"
+    mode: 'time',                       // "time" | "date" | "session"
     startTime: '08:00',                 // mode time
     endTime: '16:00',                   // mode time
     targetDate: '2026-10-10T16:00:00',  // mode date
-    durationMinutes: 3,                // mode session
+    durationMinutes: 10,                // mode session
 
     /* pengaturan tambahan (opsional diubah) */
     warningMinutes: 1,                  // peringatan "sisa waktu" sebelum berakhir
