@@ -60,7 +60,7 @@ const GAME_CONFIG = Object.freeze({
     active: true,                       // boolean
     mode: 'time',                       // "time" | "date" | "session"
     startTime: '08:00',                 // mode time
-    endTime: '16:00',                   // mode time
+    endTime: '10.31',                   // mode time
     targetDate: '2026-10-10T16:00:00',  // mode date
     durationMinutes: 10,                // mode session
 
