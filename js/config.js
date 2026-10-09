@@ -102,19 +102,19 @@ const GAME_CONFIG = Object.freeze({
  * Untuk kembali ke lokal: ubah provider kembali ke 'indexeddb'.
  */
 const FIREBASE_CONFIG = {
-  apiKey: '',
-  authDomain: '',
-  projectId: '',
-  storageBucket: '',
-  messagingSenderId: '',
-  appId: '',
+  apiKey: 'AIzaSyC_tyxuMIjDVtf2mYnX9Q84V7MHIMlhxxE',
+  authDomain: 'desakelam-b87dc.firebaseapp.com',
+  projectId: 'desakelam-b87dc',
+  storageBucket: 'desakelam-b87dc.firebasestorage.app',
+  messagingSenderId: '760166378302',
+  appId: '1:760166378302:web:12c0e0d14da9bb0af21a6f',
   useAnonymousAuth: false,   // true bila Firestore rules Anda mensyaratkan login anonim
   sdkVersion: '10.12.2',     // versi Firebase JS SDK (compat) yang dimuat dari CDN
   sdkBaseUrl: ''             // opsional: alamat SDK self-host bila CDN diblokir jaringan sekolah
 };
 
 const DATABASE_CONFIG = Object.freeze({
-  provider: 'indexeddb',      // 'indexeddb' (lokal) | 'firebase'
+  provider: 'firebase',      // 'indexeddb' (lokal) | 'firebase'
   remoteTimeoutMs: 7000,      // batas waktu menunggu Firebase saat start
   name: 'malam_kelam_db',
   version: 3,
