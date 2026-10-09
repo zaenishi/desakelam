@@ -11,7 +11,8 @@ Buka `index.html` (disarankan lewat server lokal, mis. `python3 -m http.server`)
 | `js/tournament.js` | Fase turnamen, timer, pop-up, hitung mundur, urutan akhir, reset sesi |
 | `js/economy.js` | `Economy` (koin) & `Loadout` (upgrade skill + senjata) — satu-satunya pintu ubah koin |
 | `js/account.js` | Profil, skor, achievement, kode akses |
-| `js/database.js` | IndexedDB + cache; store baru `tournament` (skor khusus turnamen) |
+| `js/database.js` | IndexedDB (cache lokal) + lapisan remote; store `tournament` (skor khusus turnamen) |
+| `js/db-firebase.js` | Adapter Firestore (aktif bila `provider: 'firebase'`) — lihat `FIREBASE_SETUP.md` |
 | `js/sprites.js` | Karakter 2D prosedural + preview senjata/skill |
 | `js/combat.js`, `skills.js` | Serangan & skill unik per karakter, stun |
 | `js/cinematic.js` | Sinematik "Desa Kelam menjadi cerah" |
@@ -28,7 +29,10 @@ Buka `index.html` (disarankan lewat server lokal, mis. `python3 -m http.server`)
 `body[data-ui]` diisi oleh `UI.set()`. CSS menampilkan kontrol gameplay (`#tc`, `#pb`, `#bI`) **hanya** saat `GAMEPLAY`.
 Setiap layar memakai `scope.on/interval/timeout/raf` sehingga semuanya dibuang otomatis saat pindah layar.
 
+## Database
+Default: lokal (IndexedDB, per perangkat). Untuk leaderboard/turnamen lintas perangkat ikuti `FIREBASE_SETUP.md`
+(isi `FIREBASE_CONFIG`, ubah `DATABASE_CONFIG.provider` ke `'firebase'`). Gagal terhubung → otomatis kembali ke lokal.
+
 ## Batasan yang perlu diketahui
-- Leaderboard tersimpan **lokal per browser/perangkat**. Untuk turnamen lintas perangkat, perlu backend bersama
-  (skema Supabase ada di `SUPABASE_SCHEMA.sql`, belum disambungkan ke game).
 - Waktu turnamen memakai jam perangkat pemain.
+- Skor dikirim dari browser sehingga dapat dipalsukan oleh yang paham teknis (lihat `FIREBASE_SETUP.md`).

@@ -62,6 +62,7 @@ const Tournament = (() => {
     if (phase() !== 'running' || !w) return false;
     if (st.tid !== w.tid) { st.tid = w.tid; st.joined = false; }
     if (!st.joined) { st.joined = true; st.popupPending = true; st.lastTid = w.tid; save(); }
+    MLDatabase.watchTournament(w.tid); /* skor tampil real-time bila Firebase aktif */
     renderHud();
     return true;
   }
@@ -160,12 +161,15 @@ const Tournament = (() => {
     habis.classList.remove('top'); habis.classList.add('big'); card.classList.remove('show'); list.innerHTML = '';
     try { SFX.gong(); } catch (e) {}
     scope.timeout(() => { try { SFX.gong(); } catch (e) {} }, 1300);
-    const winners = getWinners(tid), gap = +cfg().winnerRevealMs || 2400;
-    scope.timeout(() => {
+    const gap = +cfg().winnerRevealMs || 2400;
+    let dead = false, timeUp = false, synced = false, revealed = false;
+    scope.add(() => { dead = true; });
+
+    function reveal() {
+      const winners = getWinners(tid); /* dibaca SETELAH sinkron server agar skor semua perangkat ikut */
       habis.classList.remove('big'); habis.classList.add('top'); card.classList.add('show');
-      if (!winners.length) { list.innerHTML = '<div class="no-win">Belum ada skor tercatat.</div>'; return; }
-      const order = winners.slice().reverse(); /* dari juara 3 -> 1 */
-      order.forEach((wn, i) => scope.timeout(() => {
+      if (!winners.length) list.innerHTML = '<div class="no-win">Belum ada skor tercatat.</div>';
+      winners.slice().reverse().forEach((wn, i) => scope.timeout(() => { /* dari juara 3 -> 1 */
         const medal = ['🥇', '🥈', '🥉'][wn.rank - 1] || wn.rank;
         const cc = CHARACTER_CLASSES[wn.characterIndex] || CHARACTER_CLASSES[0];
         const row = document.createElement('div');
@@ -174,9 +178,12 @@ const Tournament = (() => {
         list.prepend(row);
         try { wn.rank === 1 ? SFX.fanfare() : SFX.chime(); } catch (e) {}
       }, 400 + i * gap));
-    }, 3200);
-    const total = 3200 + 400 + Math.max(0, winners.length) * gap + 3200;
-    scope.timeout(() => Cinematic.play(() => UI.set(LEADERBOARD_STATE, { mode: 'winners', tid })), total);
+      scope.timeout(() => Cinematic.play(() => UI.set(LEADERBOARD_STATE, { mode: 'winners', tid })), 400 + winners.length * gap + 3200);
+    }
+    /* Pengumuman menunggu 2 hal: animasi "TURNAMEN HABIS!" selesai + data server terbaru (maks 4 dtk). */
+    const tryReveal = () => { if (dead || revealed || !timeUp || !synced) return; revealed = true; reveal(); };
+    scope.timeout(() => { timeUp = true; tryReveal(); }, 3200);
+    MLDatabase.syncTournament(tid, 4000).then(() => { synced = true; tryReveal(); });
   }
 
   /* Reset sesi untuk turnamen berikutnya. */
@@ -194,6 +201,7 @@ const Tournament = (() => {
     if (started) return; started = true;
     load();
     if (st.pendingReset) finishSession(); /* reload di tengah urutan akhir -> bersihkan state */
+    if (st.joined && st.tid && phase() === 'running') MLDatabase.watchTournament(st.tid);
     timer = setInterval(tick, 250); tick();
   }
   function dispose() { clearInterval(timer); timer = 0; started = false; }

@@ -45,6 +45,7 @@ const Leaderboard = (() => {
 UI.register(LEADERBOARD_STATE, {
   enter(scope, p) {
     const mode = p.mode || 'general', tabs = $('#rankTabs');
+    let view = 'general';
     if (mode === 'general' && Tournament.isLeaderboardLocked()) { toast('🔒 Leaderboard terkunci selama turnamen!', 'bad'); UI.set(MENU_STATE); return; }
     tabs.innerHTML = '';
     const tid = p.tid || Tournament.lastTid();
@@ -52,11 +53,15 @@ UI.register(LEADERBOARD_STATE, {
     if (mode === 'winners') {
       $('#rs').textContent = '';
       Leaderboard.showTournament(tid); SFX.fanfare();
+      scope.add(Events.on('tboard', id => { if (id === tid) Leaderboard.showTournament(tid); }));
       return;
     }
     const hasT = tid && MLDatabase.getTournamentBoardSync(tid).length > 0;
-    const mkTab = (label, fn, on) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'tab' + (on ? ' on' : ''); b.textContent = label; scope.on(b, 'click', () => { tabs.querySelectorAll('.tab').forEach(x => x.classList.remove('on')); b.classList.add('on'); SFX.click(); fn(); }); tabs.appendChild(b); };
+    const mkTab = (label, v, fn, on) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'tab' + (on ? ' on' : ''); b.textContent = label; scope.on(b, 'click', () => { view = v; tabs.querySelectorAll('.tab').forEach(x => x.classList.remove('on')); b.classList.add('on'); SFX.click(); fn(); }); tabs.appendChild(b); };
     Leaderboard.showGeneral();
-    if (hasT) { mkTab('Umum', Leaderboard.showGeneral, true); mkTab('Turnamen Terakhir', () => Leaderboard.showTournament(tid), false); }
+    if (hasT) { mkTab('Umum', 'general', Leaderboard.showGeneral, true); mkTab('Turnamen Terakhir', 'tournament', () => Leaderboard.showTournament(tid), false); }
+    /* papan berubah real-time (Firebase) -> tampilan ikut diperbarui */
+    scope.add(Events.on('leaderboard', () => { if (view === 'general') Leaderboard.showGeneral(); }));
+    scope.add(Events.on('tboard', id => { if (view === 'tournament' && id === tid) Leaderboard.showTournament(tid); }));
   }
 });

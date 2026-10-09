@@ -101,6 +101,8 @@ async function initDatabase() {
   savePlayerProfile();
 }
 function getLeaderboardEntries() { return leaderboardCache; }
+/* Papan peringkat berubah real-time (Firebase) -> segarkan cache lokal untuk HUD/rank. */
+Events.on('leaderboard', () => { leaderboardCache = MLDatabase.getLeaderboardSync(); });
 function getPlayerRank(value) {
   return 1 + getLeaderboardEntries().filter(e => e.uid !== playerProfile.uid && e.score > value).length;
 }

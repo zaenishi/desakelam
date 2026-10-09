@@ -35,7 +35,7 @@ async function requestGameFullscreen(){
       const el=document.documentElement;
       const fn=el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
       if(fn){
-        const result=fn.call(el);
+        const result=fn.call(el,{navigationUI:'hide'});
         if(result && typeof result.then==='function') await result;
       }
       fullscreenOk=isFullscreen();
@@ -50,6 +50,7 @@ async function requestGameFullscreen(){
 }
 
 async function exitImmersiveMode(){
+  userExitedManually = true;
   try{
     if(screen.orientation && typeof screen.orientation.unlock==='function') screen.orientation.unlock();
   }catch(e){}
@@ -65,6 +66,11 @@ async function exitImmersiveMode(){
 
 async function toggleImmersiveMode(){
   if(isFullscreen()) return exitImmersiveMode();
+  userExitedManually = false;
+  if(!fullscreenSupported()){
+    if(typeof toast==='function') toast('Browser ini tidak mendukung layar penuh. Di iPhone: Bagikan → Tambah ke Layar Utama.','bad');
+    return false;
+  }
   return requestGameFullscreen();
 }
 
@@ -78,18 +84,26 @@ async function enableImmersiveMode(){
   await requestGameFullscreen();
 }
 
-/* Gesture pertama saja: aktifkan audio + coba fullscreen/landscape (tombol ⛶ tersedia untuk manual). */
-const immersiveTapHandler=(event)=>{
+/*
+ * Auto fullscreen + landscape lewat sentuhan.
+ * PENTING: browser hanya mengizinkan requestFullscreen pada "user activation" yang sah.
+ * Untuk layar sentuh itu adalah pointerup / touchend / click (BUKAN pointerdown),
+ * untuk keyboard adalah keydown. Karena itu kita mendengarkan semuanya dan MENGULANG
+ * setiap gesture sampai berhasil masuk fullscreen (tidak berhenti setelah percobaan pertama).
+ * Jika pemain keluar lewat tombol ⛶, auto-masuk dihentikan agar tidak memaksa.
+ */
+let userExitedManually = false, fsBusy = false;
+const fullscreenSupported = () => !!(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen);
+async function onActivationGesture(event){
   if(event.target && event.target.closest && event.target.closest('#immersiveToggle')) return;
-  removeEventListener('pointerdown', immersiveTapHandler, true);
-  removeEventListener('keydown', firstKeyHandler, true);
-  fsDone = true;
-  try{ au(); }catch(e){}
-  if(GAME_CONFIG.ui.autoFullscreen || GAME_CONFIG.ui.autoLandscape) void enableImmersiveMode();
-};
-const firstKeyHandler=()=>{ removeEventListener('pointerdown', immersiveTapHandler, true); removeEventListener('keydown', firstKeyHandler, true); fsDone = true; try{ au(); }catch(e){} };
-addEventListener('pointerdown', immersiveTapHandler, {capture:true});
-addEventListener('keydown', firstKeyHandler, {capture:true});
+  if(!fsDone){ fsDone = true; try{ au(); }catch(e){} }
+  if(isFullscreen() || userExitedManually || fsBusy) return;
+  if(!(GAME_CONFIG.ui.autoFullscreen || GAME_CONFIG.ui.autoLandscape)) return;
+  if(!fullscreenSupported()) return;
+  fsBusy = true;
+  try{ await enableImmersiveMode(); }finally{ fsBusy = false; }
+}
+['pointerup','touchend','click','keydown'].forEach(ev => addEventListener(ev, onActivationGesture, {capture:true, passive:true}));
 
 document.addEventListener('fullscreenchange',()=>{updateImmersiveButton();fit()});
 document.addEventListener('webkitfullscreenchange',()=>{updateImmersiveButton();fit()});

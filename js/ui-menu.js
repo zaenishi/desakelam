@@ -13,6 +13,12 @@ function renderMenu() {
     ? `Skor terbaik <b style="color:#ffd700">${playerProfile.bestScore}</b> · Rank ${rankText(playerProfile.bestScore)}` + (playerProfile.skinUnlocked ? ' · Skin emas' : '')
     : '';
   $('#drRank').classList.toggle('locked', Tournament.isLeaderboardLocked());
+  const ds = MLDatabase.status(), el = $('#dbStatus');
+  if (el) {
+    el.textContent = ds.provider === 'firebase' ? (ds.online ? '☁ Firebase terhubung' : '💾 Mode lokal (Firebase gagal)') : '💾 Database lokal';
+    el.className = ds.provider === 'firebase' ? (ds.online ? 'ok' : 'warn') : '';
+    el.title = ds.error || '';
+  }
   Tournament.renderHud();
 }
 
