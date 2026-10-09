@@ -1,5 +1,5 @@
 /* ===== UI / NAVIGATION ===== */
-function setGameplayControls(active){const tc=$('#tc');if(tc){tc.style.display=active&&touch?'block':'none';tc.classList.toggle('active',!!(active&&touch))}const pb=$('#pb');if(pb)pb.style.display=active?'block':'none';const bi=$('#bI');if(bi)bi.style.display=active&&touch?'block':'none'}
+function setGameplayControls(active){const tc=$('#tc');if(tc){tc.style.display=active&&touch?'block':'none';tc.classList.toggle('active',!!(active&&touch))}const pb=$('#pb');if(pb)pb.style.display=active?'block':'none';const bi=$('#bI');if(bi)bi.style.display=active&&touch?'block':'none';if(!active&&typeof resetJoystickVisual==='function'){jx=jy=0;resetJoystickVisual()}}
 document.addEventListener('click',e=>{
  const cc=e.target.closest?.('.chc');if(cc){SFX.click();selectCharacter(+cc.dataset.i);return}
  const b=e.target.closest?.('.b');if(!b)return;SFX.click();const r=document.createElement('i'),q=b.getBoundingClientRect();r.className='rp';r.style.left=e.clientX-q.left-5+'px';r.style.top=e.clientY-q.top-5+'px';b.appendChild(r);setTimeout(()=>r.remove(),600);
