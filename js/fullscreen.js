@@ -5,104 +5,104 @@
  */
 let immersiveActive = false;
 let immersiveAttempted = false;
-const immersiveButton = () => document.getElementById('immersiveToggle');
-
-function isFullscreen(){
-  return !!(document.fullscreenElement || document.webkitFullscreenElement);
+const immersiveButton =() => document.getElementById('immersiveToggle');
+function isFullscreen() {
+  return!!(document.fullscreenElement || document.webkitFullscreenElement);
 }
-
-function updateImmersiveButton(){
+function updateImmersiveButton() {
   const button = immersiveButton();
-  if(!button) return;
+  if(!button)return;
   immersiveActive = isFullscreen();
   button.classList.toggle('hide', immersiveActive);
 }
-
-async function requestLandscape(){
-  try{
-    if(screen.orientation && typeof screen.orientation.lock === 'function'){
+async function requestLandscape() {
+  try {
+    if(screen.orientation && typeof screen.orientation.lock === 'function') {
       await screen.orientation.lock('landscape');
       return true;
     }
-  }catch(e){}
+  } catch(e) {
+  }
   return false;
 }
-
-async function requestGameFullscreen(){
+async function requestGameFullscreen() {
   let fullscreenOk = isFullscreen();
-  try{
-    if(!fullscreenOk){
-      const el=document.documentElement;
-      const fn=el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
-      if(fn){
-        const result=fn.call(el);
-        if(result && typeof result.then==='function') await result;
+  try {
+    if(!fullscreenOk) {
+      const el = document.documentElement;
+      const fn = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
+      if(fn) {
+        const result = fn.call(el);
+        if(result && typeof result.then === 'function')await result;
       }
-      fullscreenOk=isFullscreen();
+      fullscreenOk = isFullscreen();
     }
-  }catch(e){}
-
-  if(fullscreenOk) await requestLandscape();
+  } catch(e) {
+  }
+  if(fullscreenOk)await requestLandscape();
   fit();
   updateImmersiveButton();
-  immersiveAttempted=true;
+  immersiveAttempted = true;
   return fullscreenOk;
 }
-
-async function exitImmersiveMode(){
-  try{
-    if(screen.orientation && typeof screen.orientation.unlock==='function') screen.orientation.unlock();
-  }catch(e){}
-  try{
-    if(isFullscreen()){
-      const fn=document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
-      if(fn) await fn.call(document);
+async function exitImmersiveMode() {
+  try {
+    if(screen.orientation && typeof screen.orientation.unlock === 'function')screen.orientation.unlock();
+  } catch(e) {
+  }
+  try {
+    if(isFullscreen()) {
+      const fn = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
+      if(fn)await fn.call(document);
     }
-  }catch(e){}
+  } catch(e) {
+  }
   fit();
   updateImmersiveButton();
 }
-
-async function toggleImmersiveMode(){
-  if(isFullscreen()) return exitImmersiveMode();
+async function toggleImmersiveMode() {
+  if(isFullscreen())return exitImmersiveMode();
   return requestGameFullscreen();
 }
-
-async function enableImmersiveMode(){
-  try{ if(typeof au==='function') au(); }catch(e){}
-  if(isFullscreen()){
+async function enableImmersiveMode() {
+  try {
+    if(typeof au === 'function')au();
+  } catch(e) {
+  }
+  if(isFullscreen()) {
     await requestLandscape();
     updateImmersiveButton();
     return;
   }
   await requestGameFullscreen();
 }
-
-/* Gesture pertama saja: aktifkan audio + coba fullscreen/landscape (tombol ⛶ tersedia untuk manual). */
-const immersiveTapHandler=(event)=>{
-  if(event.target && event.target.closest && event.target.closest('#immersiveToggle')) return;
-  removeEventListener('pointerdown', immersiveTapHandler, true);
-  removeEventListener('keydown', firstKeyHandler, true);
-  fsDone = true;
-  try{ au(); }catch(e){}
-  if(GAME_CONFIG.ui.autoFullscreen || GAME_CONFIG.ui.autoLandscape) void enableImmersiveMode();
+const immersiveTapHandler =(event) => {
+  if(event.target && event.target.closest && event.target.closest('#immersiveToggle'))return;
+  void enableImmersiveMode();
 };
-const firstKeyHandler=()=>{ removeEventListener('pointerdown', immersiveTapHandler, true); removeEventListener('keydown', firstKeyHandler, true); fsDone = true; try{ au(); }catch(e){} };
-addEventListener('pointerdown', immersiveTapHandler, {capture:true});
-addEventListener('keydown', firstKeyHandler, {capture:true});
-
-document.addEventListener('fullscreenchange',()=>{updateImmersiveButton();fit()});
-document.addEventListener('webkitfullscreenchange',()=>{updateImmersiveButton();fit()});
-
-const button=immersiveButton();
-if(button) button.addEventListener('click', e=>{e.stopPropagation();void toggleImmersiveMode()});
-
+addEventListener('pointerdown', immersiveTapHandler, {
+  capture:true, once:false
+});
+document.addEventListener('fullscreenchange', () => {
+  updateImmersiveButton(); fit()
+});
+document.addEventListener('webkitfullscreenchange', () => {
+  updateImmersiveButton(); fit()
+});
+const button = immersiveButton();
+if(button)button.addEventListener('click', e => {
+  e.stopPropagation(); void toggleImmersiveMode()
+});
 let rz;
-function fit(){
-  const s=Math.min(innerWidth/W,innerHeight/H);
-  C.style.transform=`translate(${(innerWidth-W*s)/2}px,${(innerHeight-H*s)/2}px) scale(${s})`;
+function fit() {
+  const s = Math.min(innerWidth / canvasWidthValue, innerHeight / canvasHeightValue);
+  gameCanvas.style.transform = `translate(${(innerWidth-canvasWidthValue*s)/2}px,${(innerHeight-canvasHeightValue*s)/2}px) scale(${s})`;
 }
-addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(fit,80)});
-addEventListener('orientationchange',()=>setTimeout(fit,200));
+addEventListener('resize', () => {
+  clearTimeout(rz); rz = setTimeout(fit, 80)
+});
+addEventListener('orientationchange', () => setTimeout(fit, 200));
 fit();
-setTimeout(()=>{ if(GAME_CONFIG.ui.autoFullscreen || GAME_CONFIG.ui.autoLandscape) void enableImmersiveMode(); },250);
+setTimeout(() => {
+  if(GAME_CONFIG.ui.autoFullscreen || GAME_CONFIG.ui.autoLandscape)void enableImmersiveMode(); 
+}, 250);
