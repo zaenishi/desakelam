@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="id"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover,user-scalable=no,interactive-widget=resizes-visual">
 <title>Malam Kelam di Desa Terkutuk</title><meta name="theme-color" content="#0a0a0a">
 <meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-fullscreen">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Creepster&display=swap" rel="stylesheet">
+<script>(function(){function f(){document.documentElement.style.setProperty("--vh",(window.innerHeight*0.01)+"px")}f();addEventListener("resize",f);addEventListener("orientationchange",function(){setTimeout(f,150)})})()</script>
 <link rel="stylesheet" href="css/main.css"></head>
 <body data-ui="INTRO">
 <canvas id="c" width="960" height="540"></canvas>
@@ -11,7 +12,7 @@
 <!-- ===== KONTROL GAMEPLAY (hanya tampil di GAMEPLAY_STATE, diatur CSS lewat body[data-ui]) ===== -->
 <div id="tc"><div id="jz"></div><div id="jb"></div><div id="jk"></div>
 <button class="tb" id="bH">HIT</button><button class="tb" id="bD">DODGE</button><button class="tb" id="bE">MED</button><button class="tb" id="bS">SKILL</button><button class="tb" id="bI">MASUK</button></div>
-<button id="pb" aria-label="Jeda">II</button><button id="sk">LEWATI</button><button id="cineSkip">LEWATI ▸</button>
+<button id="pb" aria-label="Jeda">II</button><button id="sk">LEWATI ▸</button><button id="cineSkip">LEWATI ▸</button>
 <button id="immersiveToggle" class="immersive-toggle" type="button" aria-label="Layar penuh dan landscape" title="Layar penuh + landscape">⛶</button>
 
 <!-- ===== HUD TURNAMEN (non-intrusif) ===== -->
@@ -33,11 +34,12 @@
     <nav class="drawer-menu">
       <button class="dr-item" data-go="credits" type="button"><svg viewBox="0 0 48 48" class="ic ic-credits"><path d="M24 4l5.5 11.6 12.5 1.7-9.2 8.7 2.4 12.5L24 32.5 12.8 38.5l2.4-12.5L6 17.3l12.5-1.7z"/></svg><span>Credits</span></button>
       <button class="dr-item" data-go="shop" type="button"><svg viewBox="0 0 48 48" class="ic ic-shop"><circle cx="24" cy="24" r="17"/><text x="24" y="31" text-anchor="middle">$</text></svg><span>Shop</span></button>
+      <button class="dr-item" data-go="settings" type="button"><svg viewBox="0 0 48 48" class="ic ic-gear"><circle cx="24" cy="24" r="8"/><path d="M24 5v7M24 36v7M5 24h7M36 24h7M10.5 10.5l5 5M32.5 32.5l5 5M37.5 10.5l-5 5M15.5 32.5l-5 5"/></svg><span>Setelan</span></button>
       <button class="dr-item" data-go="rank" type="button" id="drRank"><svg viewBox="0 0 48 48" class="ic ic-trophy"><path d="M14 6h20v12a10 10 0 0 1-20 0zM14 10H6c0 8 3 12 8 13M34 10h8c0 8-3 12-8 13M21 28h6v7h6v6H15v-6h6z"/></svg><span>Leaderboard</span><i class="lock" id="rankLock">🔒</i></button>
     </nav>
   </aside>
 
-  <div id="dbStatus"></div>
+  <button id="dbStatus" type="button" aria-label="Status database"></button>
   <div class="start-cluster">
     <button class="b trn" data-a="train" type="button"><span>TRAINING</span></button>
     <button class="b start" data-a="classic" id="startBtn" type="button"><span class="st-main">START</span><span class="st-sub" id="startSub" hidden></span></button>
@@ -86,12 +88,14 @@
   <header class="shop-head">
     <button class="b s" data-a="shopBack" type="button">← KEMBALI</button>
     <h2>EDUSHOP</h2>
+    <button class="quiz-open-btn" id="quizOpen" type="button">📝 KUIS KOIN</button>
     <div class="coin-pill" id="coinPill"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><text x="12" y="16.5" text-anchor="middle">$</text></svg><b id="coinVal">0</b></div>
   </header>
-  <div class="shop-tabs" id="shopTabs"><button class="tab on" data-cat="upgrade" type="button">⚡ Upgrade Skill</button><button class="tab" data-cat="weapon" type="button">⚔️ Pedang / Senjata Unik</button></div>
+  <div class="shop-tabs" id="shopTabs"><button class="tab on" data-cat="upgrade" type="button">⚡ Upgrade Skill</button><button class="tab" data-cat="weapon" type="button">⚔️ Senjata Unik</button></div>
   <div class="shop-grid" id="shopGrid"></div>
+  <div class="quiz-dim" id="quizDim"></div>
   <aside class="quiz-panel" id="quizPanel">
-    <button class="quiz-tab" id="quizTab" type="button"><span>📝 KUIS<br>KOIN</span></button>
+    <div class="quiz-bar"><span>📝 Bank Soal Sekolah</span><button id="quizClose" type="button">✕ Tutup</button></div>
     <div class="quiz-body" id="quizBody"></div>
   </aside>
 </section>
@@ -110,10 +114,19 @@
   </div>
 </section>
 
+<section class="ov hide modal" id="settings"><div class="card set-card">
+  <button class="x" data-a="closeModal" aria-label="Tutup" type="button">×</button><h2>SETELAN</h2>
+  <div class="set-row"><span>Kontrol</span><div class="seg" id="setControls"><button data-v="auto" type="button">Otomatis</button><button data-v="touch" type="button">Sentuh</button><button data-v="keyboard" type="button">Keyboard</button></div></div>
+  <div class="set-row"><span>Getar (HP)</span><div class="seg" id="setVib"><button data-v="1" type="button">Nyala</button><button data-v="0" type="button">Mati</button></div></div>
+  <div class="set-row"><span>Layar penuh</span><button class="b s" id="setFs" type="button">⛶ AKTIFKAN / KELUAR</button></div>
+  <div class="set-info" id="setInfo"></div>
+  <div class="set-row"><span>Database</span><button class="b s" id="setDiag" type="button">TES KONEKSI</button></div>
+  <pre id="dbDiag"></pre></div></section>
+
 <section class="ov hide modal" id="credits"><div class="card credits-card"><h2>CREDITS</h2><div id="creditsNames" class="creditsNames"></div><p>Terima kasih untuk semua yang membantu pengembangan dan pengujian.</p><button class="b s" data-a="closeModal" type="button">KEMBALI</button></div></section>
 
 <!-- ===== LOADING / JEDA / HASIL ===== -->
-<section class="ov hide" id="load"><h1 style="font-size:5vh">Memuat…</h1><div id="bar"><i></i></div><p id="tip"></p></section>
+<section class="ov hide" id="load"><h1 style="font-size:5vh">Memuat…</h1><div id="bar"><i></i></div><p id="tip"></p><p id="ctlHint"></p></section>
 <section class="ov hide" id="pause"><h1>JEDA</h1><button class="b" data-a="resume" type="button">LANJUT</button><button class="b" data-a="home" type="button">MENU</button></section>
 <section class="ov hide" id="end"><h1 id="et"></h1><p id="es" style="font-size:clamp(12px,2.8vh,20px);line-height:1.6"></p><button class="b" data-a="again" type="button">ULANGI</button><button class="b" data-a="home" type="button">MENU</button></section>
 
@@ -121,10 +134,11 @@
 <section class="ov hide" id="tournamentEnd"><div id="tHabis">TURNAMEN HABIS!</div>
 <div id="tWinCard"><h2>🏆 PEMENANG TURNAMEN</h2><div id="tWinners"></div></div></section>
 
-<div id="rot"><b>📱</b>Putar perangkat ke mode landscape untuk bermain</div>
+<div id="rot"><b>📱</b><div id="rotTitle">Putar HP ke mode landscape</div><small id="rotText"></small><button class="b" id="rotBtn" type="button">LAYAR PENUH &amp; LANDSCAPE</button></div>
 
 <script src="js/config.js"></script>
 <script src="js/edudata.js"></script>
+<script src="js/device.js"></script>
 <script src="js/database.js"></script>
 <script src="js/db-firebase.js"></script>
 <script src="js/core.js"></script>
@@ -156,5 +170,6 @@
 <script src="js/ui-charselect.js"></script>
 <script src="js/ui-leaderboard.js"></script>
 <script src="js/ui-shop.js"></script>
+<script src="js/ui-settings.js"></script>
 <script src="js/main.js"></script>
 </body></html>

@@ -61,7 +61,8 @@ function startRun(mode) {
 }
 
 UI.register(INTRO_STATE, {
-  enter() { it = 0; I = {}; reset('classic'); P.x = 300; P.y = 430; }
+  enter() { it = 0; I = {}; document.body.classList.remove('ctl-on'); reset('classic'); P.x = 300; P.y = 430; },
+  exit() { document.body.classList.remove('ctl-on'); }
 });
 UI.register(GATE_STATE, {
   enter(scope) {
@@ -72,7 +73,7 @@ UI.register(GATE_STATE, {
 });
 UI.register(LOADING_STATE, {
   enter(scope, p) {
-    $('#tip').textContent = TIPS[R() * TIPS.length | 0]; SFX.door();
+    $('#tip').textContent = TIPS[R() * TIPS.length | 0]; $('#ctlHint').textContent = Device.hint(); SFX.door();
     const bar = $('#bar i'); bar.style.transition = 'none'; bar.style.width = '0';
     requestAnimationFrame(() => { bar.style.transition = 'width 1.6s'; bar.style.width = '100%'; });
     scope.timeout(() => {

@@ -99,6 +99,8 @@ async function onActivationGesture(event){
   if(!fsDone){ fsDone = true; try{ au(); }catch(e){} }
   if(isFullscreen() || userExitedManually || fsBusy) return;
   if(!(GAME_CONFIG.ui.autoFullscreen || GAME_CONFIG.ui.autoLandscape)) return;
+  /* Android/HP: otomatis. Desktop: tidak memaksa fullscreen (tombol ⛶ / F11 tersedia). */
+  if(!Device.isMobile && !GAME_CONFIG.ui.autoFullscreenDesktop) return;
   if(!fullscreenSupported()) return;
   fsBusy = true;
   try{ await enableImmersiveMode(); }finally{ fsBusy = false; }
@@ -114,9 +116,22 @@ if(button) button.addEventListener('click', e=>{e.stopPropagation();void toggleI
 let rz;
 function fit(){
   const s=Math.min(innerWidth/W,innerHeight/H);
+  hudK=cl(0.85/s,1,1.7); /* HUD di canvas diperbesar pada layar kecil agar tetap terbaca */
   C.style.transform=`translate(${(innerWidth-W*s)/2}px,${(innerHeight-H*s)/2}px) scale(${s})`;
 }
 addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(fit,80)});
 addEventListener('orientationchange',()=>setTimeout(fit,200));
 fit();
-setTimeout(()=>{ if(GAME_CONFIG.ui.autoFullscreen || GAME_CONFIG.ui.autoLandscape) void enableImmersiveMode(); },250);
+setTimeout(()=>{ if((GAME_CONFIG.ui.autoFullscreen || GAME_CONFIG.ui.autoLandscape) && Device.isMobile) void enableImmersiveMode(); },250);
+
+/* Overlay "putar ke landscape" (hanya HP): tombolnya adalah gesture sah untuk fullscreen + kunci landscape. */
+(function(){
+  const t=document.getElementById('rotText'),btn=document.getElementById('rotBtn');
+  if(t) t.textContent = Device.isIOS
+    ? 'iPhone tidak mendukung layar penuh di browser. Putar HP ke landscape, atau buka menu Bagikan → "Tambah ke Layar Utama".'
+    : 'Game ini dimainkan secara landscape. Putar HP Anda atau tekan tombol di bawah.';
+  if(btn){
+    if(Device.isIOS) btn.hidden=true;
+    btn.addEventListener('click',()=>{ userExitedManually=false; void enableImmersiveMode(); });
+  }
+})();

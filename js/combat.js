@@ -125,7 +125,7 @@ function blood(x, y, n, pal) {
 function dmgP(d) {
   if (P.inv > 0 || S == 'intro' || P.dd > 0) return;
   P.hp -= d; P.inv = .5; P.hf = .6; shake = Math.max(shake, 9); SFX.hurt();
-  try { navigator.vibrate && navigator.vibrate(60); } catch (e) {}
+  Device.vibrate(60);
   blood(P.x, P.y, 8);
   if (MODE == 'train') P.hp = Math.max(P.hp, 1);
   if (P.hp < P.mh * .2 && !P.sc20 && P.hp > 0) { P.sc20 = 1; scare(); }

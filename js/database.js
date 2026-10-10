@@ -19,11 +19,12 @@ const MLDatabase = (() => {
   let tboards = {}; /* { [tid]: { [uid]: entry } } skor khusus turnamen */
 
   /* ---- lapisan remote (opsional, mis. Firebase). IndexedDB tetap jadi cache/offline ---- */
-  let remote = null;
-  const remoteState = { provider: 'indexeddb', online: false, error: '' };
+  let remote = null, remoteReady = false, connecting = false, retryTimer = 0, retryN = 0;
+  const remoteState = { provider: 'indexeddb', online: false, connecting: false, error: '', hint: '', steps: [], lastWriteError: '', attempts: 0 };
   const userTimers = new Map();
   const sentSig = new Map();
-  let unsubBoard = null, tWatch = { tid: '', unsub: null };
+  const waiters = [];
+  let unsubBoard = null, tWatch = { tid: '', unsub: null, want: '' };
   const withTimeout = (promise, ms) => Promise.race([promise, new Promise((_, rej) => setTimeout(() => rej(new Error('timeout ' + ms + 'ms')), ms))]);
 
   function readJson(key, fallback = null) {
@@ -211,7 +212,7 @@ const MLDatabase = (() => {
     board[uid] = normalized;
     persistTournaments();
     await saveToStore(DATABASE_CONFIG.stores.tournament, Object.assign({ key: tid + '|' + uid, tid }, normalized));
-    if (remote) remote.submitTournamentScore(tid, normalized).catch(e => console.warn('[database] skor turnamen gagal dikirim:', e.message));
+    if (remoteReady) remote.submitTournamentScore(tid, normalized).catch(noteWriteError);
     return true;
   }
 
@@ -242,35 +243,91 @@ const MLDatabase = (() => {
     });
     persistTournaments();
   }
-  async function initRemote() {
+  const emitStatus = () => { try { Events.emit('dbstatus', status()); } catch (e) {} };
+  function setState(patch) { Object.assign(remoteState, patch); emitStatus(); }
+  function noteWriteError(e) {
+    const code = (e && e.code) || '', msg = (e && e.message) || String(e);
+    remoteState.lastWriteError = (code ? code + ': ' : '') + msg;
+    if (/permission/i.test(remoteState.lastWriteError)) remoteState.hint = 'Firebase MENOLAK menulis data. Publish rules dari FIREBASE_SETUP.md; jika rules mensyaratkan login set useAnonymousAuth:true dan aktifkan Anonymous Auth.';
+    console.warn('[database] tulis ke server gagal:', remoteState.lastWriteError);
+    emitStatus();
+  }
+
+  /* Kirim data lokal pemain ke server begitu terhubung (mis. skor yang dimainkan saat offline). */
+  function flushToRemote() {
+    const jobs = [], me = getCachedUser();
+    if (!remoteReady || !me || !me.uid) return Promise.resolve();
+    const uid = String(me.uid), mine = leaderboard.find(e => e.uid === uid);
+    jobs.push(remote.saveUser(clone(me)));
+    if (mine) jobs.push(remote.submitScore(mine));
+    Object.keys(tboards).forEach(tid => { const e = tboards[tid][uid]; if (e) jobs.push(remote.submitTournamentScore(tid, e)); });
+    return Promise.allSettled(jobs).then(rs => { const bad = rs.find(r => r.status === 'rejected'); if (bad) noteWriteError(bad.reason); else setState({ lastWriteError: '' }); });
+  }
+
+  async function connectRemote() {
+    if (!remote || connecting || remoteReady) return remoteReady;
+    connecting = true; setState({ connecting: true, attempts: remoteState.attempts + 1, error: '', hint: '' });
+    try {
+      await remote.connect();
+      mergeLeaderboard(await withTimeout(remote.fetchLeaderboard(GAME_CONFIG.leaderboard.maxEntries), 20000));
+      unsubBoard = remote.subscribeLeaderboard(rows => { mergeLeaderboard(rows); Events.emit('leaderboard'); }, GAME_CONFIG.leaderboard.maxEntries);
+      remoteReady = true; retryN = 0;
+      setState({ online: true, connecting: false, error: '', hint: '', steps: remote.getSteps ? remote.getSteps() : [] });
+      waiters.splice(0).forEach(fn => fn(true));
+      Events.emit('leaderboard');
+      if (tWatch.want) watchTournament(tWatch.want);
+      flushToRemote();
+    } catch (error) {
+      console.warn('[database] ' + remoteState.provider + ' gagal terhubung:', error.message, error.hint || '');
+      remoteReady = false;
+      setState({ online: false, connecting: false, error: error.message, hint: error.hint || '', steps: remote.getSteps ? remote.getSteps() : [] });
+      scheduleRetry();
+    } finally { connecting = false; }
+    return remoteReady;
+  }
+  /* Coba lagi otomatis (10s, 20s, 40s, lalu tiap 60s) selama halaman terbuka. */
+  function scheduleRetry() {
+    clearTimeout(retryTimer);
+    const delay = Math.min(60000, 10000 * Math.pow(2, Math.min(retryN++, 3)));
+    retryTimer = setTimeout(() => { connectRemote(); }, delay);
+  }
+  /* Dipanggil saat startup: TIDAK menunggu server, game langsung jalan memakai data lokal. */
+  function startRemote() {
     const provider = DATABASE_CONFIG.provider || 'indexeddb';
-    remoteState.provider = provider; remoteState.online = false; remoteState.error = '';
+    remoteState.provider = provider;
     if (provider === 'indexeddb') return;
     if (provider === 'firebase' && typeof FirebaseRemote !== 'undefined') remote = FirebaseRemote;
-    if (!remote) { remoteState.error = 'Provider "' + provider + '" tidak tersedia'; return; }
-    try {
-      const ms = DATABASE_CONFIG.remoteTimeoutMs || 7000;
-      await withTimeout(remote.connect(), ms);
-      mergeLeaderboard(await withTimeout(remote.fetchLeaderboard(GAME_CONFIG.leaderboard.maxEntries), ms));
-      unsubBoard = remote.subscribeLeaderboard(rows => { mergeLeaderboard(rows); Events.emit('leaderboard'); }, GAME_CONFIG.leaderboard.maxEntries);
-      remoteState.online = true;
-    } catch (error) {
-      console.warn('[database] ' + provider + ' gagal, memakai database lokal:', error.message);
-      remoteState.error = error.message; remote = null;
-    }
+    if (!remote) { setState({ error: 'Provider "' + provider + '" tidak tersedia' }); return; }
+    connectRemote();
+  }
+  /* Tombol "Tes Koneksi": ulangi koneksi sekarang + uji tulis, lalu kembalikan status lengkap. */
+  async function reconnect() {
+    if (!remote) return status();
+    clearTimeout(retryTimer); retryN = 0;
+    if (!remoteReady) await connectRemote(); else await flushToRemote();
+    return status();
+  }
+  function whenReady(ms) {
+    if (remoteReady) return Promise.resolve(true);
+    if (!remote) return Promise.resolve(false);
+    return Promise.race([new Promise(res => waiters.push(res)), new Promise(res => setTimeout(() => res(false), ms))]);
   }
   /* Mulai mendengarkan skor turnamen (real-time antar perangkat). */
   function watchTournament(tid) {
-    if (!remote || !tid || tWatch.tid === tid) return;
+    if (!tid) return;
+    tWatch.want = tid;
+    if (!remoteReady || tWatch.tid === tid) return;
     if (tWatch.unsub) { try { tWatch.unsub(); } catch (e) {} }
-    tWatch = { tid, unsub: remote.subscribeTournament(tid, rows => { mergeTournament(tid, rows); Events.emit('tboard', tid); }) };
+    tWatch.tid = tid;
+    tWatch.unsub = remote.subscribeTournament(tid, rows => { mergeTournament(tid, rows); Events.emit('tboard', tid); });
   }
   /* Tarik skor turnamen terbaru dari server (dipanggil sebelum pengumuman juara). */
   async function syncTournament(tid, ms = 4000) {
     if (!remote || !tid) return false;
+    if (!(await whenReady(ms))) return false;
     try { mergeTournament(tid, await withTimeout(remote.fetchTournament(tid), ms)); return true; } catch (e) { return false; }
   }
-  const status = () => ({ provider: remoteState.provider, online: remoteState.online, error: remoteState.error });
+  const status = () => Object.assign({}, remoteState, { steps: remoteState.steps.map(x => Object.assign({}, x)) });
 
   async function init() {
     const cachedUser = getCachedUser();
@@ -325,8 +382,8 @@ const MLDatabase = (() => {
       }
     }
 
-    await initRemote();
     databaseReady = true;
+    startRemote(); /* tidak di-await: game tidak menunggu server */
     return true;
   }
 
@@ -349,10 +406,10 @@ const MLDatabase = (() => {
     cacheUser(user);
     await saveToStore(DATABASE_CONFIG.stores.users, user);
 
-    if (remote) { /* tulis ke server maksimal tiap 2,5 dtk per pemain */
+    if (remoteReady) { /* tulis ke server maksimal tiap 2,5 dtk per pemain */
       const uid = String(user.uid);
       clearTimeout(userTimers.get(uid));
-      userTimers.set(uid, setTimeout(() => { if (remote) remote.saveUser(clone(user)).catch(() => {}); }, 2500));
+      userTimers.set(uid, setTimeout(() => { if (remoteReady) remote.saveUser(clone(user)).catch(noteWriteError); }, 2500));
     }
 
     return clone(user);
@@ -393,7 +450,7 @@ const MLDatabase = (() => {
       }
     }
 
-    if (remote) {
+    if (remoteReady) {
       try {
         const user = await withTimeout(remote.getUser(userId), 4000);
         if (user) { users.set(userId, user); cacheUser(user); return clone(user); }
@@ -439,11 +496,11 @@ const MLDatabase = (() => {
       normalizedEntry
     );
 
-    if (remote) {
+    if (remoteReady) {
       const sig = [normalizedEntry.score, normalizedEntry.kills, normalizedEntry.night, normalizedEntry.name, normalizedEntry.characterIndex].join('|');
       if (sentSig.get(normalizedEntry.uid) !== sig) {
         sentSig.set(normalizedEntry.uid, sig);
-        remote.submitScore(normalizedEntry).catch(() => sentSig.delete(normalizedEntry.uid));
+        remote.submitScore(normalizedEntry).catch(e => { sentSig.delete(normalizedEntry.uid); noteWriteError(e); });
       }
     }
   }
@@ -475,6 +532,7 @@ const MLDatabase = (() => {
     watchTournament,
     syncTournament,
     status,
+    reconnect,
     config: DATABASE_CONFIG
   });
 })();

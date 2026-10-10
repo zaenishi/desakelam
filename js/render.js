@@ -91,18 +91,44 @@ function post(){const hr=((18*60+gt)/60)%24,ds=S=='intro'?.5:weather=='eclipse'?
  if(P.hf>0){X.fillStyle=`rgba(150,0,0,${P.hf*.5})`;X.fillRect(0,0,W,H)}
  if(flash>0){X.fillStyle=`rgba(220,230,255,${flash*.8})`;X.fillRect(0,0,W,H)}
  X.fillStyle='#fff1';for(let i=0;i<50;i++)X.fillRect(R()*W,R()*H,2,2)}
-function hud(){const bar=(y,v,c,l)=>{X.fillStyle='#000a';X.fillRect(12,y,170,14);X.fillStyle=c;X.fillRect(13,y+1,168*cl(v,0,1),12);X.strokeStyle='#8b0000';X.lineWidth=2;X.strokeRect(12,y,170,14);X.fillStyle='#fff';X.font='10px Cinzel';X.textAlign='left';X.fillText(l,190,y+11)};
- bar(12,P.hp/P.mh,`hsl(0,80%,${30+Math.sin(t*8)*(P.hp<30?8:0)}%)`,'♥ HP');bar(32,P.st/100,'#c9a227','⚡ STAMINA');bar(52,P.sn/100,'#3a5a9a','👁 SANITY');
- X.fillStyle='#ffd700';X.font='13px Cinzel';X.textAlign='left';X.fillText(`Medkit ${P.meds}   Nyawa ${'♥'.repeat(Math.max(0,P.lives))}`,12,84);hud2();
- X.textAlign='center';X.font='16px Cinzel';
- if(MODE=='classic'){const hr=((18*60+gt)/60)%24,hh=hr|0,mm=(hr%1*60)|0;X.fillText(`${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')} → 06:00   ·   Malam ${night}   ·   Artefak ${P.art}/5   ·   Gelombang ${wave}`,W/2,22);
-  X.font='12px Cinzel';X.fillStyle='#caa';X.fillText(`${ZN[zoneAt(P.x,P.y)][0]}  ·  ${{clear:'Cerah',rain:'Hujan',fog:'Kabut',storm:'Badai',eclipse:'Gerhana'}[weather]}  ·  Penyintas ${P.rs}/3  ·  Catatan ${P.nt}/10`,W/2,40)}
- else{X.fillText(`Langkah ${Math.min(tr+1,6)}/6`,W/2,22);X.font='14px Cinzel';X.fillStyle='#fff';X.fillText(TS[Math.min(tr,5)],W/2,44)}
- /* minimap perkamen */
- const mx=W-136,my=56,sx=124/WW,sy=84/WH;X.fillStyle='#d8c39acc';X.fillRect(mx-4,my-4,132,92);X.strokeStyle='#5a3a1a';X.strokeRect(mx-4,my-4,132,92);X.fillStyle='#5a3a1a55';ZN.forEach(z=>X.strokeRect(mx+z[1]*sx,my+z[2]*sy,z[3]*sx,z[4]*sy));
- IT.forEach(i=>{if(i.k=='art'){X.fillStyle='#b8860b';X.fillRect(mx+i.x*sx-2,my+i.y*sy-2,4,4)}});ci(mx+P.x*sx,my+P.y*sy,3,'#c00');X.fillStyle='#300';X.font='9px Cinzel';X.fillText('N',mx+62,my+8);
- if(msg){X.fillStyle='#000c';X.fillRect(W/2-300,H-70,600,34);X.strokeStyle='#8b0000';X.strokeRect(W/2-300,H-70,600,34);X.fillStyle='#ffd700';X.font='14px Cinzel';X.textAlign='center';X.fillText(msg.s,W/2,H-48)}
- if(MODE=='train'){const tg=tr==2?I.d:tr==4?I.m:tr==5?I.a:null;if(tg){const a=Math.atan2(tg.y-P.y,tg.x-P.x),d=dist(tg,P);let ax=tg.x-cam.x,ay=tg.y-cam.y-40;if(d>200||ax<0||ax>W||ay<0||ay>H){ax=cl(W/2+Math.cos(a)*200,30,W-30);ay=cl(H/2+Math.sin(a)*130,30,H-30)}X.save();X.translate(ax,ay+Math.sin(t*6)*4);X.rotate(d>200?a:PI/2);X.fillStyle='#ff0';X.beginPath();X.moveTo(14,0);X.lineTo(-8,-10);X.lineTo(-8,10);X.fill();X.restore()}}}
+/* HUD di canvas. anchor() memperbesar HUD (hudK) dari sudut/tepi masing-masing agar terbaca di layar HP kecil. */
+function anchor(ax,ay,fn){X.save();X.translate(ax,ay);X.scale(hudK,hudK);X.translate(-ax,-ay);fn();X.restore()}
+function fitText(str,x,y,px,maxW,font='Cinzel'){X.font=`${px}px ${font}`;const w=X.measureText(str).width;if(w>maxW)X.font=`${Math.max(8,px*maxW/w)}px ${font}`;X.fillText(str,x,y)}
+function hud(){
+ const bar=(y,v,c,l)=>{X.fillStyle='#000a';X.fillRect(12,y,170,14);X.fillStyle=c;X.fillRect(13,y+1,168*cl(v,0,1),12);X.strokeStyle='#8b0000';X.lineWidth=2;X.strokeRect(12,y,170,14);X.fillStyle='#fff';X.font='10px Cinzel';X.textAlign='left';X.fillText(l,190,y+11)};
+ anchor(0,0,()=>{
+  bar(12,P.hp/P.mh,`hsl(0,80%,${30+Math.sin(t*8)*(P.hp<30?8:0)}%)`,'♥ HP');bar(32,P.st/100,'#c9a227','⚡ STAMINA');bar(52,P.sn/100,'#3a5a9a','👁 SANITY');
+  X.fillStyle='#ffd700';X.font='13px Cinzel';X.textAlign='left';X.fillText(`Medkit ${P.meds}   Nyawa ${'♥'.repeat(Math.max(0,P.lives))}`,12,84);
+  const mu=(1+Math.min(4,P.sk/3|0))*(weather=='eclipse'?2:1);
+  if(MODE=='classic'){X.fillStyle='#fff';X.font='bold 15px Cinzel';X.fillText('SKOR '+(score|0),12,104);X.font='12px Cinzel';X.fillStyle=mu>1?'#ff6':'#caa';X.fillText(`x${mu}  streak ${P.sk}  ·  Rank ${rankText(Math.max(playerProfile.bestScore,score|0))}  ·  Tumpukan ${NS.length}`,12,121)}
+  X.fillStyle=P.scd>0?'#777':'#8f8';X.font='12px Cinzel';X.fillText(P.scd>0?`${getCurrentCharacterClass().skillName} ${Math.ceil(P.scd)}s`:`${getCurrentCharacterClass().skillName} SIAP${touch?'':' (K)'}`,12,138);
+ });
+ anchor(W/2,0,()=>{
+  X.textAlign='center';X.fillStyle='#ffd700';
+  const compact=hudK>1.12,mw=compact?(W-2*Math.max(262*hudK,150*hudK))/hudK:(W-300)/hudK,wx=cl(W/2,0,W);
+  if(MODE=='classic'){const hr=((18*60+gt)/60)%24,hh=hr|0,mm=(hr%1*60)|0,tm=`${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`,wt={clear:'Cerah',rain:'Hujan',fog:'Kabut',storm:'Badai',eclipse:'Gerhana'}[weather];
+   if(compact){fitText(`${tm}  ·  Malam ${night}  ·  Artefak ${P.art}/5`,wx,20,15,mw);X.fillStyle='#caa';fitText(`${ZN[zoneAt(P.x,P.y)][0]}  ·  ${wt}  ·  Gel. ${wave}`,wx,38,12,mw)}
+   else{fitText(`${tm} → 06:00  ·  Malam ${night}  ·  Artefak ${P.art}/5  ·  Gelombang ${wave}`,wx,22,16,mw);X.fillStyle='#caa';fitText(`${ZN[zoneAt(P.x,P.y)][0]}  ·  ${wt}  ·  Penyintas ${P.rs}/3  ·  Catatan ${P.nt}/10`,wx,40,12,mw)}}
+  else{fitText(`Langkah ${Math.min(tr+1,6)}/6`,wx,22,16,mw);X.fillStyle='#fff';fitText(TS[Math.min(tr,5)],wx,44,14,mw)}
+ });
+ if(!INR)anchor(W,0,()=>{ /* minimap perkamen (disembunyikan di dalam bangunan) */
+  const mx=W-136,my=56,sx=124/WW,sy=84/WH;X.fillStyle='#d8c39acc';X.fillRect(mx-4,my-4,132,92);X.strokeStyle='#5a3a1a';X.strokeRect(mx-4,my-4,132,92);X.fillStyle='#5a3a1a55';ZN.forEach(z=>X.strokeRect(mx+z[1]*sx,my+z[2]*sy,z[3]*sx,z[4]*sy));
+  IT.forEach(i=>{if(i.k=='art'){X.fillStyle='#b8860b';X.fillRect(mx+i.x*sx-2,my+i.y*sy-2,4,4)}});ci(mx+P.x*sx,my+P.y*sy,3,'#c00');X.fillStyle='#300';X.font='9px Cinzel';X.textAlign='center';X.fillText('N',mx+62,my+8)});
+ /* pintu: zona berdiri bercahaya + tombol MASUK (sentuh) / [F] (keyboard) */
+ const dn=doorNear();
+ if(MODE=='classic'&&S=='play'){
+  const ring=(x,y,hot)=>{X.save();X.globalAlpha=hot?.95:.45;X.strokeStyle='#ffd700';X.fillStyle=hot?'#ffd70044':'#ffd70018';X.lineWidth=hot?3:2;X.beginPath();X.ellipse(x,y,26+Math.sin(t*5)*(hot?3:1.5),11,0,0,7);X.fill();X.stroke();X.restore()};
+  if(INR)ring(WW/2-cam.x,WH-46-cam.y,dn==='exit');
+  else for(const o of OB)if((o.z==0||o.z==1||o.z==4)&&!o.lake&&!o.tower){const dx=o.x+o.w/2,dy=o.y+o.h+26;if(Math.hypot(dx-P.x,dy-P.y)<260)ring(dx-cam.x,dy-cam.y,dn===o)}
+ }
+ anchor(W/2,touch?0:H,()=>{ /* pesan: di HP ditaruh di atas agar tidak tertutup jari/tombol */
+  X.textAlign='center';const bw=Math.min(600,(W-24)/hudK),my=touch?66:H-70;
+  if(msg){X.fillStyle='#000c';X.fillRect(W/2-bw/2,my,bw,34);X.strokeStyle='#8b0000';X.strokeRect(W/2-bw/2,my,bw,34);X.fillStyle='#ffd700';fitText(msg.s,W/2,my+22,14,bw-16)}
+ });
+ if(dn)anchor(W/2,H,()=>{X.textAlign='center';X.fillStyle='#ffd700';const txt=dn==='exit'?(touch?'Ketuk KELUAR':'[F] Keluar'):(touch?'Ketuk MASUK untuk masuk bangunan':'[F] Masuk bangunan');fitText(txt,W/2,H-(touch?96:90),14,W/hudK-24)});
+ const bI=$('#bI');if(bI){if(touch&&dn){bI.style.display='block';const lb=dn==='exit'?'KELUAR':'MASUK';if(bI.textContent!==lb)bI.textContent=lb}else bI.style.display='none'}
+ if(MODE=='train'){const tg=tr==2?I.d:tr==4?I.m:tr==5?I.a:null;if(tg){const a=Math.atan2(tg.y-P.y,tg.x-P.x),d=dist(tg,P);let ax=tg.x-cam.x,ay=tg.y-cam.y-40;if(d>200||ax<0||ax>W||ay<0||ay>H){ax=cl(W/2+Math.cos(a)*200,30,W-30);ay=cl(H/2+Math.sin(a)*130,30,H-30)}X.save();X.translate(ax,ay+Math.sin(t*6)*4);X.rotate(d>200?a:PI/2);X.fillStyle='#ff0';X.beginPath();X.moveTo(14,0);X.lineTo(-8,-10);X.lineTo(-8,10);X.fill();X.restore()}}
+}
 function face(){X.save();X.fillStyle='#000';X.fillRect(0,0,W,H);const z=1+(1-sc.t/.55)*.6;X.translate(W/2,H/2);X.scale(z,z);X.translate((R()-.5)*14,(R()-.5)*14);X.fillStyle='#1a0000';X.beginPath();X.ellipse(0,0,170,210,0,0,7);X.fill();
  X.fillStyle='#f00';X.shadowColor='#f00';X.shadowBlur=30;X.beginPath();X.ellipse(-60,-50,26,14,.3,0,7);X.ellipse(60,-50,26,14,-.3,0,7);X.fill();X.shadowBlur=0;X.fillStyle='#000';X.beginPath();X.ellipse(0,80,100,70,0,0,7);X.fill();X.fillStyle='#eee';for(let i=-4;i<5;i++){X.beginPath();X.moveTo(i*20-8,30);X.lineTo(i*20,70+(i%2?10:0));X.lineTo(i*20+8,30);X.fill()}X.restore();X.fillStyle=`rgba(180,0,0,${.4*sc.t})`;X.fillRect(0,0,W,H)}
 

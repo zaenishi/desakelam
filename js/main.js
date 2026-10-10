@@ -16,6 +16,7 @@ function frame(now) {
 
   if (S == 'intro') {
     it += rd;
+    document.body.classList.toggle('ctl-on', !!I.ctl); /* kontrol sentuh muncul saat fase "Bertahan hidup" */
     if (it > 8 && !I.sp) { I.sp = 1; I.ctl = 1; for (let i = 0; i < 3; i++) { const m = mk('sh', P.x + 200 + i * 50, P.y - 80 + i * 70, .5); go(m, 'chase'); M.push(m); } }
     if (it > 15 && !I.sc) { I.sc = 1; slow = .25; scare(); }
     if (it >= 20) endIntro();
@@ -40,8 +41,8 @@ function init() {
 }
 async function boot() {
   await initDatabase();
-  const dbs = MLDatabase.status();
-  if (dbs.provider === 'firebase' && !dbs.online) setTimeout(() => toast('Firebase gagal terhubung — memakai database lokal', 'bad'), 800);
+  let dbToast = false; /* koneksi Firebase berjalan di latar belakang; beri tahu SEKALI bila gagal */
+  Events.on('dbstatus', st => { if (st.provider === 'firebase' && !st.online && !st.connecting && st.error && !dbToast) { dbToast = true; toast('Firebase belum terhubung — memakai data lokal. Lihat Setelan → Tes Koneksi.', 'bad'); } });
   Tournament.init();
   addEventListener('pagehide', () => { if (S == 'play' && MODE == 'classic') submitScore(score | 0); });
   document.addEventListener('visibilitychange', () => { if (document.hidden && GAME_CONFIG.gameplay.pauseWhenHidden && S == 'play') pauseT(); });

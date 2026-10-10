@@ -12,11 +12,12 @@ Buka `index.html` (disarankan lewat server lokal, mis. `python3 -m http.server`)
 | `js/economy.js` | `Economy` (koin) & `Loadout` (upgrade skill + senjata) — satu-satunya pintu ubah koin |
 | `js/account.js` | Profil, skor, achievement, kode akses |
 | `js/database.js` | IndexedDB (cache lokal) + lapisan remote; store `tournament` (skor khusus turnamen) |
+| `js/device.js` | Deteksi Android/iOS/Desktop, kontrol sentuh vs keyboard, setelan pemain |
 | `js/db-firebase.js` | Adapter Firestore (aktif bila `provider: 'firebase'`) — lihat `FIREBASE_SETUP.md` |
 | `js/sprites.js` | Karakter 2D prosedural + preview senjata/skill |
 | `js/combat.js`, `skills.js` | Serangan & skill unik per karakter, stun |
 | `js/cinematic.js` | Sinematik "Desa Kelam menjadi cerah" |
-| `js/ui*.js`, `css/main.css`, `index.html` | Layar: menu, profil, pilih karakter, leaderboard, shop |
+| `js/ui*.js`, `css/main.css`, `index.html` | Layar: menu, profil, setelan, pilih karakter, leaderboard, shop |
 
 ## Mengatur turnamen (`js/config.js` → `GAME_CONFIG.tournament`)
 - `active`: `true/false`
@@ -36,3 +37,9 @@ Default: lokal (IndexedDB, per perangkat). Untuk leaderboard/turnamen lintas per
 ## Batasan yang perlu diketahui
 - Waktu turnamen memakai jam perangkat pemain.
 - Skor dikirim dari browser sehingga dapat dipalsukan oleh yang paham teknis (lihat `FIREBASE_SETUP.md`).
+
+## Perangkat
+- **Android/HP**: kontrol sentuh (joystick + tombol), auto fullscreen+landscape saat disentuh, overlay "putar ke landscape" di portrait, getar.
+- **iPhone**: sama, tanpa fullscreen (batasan iOS) — gunakan "Tambah ke Layar Utama".
+- **Desktop**: kontrol keyboard (WASD/J/K/Shift/E/F), tidak dipaksa fullscreen.
+- Pemain dapat menimpa lewat **Menu → Setelan** (Kontrol: Otomatis / Sentuh / Keyboard).

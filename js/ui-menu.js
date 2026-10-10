@@ -15,8 +15,9 @@ function renderMenu() {
   $('#drRank').classList.toggle('locked', Tournament.isLeaderboardLocked());
   const ds = MLDatabase.status(), el = $('#dbStatus');
   if (el) {
-    el.textContent = ds.provider === 'firebase' ? (ds.online ? '☁ Firebase terhubung' : '💾 Mode lokal (Firebase gagal)') : '💾 Database lokal';
-    el.className = ds.provider === 'firebase' ? (ds.online ? 'ok' : 'warn') : '';
+    el.textContent = ds.provider !== 'firebase' ? '💾 Database lokal'
+      : ds.online ? '☁ Firebase terhubung' : ds.connecting ? '⏳ Menghubungkan Firebase…' : '💾 Mode lokal · Firebase gagal (ketuk)';
+    el.className = ds.provider === 'firebase' ? (ds.online ? 'ok' : ds.connecting ? '' : 'warn') : '';
     el.title = ds.error || '';
   }
   Tournament.renderHud();
@@ -53,6 +54,7 @@ UI.register(MENU_STATE, {
     drawer.querySelectorAll('.dr-item').forEach(btn => scope.on(btn, 'click', () => {
       const go = btn.dataset.go;
       if (go === 'credits') { SFX.click(); setOpen(false); openCredits(); }
+      else if (go === 'settings') { SFX.click(); setOpen(false); Settings.open(); }
       else if (go === 'shop') {
         if (Tournament.phase() === 'running' && GAME_CONFIG.shop.availableDuringTournament === false) { toast('Shop ditutup selama turnamen!', 'bad'); SFX.deny(); return; }
         SFX.click(); UI.set(SHOP_STATE);
@@ -63,10 +65,12 @@ UI.register(MENU_STATE, {
         } else { SFX.click(); UI.set(LEADERBOARD_STATE, { mode: 'general' }); }
       }
     }));
+    scope.on($('#dbStatus'), 'click', () => { SFX.click(); Settings.open(); });
+    scope.add(Events.on('dbstatus', () => { if (UI.is(MENU_STATE)) renderMenu(); }));
     scope.on($('#profileBar'), 'click', () => { SFX.click(); setOpen(false); Profile.open(); });
     scope.on(window, 'keydown', e => {
       if (e.key !== 'Escape') return;
-      if (UI.isModalOpen('prof')) UI.closeModal('prof'); else if (UI.isModalOpen('credits')) UI.closeModal('credits'); else if (open) setOpen(false);
+      if (UI.isModalOpen('prof')) UI.closeModal('prof'); else if (UI.isModalOpen('settings')) UI.closeModal('settings'); else if (UI.isModalOpen('credits')) UI.closeModal('credits'); else if (open) setOpen(false);
     });
     scope.add(Events.on('profile', () => { if (UI.is(MENU_STATE)) renderMenu(); }));
     scope.interval(() => { $('#drRank').classList.toggle('locked', Tournament.isLeaderboardLocked()); }, 1000);

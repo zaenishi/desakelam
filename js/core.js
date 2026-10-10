@@ -3,12 +3,9 @@ const $=s=>document.querySelector(s),C=$('#c'),X=C.getContext('2d'),W=GAME_CONFI
 let WW=GAME_CONFIG.world.width,WH=GAME_CONFIG.world.height;
 const cl=(v,a,b)=>Math.max(a,Math.min(b,v)),dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),angd=(a,b)=>((a-b+3*PI)%(2*PI))-PI;
 const ci=(x,y,r,c)=>{X.fillStyle=c;X.beginPath();X.arc(x,y,r,0,7);X.fill()};
-/* Deteksi layar sentuh: dicek saat load DAN saat sentuhan pertama (mis. DevTools/hybrid laptop). */
-let touch=matchMedia('(pointer:coarse)').matches||(navigator.maxTouchPoints||0)>0||'ontouchstart' in window;
-const enableTouchUI=()=>{touch=true;document.body.classList.add('touch')};
-if(touch)enableTouchUI();
-addEventListener('pointerdown',e=>{if(e.pointerType==='touch'||e.pointerType==='pen')enableTouchUI()},{capture:true,passive:true});
-addEventListener('touchstart',enableTouchUI,{capture:true,passive:true,once:true});
+/* Skema kontrol dikelola Device (device.js): `touch` = true bila UI sentuh aktif. */
+let touch=Device.touchUI,hudK=1;
+Device.onChange(()=>{touch=Device.touchUI});
 /* State global gameplay. S = fase game loop ('intro','menu','load','play','pause','end','tend','cine').
    S tidak diubah langsung: gunakan UI.set(...) di state.js agar HUD/overlay ikut konsisten. */
 let S='intro',MODE='classic',t=0,last=0,shake=0,hitstop=0,slow=1,flash=0,cam={x:0,y:0},it=0,I={},sc=null,msg=null;

@@ -46,6 +46,8 @@ const UI=(()=>{
     closeModal(id);
     const sc2=createScope();modals[id]={scope:sc2};
     show(id,1);
+    const ov=document.getElementById(id);
+    if(ov)sc2.on(ov,'pointerdown',e=>{if(e.target===ov)closeModal(id)}); /* ketuk area gelap = tutup */
     try{enter&&enter(sc2)}catch(e){console.error(e)}
   }
   function closeModal(id){

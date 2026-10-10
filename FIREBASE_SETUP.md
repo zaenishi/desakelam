@@ -8,13 +8,13 @@ IndexedDB tetap dipakai sebagai cache/offline; jika Firebase gagal terhubung gam
 1. <https://console.firebase.google.com> → **Add project**.
 2. **Build → Firestore Database → Create database** (mode *production*, lokasi terdekat, mis. `asia-southeast2`).
 3. **Project settings → General → Your apps → Web (`</>`)** → daftarkan app → salin objek `firebaseConfig`.
-4. (Disarankan) **Build → Authentication → Sign-in method → Anonymous → Enable**.
+4. (Opsional) **Build → Authentication → Sign-in method → Anonymous → Enable** bila memakai Opsi B.
 5. Buka `js/config.js`:
    ```js
    const FIREBASE_CONFIG = {
      apiKey: '...', authDomain: '...', projectId: '...',
      storageBucket: '...', messagingSenderId: '...', appId: '...',
-     useAnonymousAuth: true,   // true jika memakai rules di bawah
+     useAnonymousAuth: false,  // true hanya jika memakai Opsi B
    };
    // ...
    const DATABASE_CONFIG = Object.freeze({ provider: 'firebase', ... });
@@ -25,34 +25,63 @@ IndexedDB tetap dipakai sebagai cache/offline; jika Firebase gagal terhubung gam
 
 Kembali ke lokal kapan saja: ubah `provider` menjadi `'indexeddb'`.
 
-## Rules yang disarankan (butuh Anonymous Auth aktif + `useAnonymousAuth: true`)
+## Rules Firestore (pilih salah satu, lalu **Publish**)
+
+### Opsi A — tanpa login (cocok dengan `useAnonymousAuth: false`, paling mudah)
 ```
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    function signedIn() { return request.auth != null; }
     function validEntry(uid) {
       let d = request.resource.data;
       return d.uid == uid && d.name is string && d.name.size() <= 24
           && d.score is number && d.score >= 0 && d.score < 10000000;
     }
     match /users/{uid} {
-      allow read, write: if signedIn();
+      allow read: if true;
+      allow write: if request.resource.data.uid == uid;
     }
     match /leaderboard/{uid} {
       allow read: if true;
-      allow create: if signedIn() && validEntry(uid);
-      allow update: if signedIn() && validEntry(uid) && request.resource.data.score >= resource.data.score;
+      allow create: if validEntry(uid);
+      allow update: if validEntry(uid) && request.resource.data.score >= resource.data.score;
     }
     match /tournaments/{tid}/scores/{uid} {
       allow read: if true;
-      allow create: if signedIn() && validEntry(uid);
-      allow update: if signedIn() && validEntry(uid) && request.resource.data.score >= resource.data.score;
+      allow create: if validEntry(uid);
+      allow update: if validEntry(uid) && request.resource.data.score >= resource.data.score;
     }
   }
 }
 ```
-Untuk uji cepat saja (jangan dipakai saat lomba): `allow read, write: if true;` pada semua koleksi.
+
+### Opsi B — dengan login anonim (`useAnonymousAuth: true` + Authentication → Anonymous aktif)
+Sama seperti Opsi A, tetapi tambahkan `request.auth != null &&` di depan setiap kondisi `allow write/create/update`.
+
+Untuk uji sangat cepat saja (jangan dipakai saat lomba): `allow read, write: if true;` pada semua koleksi.
+
+> `apiKey` Firebase untuk web memang bukan rahasia (ikut terkirim ke browser). Keamanan data ditentukan oleh **rules** di atas,
+> bukan oleh kerahasiaan apiKey.
+
+## Jika tertulis "Mode lokal · Firebase gagal"
+Ketuk teks status di menu (atau **Setelan → TES KONEKSI**). Game menampilkan langkah mana yang gagal beserta penyebabnya:
+
+| Langkah gagal | Arti & solusi |
+|---|---|
+| Cek konfigurasi | `apiKey` / `projectId` belum diisi di `FIREBASE_CONFIG`. |
+| Muat Firebase SDK | Internet mati atau jaringan memblokir `gstatic.com` / `jsdelivr.net`. Pakai SDK self-host lewat `sdkBaseUrl`. |
+| Login anonim | Aktifkan Authentication → Sign-in method → Anonymous, atau set `useAnonymousAuth: false`. |
+| Hubungi Firestore — `permission-denied` | Rules belum di-publish / menolak. Publish Opsi A di atas. Pastikan juga **Cloud Firestore API** aktif. |
+| Hubungi Firestore — `not-found` | Database belum dibuat: Build → Firestore Database → **Create database**. |
+| Hubungi Firestore — `timeout` / `unavailable` | Server tidak terjangkau. Penyebab tersering: Firestore Database **belum dibuat**, jaringan/ad-blocker memblokir `*.googleapis.com`, atau halaman dibuka lewat `file://`. Coba `forceLongPolling: true`, nonaktifkan ad-blocker, dan **hosting game lewat http(s)**. |
+| Tulis: DITOLAK | Koneksi baca berhasil tetapi rules menolak tulis. Periksa rules (Opsi A) atau `useAnonymousAuth`. |
+
+Koneksi berjalan di latar belakang: game **tidak menunggu** Firebase saat start, dan mencoba menyambung ulang otomatis
+(10 → 20 → 40 → 60 detik). Skor yang dimainkan saat offline dikirim otomatis begitu tersambung.
+
+## Hosting (sangat disarankan, terutama untuk Android)
+Buka game dari alamat `https://…` (Firebase Hosting, GitHub Pages, Netlify, dsb.), bukan `file://`. Fullscreen/landscape, koneksi
+Firestore, dan pemasangan ke Layar Utama bekerja jauh lebih andal lewat HTTPS.
 
 ## Struktur data
 | Path | Isi |

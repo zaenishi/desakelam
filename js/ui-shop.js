@@ -80,39 +80,41 @@ const Quiz = (() => {
 UI.register(SHOP_STATE, {
   enter(scope) {
     let cat = 'upgrade', shown = Economy.balance(), target = shown;
-    const grid = $('#shopGrid'), val = $('#coinVal'), pill = $('#coinPill'), panel = $('#quizPanel');
-    panel.classList.remove('open');
-    scope.add(() => panel.classList.remove('open'));
+    const shop = $('#shop'), grid = $('#shopGrid'), val = $('#coinVal'), pill = $('#coinPill'), qbtn = $('#quizOpen');
+    shop.classList.remove('quiz-open');
+    scope.add(() => shop.classList.remove('quiz-open'));
     val.textContent = shown;
+    const setQuiz = on => { shop.classList.toggle('quiz-open', on); };
+    qbtn.classList.toggle('pulse', Economy.balance() < 60); /* koin sedikit -> ajak jawab kuis */
 
     const pips = (l, m) => Array.from({ length: m }, (_, i) => `<i class="${i < l ? 'on' : ''}"></i>`).join('');
     function render() {
       if (cat === 'upgrade') {
         grid.innerHTML = SHOP_UPGRADES.map(u => {
           const l = Loadout.level(u.id), price = Loadout.upgradePrice(u.id), max = price === null;
-          return `<div class="item" data-id="${u.id}"><div class="ico">${u.icon}</div><h3>${u.name}</h3><p>${u.desc}</p><div class="pips">${pips(l, u.max)}<small>Lv ${l}/${u.max}</small></div>
+          return `<div class="item" data-id="${u.id}"><div class="ico">${u.icon}</div><div class="info"><h3>${u.name}</h3><p>${u.desc}</p><div class="pips">${pips(l, u.max)}<small>Lv ${l}/${u.max}</small></div></div>
             <button class="buy-btn" data-kind="upgrade" data-id="${u.id}" type="button" ${max ? 'disabled' : ''}>${max ? 'MAKS' : `BELI · 🪙 ${price}`}</button><div class="nf">Uang Tidak Cukup!</div></div>`;
         }).join('');
       } else {
         grid.innerHTML = SHOP_WEAPONS.map(w => {
           const owned = Loadout.owns(w.id), eq = playerProfile.equippedWeapon === w.id;
-          const btn = eq ? `<button class="buy-btn eq" disabled type="button">TERPASANG</button>` : owned ? `<button class="buy-btn" data-kind="equip" data-id="${w.id}" type="button">PASANG</button>` : `<button class="buy-btn" data-kind="weapon" data-id="${w.id}" type="button">BELI · 🪙 ${w.price}</button>`;
-          return `<div class="item ${eq ? 'equipped' : ''}" data-id="${w.id}"><div class="ico" style="${w.color ? `box-shadow:0 0 18px ${w.color}` : ''}">${w.icon}</div><h3>${w.name}</h3><p>${w.desc}</p>${btn}<div class="nf">Uang Tidak Cukup!</div></div>`;
+          const btn = eq ? `<button class="buy-btn eq" disabled type="button">✔ TERPASANG</button>` : owned ? `<button class="buy-btn" data-kind="equip" data-id="${w.id}" type="button">PASANG</button>` : `<button class="buy-btn" data-kind="weapon" data-id="${w.id}" type="button">BELI · 🪙 ${w.price}</button>`;
+          return `<div class="item ${eq ? 'equipped' : ''}" data-id="${w.id}"><div class="ico" style="${w.color ? `box-shadow:0 0 18px ${w.color}` : ''}">${w.icon}</div><div class="info"><h3>${w.name}</h3><p>${w.desc}</p></div>${btn}<div class="nf">Uang Tidak Cukup!</div></div>`;
         }).join('');
       }
       document.querySelectorAll('#shopTabs .tab').forEach(b => b.classList.toggle('on', b.dataset.cat === cat));
     }
     render();
 
-    scope.on($('#shopTabs'), 'click', e => { const b = e.target.closest('.tab'); if (!b) return; cat = b.dataset.cat; SFX.click(); render(); });
+    scope.on($('#shopTabs'), 'click', e => { const b = e.target.closest('.tab'); if (!b) return; cat = b.dataset.cat; SFX.click(); render(); grid.scrollTop = 0; });
     scope.on(grid, 'click', e => {
       const btn = e.target.closest('.buy-btn'); if (!btn || btn.disabled) return;
       const id = btn.dataset.id, kind = btn.dataset.kind;
       if (kind === 'equip') { Loadout.equip(id); SFX.click(); toast('Senjata dipasang!', 'good'); render(); return; }
       const res = kind === 'upgrade' ? Loadout.buyUpgrade(id) : Loadout.buyWeapon(id);
-      if (res.ok) { SFX.buy(); toast('Pembelian berhasil! ✔', 'good'); render(); }
+      if (res.ok) { SFX.buy(); Device.vibrate(30); toast('Pembelian berhasil! ✔', 'good'); render(); }
       else if (res.reason === 'funds') {
-        SFX.deny();
+        SFX.deny(); Device.vibrate([40, 40, 40]);
         const nf = btn.parentElement.querySelector('.nf');
         btn.classList.remove('shake'); void btn.offsetWidth; btn.classList.add('shake');
         nf.classList.add('show'); pill.classList.add('bad');
@@ -124,6 +126,7 @@ UI.register(SHOP_STATE, {
     scope.add(Events.on('coins', (bal, delta) => {
       target = bal;
       if (delta > 0) { pill.classList.remove('gain'); void pill.offsetWidth; pill.classList.add('gain'); }
+      qbtn.classList.toggle('pulse', bal < 60);
       render();
     }));
     scope.raf(() => {
@@ -132,8 +135,10 @@ UI.register(SHOP_STATE, {
       val.textContent = shown;
     });
 
-    scope.on($('#quizTab'), 'click', () => { SFX.click(); panel.classList.toggle('open'); });
-    scope.on(window, 'keydown', e => { if (e.key === 'Escape') { if (panel.classList.contains('open')) panel.classList.remove('open'); else UI.set(MENU_STATE); } });
+    scope.on(qbtn, 'click', () => { SFX.click(); setQuiz(true); });
+    scope.on($('#quizClose'), 'click', () => { SFX.back(); setQuiz(false); });
+    scope.on($('#quizDim'), 'click', () => { SFX.back(); setQuiz(false); });
+    scope.on(window, 'keydown', e => { if (e.key === 'Escape') { if (shop.classList.contains('quiz-open')) setQuiz(false); else UI.set(MENU_STATE); } });
     Quiz.mount(scope, $('#quizBody'));
   }
 });
